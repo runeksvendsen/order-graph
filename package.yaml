@@ -1,0 +1,50 @@
+name:                order-graph
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/runeksvendsen/order-graph#readme
+license:             BSD3
+author:              Rune K. Svendsen
+maintainer:          runesvend@gmail.com
+copyright:           CC0
+category:            value
+extra-source-files:
+- README.md
+
+dependencies:
+  - base >= 4.7 && < 5
+  - protolude
+  - transformers
+  - orderbook
+  - unordered-containers
+  - impure-containers
+  - text
+  - primitive
+  - safe-money
+  - heap
+  - hashable
+  - deepseq
+
+library:
+  source-dirs: src
+  ghc-options:
+  - -Wall
+
+executables:
+  order-graph-exe:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+    - base
+    - orderbook
+    - crypto-depth
+    - crypto-venues
+    - order-graph
+    - logging
+    - http-client
+    - http-client-tls
+    - monad-parallel
+    - unordered-containers
+    - safe-money
+    - vector
+    - criterion

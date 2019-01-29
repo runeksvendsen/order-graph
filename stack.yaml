@@ -1,0 +1,25 @@
+resolver: lts-12.5
+
+packages:
+- .
+- location:
+    git: https://github.com/runeksvendsen/orderbook.git
+    commit: 2e2551e1333ec7bc1c4745e6a547bdf4887d79b4
+  extra-dep: true
+- location:
+    git: https://github.com/runeksvendsen/crypto-depth.git
+    commit: b821b780b19800c480083e291804ee0e7790bd24
+  extra-dep: true
+- location:
+    git: https://github.com/runeksvendsen/crypto-venues.git
+    commit: d306a1483d8cdab4d9e8f665d0e003e1ff80be72
+  extra-dep: true
+- location:
+    git: https://github.com/runeksvendsen/impure-containers.git
+    commit: 5e4529b0b1c2abea0800217f214fa9cd78de3900
+  extra-dep: true
+
+extra-deps:
+- logging-3.0.5@sha256:88096d3124fce9a19af3720f751e1a354d866ed5030d2e5197238d2277cdb2f2
+- rate-limit-1.4.1@sha256:27abe882e8b7851202cac124ea2b631e77ab7216f7a655b0782704838fe3c305
+- time-units-1.0.0@sha256:27cf54091c4a0ca73d504fc11d5c31ab4041d17404fe3499945e2055697746c1
