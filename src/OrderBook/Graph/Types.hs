@@ -1,23 +1,18 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE StrictData #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleContexts #-}
 module OrderBook.Graph.Types
 ( Edge(..)
 , IsEdge(..)
 , Currency
-, SellOrder'
-, SellOrder
 , SomeSellOrder'(..), someOrder
 , SomeSellOrder, SomeBuyOrder
 , OrderGraph
@@ -59,13 +54,6 @@ newtype Currency = Currency T.Text
     deriving (Eq, Ord, Read, Show, IsString, Semigroup, Monoid, Hashable, Generic)
 
 instance NFData Currency
-
--- | An order indexed by "src" and "dst" currency
-newtype SellOrder' numTyp (src :: Symbol) (dst :: Symbol) = SellOrder' (SomeSellOrder' numTyp numTyp)
-type SellOrder = SellOrder' Double
-
-toSomeOrder :: SellOrder' numTyp src dst -> SomeSellOrder' numTyp numTyp
-toSomeOrder (SellOrder' someOrder) = someOrder
 
 -- | A sell order.
 --   An offer to exchange 'qty' of 'soBase' for 'soQuote',
