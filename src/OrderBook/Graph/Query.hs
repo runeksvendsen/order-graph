@@ -14,7 +14,9 @@ module OrderBook.Graph.Query
 , SomeSellOrder, SomeBuyOrder
 , OrderGraph
 , GraphM
+, MeasuredPath(MeasuredPath), mpDist, mpOrders
 , query
+, subtractMatchedQty
 )
 where
 
@@ -27,7 +29,14 @@ import qualified Data.List.NonEmpty                         as NE
 
 
 -- | Source: https://github.com/andrewthad/impure-containers/issues/8#issuecomment-454373569
-data MeasuredPath = MeasuredPath Double [SomeSellOrder] deriving Eq
+data MeasuredPath = MeasuredPath
+    { mpDist    :: Double
+    , mpOrders'  :: [SomeSellOrder]
+    } deriving Eq
+
+mpOrders :: MeasuredPath -> [SomeSellOrder]
+mpOrders = reverse . mpOrders'
+
 instance Ord MeasuredPath where
     compare (MeasuredPath len1 vs1) (MeasuredPath len2 vs2) =
         compare len1 len2 <> compare vs1 vs2
@@ -61,12 +70,15 @@ query graph start end =
         MeasuredPath (len * weight orderEdge) (sellOrder : orders)
 
 
-subtractMatchedOrder :: NonEmpty (Edge SomeSellOrder) -> [SomeSellOrder]
-subtractMatchedOrder orders = fst $
-    foldl subtractExchange ([], matchedOrder') (NE.map getEdge orders)
+-- ^ subtract the quantity of the order with the smallest quantity
+--    from all the other orders in the list.
+--   the sequence of orders must be of the following form:
+--    [Order "BTC" "USD", ?
+--   at least one of the orders will end up with zero quantity.
+subtractMatchedQty :: NonEmpty SomeSellOrder -> [SomeSellOrder]
+subtractMatchedQty orders = fst $
+    foldl subtractExchange ([], matchedOrder orders) orders
   where
-    -- orders' = NE.map (fmap someOrder) orders
-    matchedOrder' = matchedOrder orders
     subtractExchange
         :: ([SomeSellOrder], SomeSellOrder)
         -> SomeSellOrder
@@ -80,6 +92,6 @@ subtractMatchedOrder orders = fst $
         in (subtractedOrder : orderList, nextToSubtract)
     minusQtyOf :: SomeSellOrder -> SomeSellOrder -> SomeSellOrder
     minusQtyOf so1 so2
-        | soQty so2 > soQty so1 = error "qty2 > qty1"
-        | soBase so1 /= soBase so2 = error "base1 /= base2"
+        | soQty so2 > soQty so1 = error $ "qty2 > qty1. (qty1,qty2) = " ++ show (soQty so1,soQty so2)
+        | soBase so1 /= soBase so2 = error $ "base1 /= base2. (base1,base2) = " ++ show (soBase so1, soBase so2)
         | otherwise = so1 { soQty = soQty so1 - soQty so2 }

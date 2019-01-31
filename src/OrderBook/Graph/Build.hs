@@ -6,6 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module OrderBook.Graph.Build
 ( module OrderBook.Graph.Types
+, SellOrderGraph
 , build
 , derive
 )
@@ -15,7 +16,6 @@ where
 import OrderBook.Graph.Internal.Prelude
 import OrderBook.Graph.Types
 import Control.Monad
-import Control.Monad.Primitive                              (PrimMonad, PrimState)
 import qualified Data.Primitive.MutVar                      as Prim
 import qualified Data.Graph.Types                           as G
 import qualified Data.Graph.Immutable                       as GI
@@ -23,25 +23,30 @@ import qualified Data.Graph.Mutable                         as GM
 import qualified Data.Heap                                  as H
 
 
+type SellOrderGraph s g = G.MGraph s g SellOrderHeap Currency
 type SellOrderHeap = H.MinHeap (Edge SomeSellOrder)
 
 -- ^ Derive a graph which only contains the best-priced sell
 --  order as each edge
 derive
-    :: G.Graph g SellOrderHeap Currency
-    -> G.Graph g (Edge SomeSellOrder) Currency
-derive graph =
-    GI.mapEdges heapKeepMin graph
+    :: PrimMonad m
+    => SellOrderGraph (PrimState m) g
+    -> m (G.Graph g (Edge SomeSellOrder) Currency)
+derive mGraph = do
+    graph <- GI.freeze mGraph
+    return $ GI.mapEdges heapKeepMin graph
   where
     heapKeepMin :: G.Vertex g -> G.Vertex g -> SellOrderHeap -> Edge SomeSellOrder
     heapKeepMin _ _ edgeHeap = fromMaybe
         (error $ "deriveGraph: missing edge")
         (H.viewHead edgeHeap)
 
+-- ^ build a graph with each edge containing (a min-heap of)
+--    *all* compatible sell orders
 build
     :: (PrimMonad m)
-    => G.MGraph (PrimState m) g SellOrderHeap Currency      -- ^ Empty graph
-    -> [SomeSellOrder]                                      -- ^ Orders
+    => SellOrderGraph (PrimState m) g   -- ^ Empty graph
+    -> [SomeSellOrder]                  -- ^ Orders
     -> m ()
 build mGraph orders = do
     minOrderPriceVar <- Prim.newMutVar (-1 :: Double)

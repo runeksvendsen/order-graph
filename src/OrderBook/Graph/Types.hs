@@ -100,8 +100,8 @@ someOrderSemigroup :: SomeSellOrder -> SomeOrderSemigroup
 someOrderSemigroup so@SomeSellOrder'{..} =
     so { soPrice = Product soPrice, soQty = Min soQty}
 
-matchedOrder :: NonEmpty (Edge SomeSellOrder) -> SomeSellOrder
-matchedOrder = someOrder . foldr1 (<>) . NE.map (someOrderSemigroup . getEdge)
+matchedOrder :: NonEmpty SomeSellOrder -> SomeSellOrder
+matchedOrder = someOrder . foldr1 (<>) . NE.map someOrderSemigroup
 
 -- | A graph with currencies as nodes and sell orders as edges
 type OrderGraph gr = G.Graph gr (Edge SomeSellOrder) Currency

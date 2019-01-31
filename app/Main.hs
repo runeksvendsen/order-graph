@@ -5,7 +5,7 @@
 {-# LANGUAGE DataKinds #-}
 module Main where
 
-import           Protolude                                  (lefts, rights, toS, forM_)
+import           Protolude                                  (lefts, rights, toS, forM_, void)
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
 import qualified OrderBook.Graph.Build                      as Lib
 import qualified OrderBook.Graph.Query                      as Lib
@@ -52,11 +52,12 @@ main :: IO ()
 main = withLogging $ do
     man <- HTTP.newManager HTTPS.tlsManagerSettings
     orders <- throwErrM $ AppM.runAppM man maxRetries $ allSellOrders
-    let buildGraphQuery sellOrders' = do
-            someGraph <- GI.create $ \mGraph -> Lib.build mGraph sellOrders'
-            let findPath graph = Lib.query (Lib.derive graph) "BTC" numeraire
-                path = GI.with someGraph findPath
-            print path
+    let buildGraphQuery sellOrders' =
+            void $ GI.create $ \mGraph -> do
+                Lib.build mGraph sellOrders'
+                graph <- Lib.derive mGraph
+                let path = Lib.query graph "BTC" numeraire
+                print path
     let benchmarkable = Criterion.perBatchEnv (const $ return orders) buildGraphQuery
     Criterion.benchmark benchmarkable
   where
