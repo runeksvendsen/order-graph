@@ -3,12 +3,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Main where
 
 import           Protolude                                  (lefts, rights, toS, forM_, void)
+import           OrderBook.Graph.Internal.Prelude           (pprint)
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
 import qualified OrderBook.Graph.Build                      as Lib
-import qualified OrderBook.Graph.Query                      as Lib
+import qualified OrderBook.Graph.Match                      as Lib
 import qualified OrderBook.Types                            as OB
 import qualified CryptoVenues.Types.AppM                    as AppM
 import qualified CryptoDepth.Fetch                          as Fetch
@@ -25,7 +27,39 @@ import           Data.Proxy                                 (Proxy(..))
 import qualified Network.HTTP.Client                        as HTTP
 import qualified Network.HTTP.Client.TLS                    as HTTPS
 import qualified Criterion
+import qualified Data.Aeson                                 as Json
+import           System.Directory                           (listDirectory)
 
+
+-- main' :: IO ()
+-- main' = do
+--     booksList <- mapM decodeFileOrFail =<< getTestFiles
+--     forM_ booksList $ \books -> do
+--         let orders = concatMap fromABook (books :: [IT.ABook])
+--         doEverything orders
+--   where
+--     fromABook (IT.ABook ob) = fromOB ob
+--     throwError file str = error $ file ++ ": " ++ str
+--     decodeFileOrFail file =
+--         either (throwError file) return =<< Json.eitherDecodeFileStrict file
+
+main = withLogging $ do
+    man <- HTTP.newManager HTTPS.tlsManagerSettings
+    orders <- throwErrM $ AppM.runAppM man maxRetries $ allSellOrders
+    doEverything orders
+  where
+    throwErrM ioA = ioA >>= either (error . show) return
+
+getTestFiles :: IO [FilePath]
+getTestFiles = do
+    jsonFiles <- filter jsonExtension <$> listDirectory testDataDir
+    return $ map (testDataDir ++) jsonFiles
+  where
+    testDataDir = "test/data/"
+    jsonExtension fileName = let splitByDot = T.split (== '.') (toS fileName) in
+        if null splitByDot
+            then False
+            else last splitByDot == "json"
 
 numObLimit :: Word
 numObLimit = 10
@@ -48,21 +82,19 @@ allSellOrders = do
   where
     fromABook (IT.ABook ob) = fromOB ob
 
-main :: IO ()
-main = withLogging $ do
-    man <- HTTP.newManager HTTPS.tlsManagerSettings
-    orders <- throwErrM $ AppM.runAppM man maxRetries $ allSellOrders
+doEverything :: [SomeSellOrder] -> IO ()
+doEverything orders = do
+    putStrLn $ "Sell order count: " ++ show (length orders)
     let buildGraphQuery sellOrders' =
             void $ GI.create $ \mGraph -> do
                 Lib.build mGraph sellOrders'
-                graph <- Lib.derive mGraph
-                let path = Lib.query graph "BTC" numeraire
-                print path
+                matchedOrders <- Lib.match mGraph buyOrder
+                pprint matchedOrders
     let benchmarkable = Criterion.perBatchEnv (const $ return orders) buildGraphQuery
     Criterion.benchmark benchmarkable
   where
-    numeraire = fromString $ symbolVal (Proxy :: Proxy Numeraire)
-    throwErrM ioA = ioA >>= either (error . show) return
+    buyOrder :: Lib.BuyOrder "BTC" Numeraire
+    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
 
 withLogging :: IO a -> IO a
 withLogging ioa = Log.withStderrLogging $ do

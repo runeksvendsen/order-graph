@@ -7,6 +7,7 @@
 module OrderBook.Graph.Build
 ( module OrderBook.Graph.Types
 , SellOrderGraph
+, SellOrderHeap
 , build
 , derive
 )
@@ -38,7 +39,7 @@ derive mGraph = do
   where
     heapKeepMin :: G.Vertex g -> G.Vertex g -> SellOrderHeap -> Edge SomeSellOrder
     heapKeepMin _ _ edgeHeap = fromMaybe
-        (error $ "deriveGraph: missing edge")
+        (error $ "deriveGraph: empty edge heap")
         (H.viewHead edgeHeap)
 
 -- ^ build a graph with each edge containing (a min-heap of)

@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module OrderBook.Graph.Internal.Prelude
 ( module Conv
 , module TypeLits
@@ -5,9 +7,10 @@ module OrderBook.Graph.Internal.Prelude
 , module Maybe
 , module Prim
 , module Monad
-, NE.NonEmpty
-, Generic
-, NFData
+, module MoreStuff
+, justOrFail
+, pp
+, pprint
 )
 
 where
@@ -16,8 +19,29 @@ import Protolude.Conv                       as Conv
 import GHC.TypeLits                         as TypeLits
 import Data.Proxy                           as Proxy
 import Data.Maybe                           as Maybe
-import Control.Monad.Primitive              as Prim (PrimMonad, PrimState)
-import Control.Monad                        as Monad (forM_)
-import qualified Data.List.NonEmpty         as NE
-import GHC.Generics                         (Generic)
-import Control.DeepSeq                      (NFData)
+import Control.Monad.Primitive              as Prim         (PrimMonad, PrimState)
+import Control.Monad                        as Monad        (forM_, when)
+import Data.List.NonEmpty                   as MoreStuff    (NonEmpty(..), cons, uncons, nonEmpty)
+import Data.String                          as MoreStuff    (fromString)
+import GHC.Generics                         as MoreStuff    (Generic)
+import Control.DeepSeq                      as MoreStuff    (NFData)
+import Control.Monad.Fix                    as MoreStuff    (mfix)
+import Text.Show.Pretty                     as MoreStuff    (PrettyVal(..), valToStr)
+import Data.Type.Equality                   as MoreStuff
+
+
+pp :: PrettyVal a => a -> String
+pp = valToStr . prettyVal
+
+pprint :: PrettyVal a => a -> IO ()
+pprint = putStrLn . valToStr . prettyVal
+
+justOrFail :: PrettyVal a => ([Char], a) -> Maybe b -> b
+justOrFail (textMsg, a) =
+    fromMaybe . error $ unlines
+        [ textMsg ++ ":"
+        , pp a
+        ]
+
+instance PrettyVal a => PrettyVal (NonEmpty a) where
+    prettyVal (first :| lst) = prettyVal (first : lst)
