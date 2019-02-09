@@ -16,10 +16,14 @@ packages:
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/impure-containers.git
-    commit: 5e4529b0b1c2abea0800217f214fa9cd78de3900
+    commit: 2d65486882be1c2f177cea56343987254f1ca320
   extra-dep: true
 
 extra-deps:
 - logging-3.0.5@sha256:88096d3124fce9a19af3720f751e1a354d866ed5030d2e5197238d2277cdb2f2
 - rate-limit-1.4.1@sha256:27abe882e8b7851202cac124ea2b631e77ab7216f7a655b0782704838fe3c305
 - time-units-1.0.0@sha256:27cf54091c4a0ca73d504fc11d5c31ab4041d17404fe3499945e2055697746c1
+- thrist-0.4@sha256:f2b6b1b918aa2899669ebcb1c368d57fbd0d4d65e7e316d9203df813348ed732
+
+# heap
+

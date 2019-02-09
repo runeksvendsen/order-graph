@@ -24,6 +24,8 @@ dependencies:
   - heap
   - hashable
   - deepseq
+  - pretty-show
+  - thrist
 
 library:
   source-dirs: src
@@ -48,3 +50,5 @@ executables:
     - safe-money
     - vector
     - criterion
+    - aeson
+    - directory

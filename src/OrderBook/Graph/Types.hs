@@ -43,17 +43,29 @@ class ( Eq nodeLabel
 -- | An edge in a graph.
 -- Used to create alternative implementations of
 --  e.g. 'Eq' and 'Ord' for types used as graph edges.
--- The "weight factor" is used to normalize edge weights
---  to get around Dijkstra not supporting negative edge weights
---  (or edge weights below 1.0, since we combine weights by multiplication)
-data Edge a = Edge { getEdge :: a, getWeightFactor :: Double }
-    deriving (Read, Show, Generic, Functor)
+
+data Edge a = Edge
+    { getEdge :: a
+    , getNormalizationFactor :: Double
+    -- ^ The "weight factor" is used because Dijkstra does not support negative edge weights.
+    -- However, since we're doing multiplication of edge weights (rather than addition)
+    -- the edge weight must be greater than or eqaul to 1.
+    }
+    deriving (Read, Generic, Functor)
+
+instance PrettyVal a => PrettyVal (Edge a)
 
 -- | Currency code, e.g. "EUR", "BTC", "USD", "ETH"
 newtype Currency = Currency T.Text
-    deriving (Eq, Ord, Read, Show, IsString, Semigroup, Monoid, Hashable, Generic)
+    deriving (Eq, Ord, Read, IsString, Semigroup, Monoid, Hashable, Generic, PrettyVal)
 
+instance Show Currency where
+    show (Currency txt) = toS txt
 instance NFData Currency
+instance StringConv String Currency where
+    strConv _ = fromString
+instance StringConv Currency String where
+    strConv l (Currency txt) = strConv l txt
 
 -- | A sell order.
 --   An offer to exchange 'qty' of 'soBase' for 'soQuote',
@@ -65,9 +77,11 @@ data SomeSellOrder' price qty =
     , soBase  :: Currency
     , soQuote :: Currency
     , soVenue :: T.Text
-    } deriving (Read, Show, Generic)
+    } deriving (Read, Functor, Generic)
 
 instance (NFData price, NFData qty) => NFData (SomeSellOrder' price qty)
+instance (PrettyVal price, PrettyVal qty) => PrettyVal (SomeSellOrder' price qty)
+-- instance PrettyVal SomeSellOrder' p
 
 instance Eq (Edge SomeSellOrder) where
     e1 == e2 =
@@ -92,7 +106,8 @@ type SomeOrderSemigroup = SomeSellOrder' (Product Double) (Min Double)
 -- | An offer to buy 'base' in exchange for 'quote'
 type SomeBuyOrder = SomeSellOrder
 
-someOrder :: SomeOrderSemigroup -> SomeSellOrder
+
+someOrder :: SomeSellOrder' (Product price) (Min qty) -> SomeSellOrder' price qty
 someOrder so@SomeSellOrder'{..} =
     so { soPrice = getProduct soPrice, soQty = getMin soQty}
 
@@ -119,7 +134,7 @@ instance Ord price => Ord (SomeSellOrder' price qty) where
     so1 <= so2 =
         soPrice so1 <= soPrice so2
 
-instance (Num price, Fractional qty, Ord qty, Show price, Show qty, qty ~ price)
+instance (Num price, Fractional qty, Ord qty, PrettyVal price, Show qty, qty ~ price)
     => Monoid (SomeSellOrder' (Product price) (Min qty)) where
         mempty =
             SomeSellOrder'
@@ -130,7 +145,7 @@ instance (Num price, Fractional qty, Ord qty, Show price, Show qty, qty ~ price)
                 "Monoid.mempty"
 
 -- | NB: "so1 <> so2" will fail if "soQuote so1 /= soBase so2"
-instance (Num price, Ord qty, Fractional price, Show price, Show qty, qty ~ price)
+instance (Num price, Ord qty, Fractional price, PrettyVal price, Show qty, qty ~ price)
     => Semigroup (SomeSellOrder' (Product price) (Min qty)) where
     -- Example:
     --                     USD per BTC                                    ETH per USD
@@ -146,5 +161,5 @@ instance (Num price, Ord qty, Fractional price, Show price, Show qty, qty ~ pric
                     base1           -- BTC
                     quote2          -- ETH
                     (v1 <> "," <> v2)
-            | otherwise = error $ "Incompatible orders: " ++ show (so1, so2)
+            | otherwise = error $ "Incompatible orders: " ++ pp (someOrder so1, someOrder so2)
                 where so2qty = fmap (/ getProduct p1) q2
