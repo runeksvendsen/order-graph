@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module OrderBook.Graph.Internal.Prelude
 ( module Conv
 , module TypeLits

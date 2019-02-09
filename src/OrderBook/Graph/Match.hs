@@ -61,8 +61,7 @@ matchR
     -> m [SomeSellOrder]
 matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
     graph <- Build.derive mGraph
-    let orders = fromMaybe noPathError $ findPath graph
-        noPathError = error $ "no path: " ++ show (src,dst)
+    let orders = justOrFail ("no path", (src,dst)) $ findPath graph
         matchedEdges = subtractMatchedQty orders
         getVertex v = justOrFail ("Vertex not found", v) (GI.lookupVertex v graph)
     forM_ matchedEdges $ \matchedEdge -> do

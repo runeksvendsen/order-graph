@@ -43,7 +43,7 @@ import           System.Directory                           (listDirectory)
 --     decodeFileOrFail file =
 --         either (throwError file) return =<< Json.eitherDecodeFileStrict file
 
-main = do
+main = withLogging $ do
     man <- HTTP.newManager HTTPS.tlsManagerSettings
     orders <- throwErrM $ AppM.runAppM man maxRetries $ allSellOrders
     doEverything orders
@@ -83,10 +83,10 @@ allSellOrders = do
     fromABook (IT.ABook ob) = fromOB ob
 
 doEverything :: [SomeSellOrder] -> IO ()
-doEverything orders = withLogging $ do
+doEverything orders = do
+    putStrLn $ "Sell order count: " ++ show (length orders)
     let buildGraphQuery sellOrders' =
             void $ GI.create $ \mGraph -> do
-                putStrLn $ "Sell order count: " ++ show (length sellOrders')
                 Lib.build mGraph sellOrders'
                 matchedOrders <- Lib.match mGraph buyOrder
                 pprint matchedOrders
