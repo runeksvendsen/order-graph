@@ -20,6 +20,7 @@ import           OrderBook.Graph.Build                      ( SomeSellOrder
                                                             )
 import qualified OrderBook.Graph.Build                      as Build
 import qualified OrderBook.Graph.Query                      as Query
+import qualified OrderBook.Graph.Exchange                   as Exchange
 
 import qualified Data.Graph.Types                           as G
 import qualified Data.Graph.Mutable                         as GM
@@ -60,7 +61,7 @@ matchR
     -> m [SomeSellOrder]
 matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
     graph <- Build.derive mGraph
-    let orders = fromMaybe noPathError . Query.mpOrders $ findPath graph
+    let orders = fromMaybe noPathError $ findPath graph
         noPathError = error $ "no path: " ++ show (src,dst)
         matchedEdges = subtractMatchedQty orders
         getVertex v = justOrFail ("Vertex not found", v) (GI.lookupVertex v graph)
@@ -79,7 +80,7 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
     -- TODO: check BuyOrder quantity and maxPrice
     if null orders
         then return matchedOrdersR
-        else matchR (matchedOrdersR ++ fmap getEdge matchedEdges) mGraph bo
+        else matchR (matchedOrdersR ++ NE.toList (fmap getEdge matchedEdges)) mGraph bo
   where
     -- ^ TODO: "existing" and "new" in the right order?
     subtractMatchedOrder
@@ -88,7 +89,7 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
         -> H.MinHeap (Edge SomeSellOrder)
     subtractMatchedOrder existingEdgeHeap (Edge matchingOrder _) =
         -- Ignore incoming (-1.0) "matchedOrder" normFac (placeholder value)
-        -- TODO: move normFac to 'MeasuredPath'
+        -- TODO: move normFac to 'BuyPath'
         let Just (Edge topBookOrder normFac, remainingOrdersHeap) = H.view existingEdgeHeap
         in case topBookOrder `minus` matchingOrder of
             Just newOrder -> H.insert (Edge newOrder normFac) remainingOrdersHeap
@@ -96,6 +97,7 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
     findPath graph = Query.query graph src dst
     src = fromString $ symbolVal (Proxy :: Proxy quote)
     dst = fromString $ symbolVal (Proxy :: Proxy base)
+
 
 -- ^ subtract the quantity of the order with the smallest quantity
 --    from all the other orders in the list.
@@ -106,28 +108,17 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
 --      , Order "ETH" "LOL"
 --      ]
 --   at least one of the orders will end up with zero quantity.
-subtractMatchedQty :: NonEmpty (Edge SomeSellOrder) -> [Edge SomeSellOrder]
-subtractMatchedQty edges = map (`Edge` normFac) $ fst $
-    foldl subtractExchange ([], matchedOrder orders) orders
+subtractMatchedQty :: NonEmpty (Edge SomeSellOrder) -> NonEmpty (Edge SomeSellOrder)
+subtractMatchedQty edges = fmap (`Edge` normFac) $
+    Exchange.withSomeSellOrders someSellOrders $ \orders ->
+        let qtyToRemove = Exchange.maxQty orders
+            newOrders = Exchange.minusQty orders qtyToRemove
+            newOrderQtys = Exchange.asList (Exchange.rawQty . Exchange.oQty) newOrders
+        in NE.zipWith setQty someSellOrders (NE.fromList newOrderQtys)
   where
-    orders = fmap getEdge edges
+    someSellOrders = fmap getEdge edges
     normFac = getNormalizationFactor $ NE.head edges
-    subtractExchange
-        :: ([SomeSellOrder], SomeSellOrder)
-        -> SomeSellOrder
-        -> ([SomeSellOrder], SomeSellOrder)
-    subtractExchange (orderList, toSubtract) order =
-        let subtractedOrder = order `minusQtyOf` toSubtract
-            nextToSubtract = toSubtract
-                { soQty = soPrice toSubtract * soQty toSubtract
-                , soBase = soQuote toSubtract
-                }
-        in (subtractedOrder : orderList, nextToSubtract)
-    minusQtyOf :: SomeSellOrder -> SomeSellOrder -> SomeSellOrder
-    minusQtyOf so1 so2
-        | soQty so2 > soQty so1 = error $ "qty2 > qty1:" ++ pp (so1, so2)
-        | soBase so1 /= soBase so2 = error $ "base1 /= base2:" ++ pp (so1, so2)
-        | otherwise = so1 { soQty = soQty so1 - soQty so2 }
+    setQty someSellOrder qty = someSellOrder { soQty = qty }
 
 minus
     :: SomeSellOrder        -- ^ Order from orderbook
@@ -149,4 +140,3 @@ minus topBookOrder matchedOrder
         && matchedQty <= bookQty
     bookQty = soQty topBookOrder
     matchedQty = soQty matchedOrder
-

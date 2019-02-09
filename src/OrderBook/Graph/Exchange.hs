@@ -6,13 +6,17 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 module OrderBook.Graph.Exchange
-( Qty
+( -- * Types
+  Qty, rawQty
 , Price
-, Order
+, Order, oQty, oPrice
+  -- * Utility functions
 , maxQty
 , minusQty
--- , fromSomeSellOrders
+, withSomeSellOrders
+, asList
 )
 where
 
@@ -20,14 +24,15 @@ import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types                  (SomeSellOrder'(..), SomeSellOrder)
 import qualified Control.Category                       as Cat
 import           Data.Thrist
--- TMP
-import Data.Functor.Identity
 
 
 -- ^ Some quantity of "thing"
 newtype Qty' numType (thing :: Symbol) = Qty' numType
     deriving (Eq, Show, Ord, Num)
 type Qty = Qty' Double
+
+rawQty :: Qty' numType thing -> numType
+rawQty (Qty' qty) = qty
 
 -- ^ A price for exchanging some quantity of "src" for "dst"
 newtype Price' numType (src :: Symbol) (dst :: Symbol) = Price' numType
@@ -47,7 +52,7 @@ exchange
 exchange (Qty' srcQty) (Price' price) =
     Qty' (srcQty * price)
 
--- ^ Exchange a quantity of something at a specified price
+-- ^ Invert a 'Price'
 invert
     :: Fractional numType
     => Price' numType src dst
@@ -56,12 +61,18 @@ invert (Price' p) =
     Price' (recip p)
 
 -- ^ A wish to exchange a given quantity of "src" for "dst"
---    at the given price
+--    at a specific price
 data Order' numType (src :: Symbol) (dst :: Symbol) = Order'
     (Qty' numType src)
     (Price' numType src dst)
         deriving (Eq, Show, Ord)
 type Order = Order' Double
+
+oQty :: Order' numType src dst -> Qty' numType src
+oQty (Order' qty _) = qty
+
+oPrice :: Order' numType src dst -> Price' numType src dst
+oPrice (Order' _ price) = price
 
 instance (Ord numType, Fractional numType) => Cat.Category (Order' numType) where
     id = Order' (Qty' $ 1/0) Cat.id
@@ -71,7 +82,7 @@ instance (Ord numType, Fractional numType) => Cat.Category (Order' numType) wher
         in Order' (exchange newQtyB bToA) (p1 Cat.. p2)
 
 
-    
+
 
 
 -- ^ Find the maximum quantity that can be moved from "A" to "Z"
@@ -81,11 +92,10 @@ instance (Ord numType, Fractional numType) => Cat.Category (Order' numType) wher
 maxQty
     :: Thrist Order src dst
     -- ^ List of orders of the specified form
-    -> Order src dst
-    -- ^ Order with a quantity equal to the maximum that can be moved through the
-    --    given list of orders.
+    -> Qty src
+    -- ^ Maximum quantity that can be moved through the given list of orders.
 maxQty =
-    foldrThrist (flip (Cat..)) Cat.id
+    oQty . foldrThrist (flip (Cat..)) Cat.id
 
 -- ^ Subtract the given quantity from the quantities of all the orders in the list
 minusQty
@@ -94,22 +104,21 @@ minusQty
     -> Thrist Order src dst
 minusQty Nil        _   = Nil
 minusQty (Cons h t) qty =
-    let (newQty, newOrder) = subtractExchange qty h 
+    let (newQty, newOrder) = subtractExchange qty h
     in newOrder `Cons` minusQty t newQty
 
 -- ^ Given a quantity and an order (with quantity "src" == order "src")
 --    return the quantity exchanged to "dst" (using the order's price)
 --    and the order with its quantity subtracted by the given quantity.
 subtractExchange
-    :: Num numType 
+    :: Num numType
     => Qty' numType src
     -> Order' numType src dst
     -> (Qty' numType dst, Order' numType src dst)
-subtractExchange qty (Order' oQty oPrice) = 
+subtractExchange qty (Order' oQty oPrice) =
     ( exchange qty oPrice
     , Order' (oQty-qty) oPrice
     )
-
 
 withSomeSellOrder
     :: SomeSellOrder
@@ -124,57 +133,23 @@ withSomeSellOrder sso f =
                     in f (order :: Order src dst)
 
 withSomeSellOrders
-    :: SomeSellOrder
-    -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Order src dst -> r)
+    :: NonEmpty SomeSellOrder
+    -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Thrist Order src dst -> r)
     -> r
+withSomeSellOrders sellOrders f =
+    case uncons sellOrders of
+        (sso1, Nothing) ->
+            withSomeSellOrder sso1 $ \order -> f (order `Cons` Nil)
+        (sso1, Just ssoTail) ->
+            withSomeSellOrder sso1 $ \(order :: Order src dst1) ->
+                withSomeSellOrders ssoTail $ \(thrist :: Thrist Order src2 dst) ->
+                    case sameSymbol (Proxy :: Proxy dst1) (Proxy :: Proxy src2) of
+                        Nothing -> error $ "Order path hole: " ++ pp (sso1, ssoTail)
+                        Just Refl  -> f (order `Cons` thrist)
 
-
-
-
-
-
-
-
-
-
-
-
-{-
-
-fromSomeSellOrders
-    :: forall src dst. 
-       (KnownSymbol src, KnownSymbol dst)
-    => NonEmpty SomeSellOrder 
-    -> Maybe (Thrist Order src dst)
-fromSomeSellOrders (firstSSO :| restSSO) = do
-    firstOrder <- fromSomeSellOrder firstSSO
-    fromSomeSellOrdersR (firstOrder `Cons` Nil) restSSO
-  where
-    fromSomeSellOrdersR 
-        :: (KnownSymbol b) 
-        => Thrist Order b c 
-        -> [SomeSellOrder] 
-        -> Maybe (Thrist Order a c)
-    fromSomeSellOrdersR t [] = return t
-    fromSomeSellOrdersR t (x:xs) = do
-        xOrder <- fromSomeSellOrder x
-        fromSomeSellOrdersR (xOrder `Cons` t) xs
-
-fromSomeSellOrder 
-    :: forall src dst. 
-       (KnownSymbol src, KnownSymbol dst)
-    => SomeSellOrder 
-    -> Maybe (Order src dst)
-fromSomeSellOrder sso =
-    case someSymbolVal (toS $ soBase sso) of
-        SomeSymbol base ->
-            case sameSymbol (Proxy :: Proxy dst) base of
-                Nothing -> Nothing
-                Just _ ->  
-                    case someSymbolVal (toS $ soQuote sso) of
-                        SomeSymbol quote ->
-                            case sameSymbol (Proxy :: Proxy src) quote of
-                                Nothing -> Nothing
-                                Just _ -> Just $ Order' (Qty' $ soQty sso) (Price' $ soPrice sso)
-
--}
+asList
+    :: (forall src dst. Order src dst -> r)
+    -> Thrist Order a b
+    -> [r]
+asList _ Nil        = []
+asList f (Cons h t) = f h : asList f t

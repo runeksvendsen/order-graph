@@ -21,12 +21,14 @@ import Data.Proxy                           as Proxy
 import Data.Maybe                           as Maybe
 import Control.Monad.Primitive              as Prim         (PrimMonad, PrimState)
 import Control.Monad                        as Monad        (forM_, when)
-import Data.List.NonEmpty                   as MoreStuff    (NonEmpty(..), cons)
+import Data.List.NonEmpty                   as MoreStuff    (NonEmpty(..), cons, uncons, nonEmpty)
 import Data.String                          as MoreStuff    (fromString)
 import GHC.Generics                         as MoreStuff    (Generic)
 import Control.DeepSeq                      as MoreStuff    (NFData)
 import Control.Monad.Fix                    as MoreStuff    (mfix)
 import Text.Show.Pretty                     as MoreStuff    (PrettyVal(..), valToStr)
+import Data.Type.Equality                   as MoreStuff
+
 
 pp :: PrettyVal a => a -> String
 pp = valToStr . prettyVal

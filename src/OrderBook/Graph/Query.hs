@@ -14,7 +14,7 @@ module OrderBook.Graph.Query
 , SomeSellOrder, SomeBuyOrder
 , OrderGraph
 , GraphM
-, MeasuredPath(MeasuredPath), mpDist, mpOrders
+, BuyPath(BuyPath), mpPrice, mpOrders
 , query
 )
 where
@@ -30,20 +30,23 @@ import           Data.Thrist                                (Thrist(..))
 type GraphPath = Thrist Order
 
 -- | Source: https://github.com/andrewthad/impure-containers/issues/8#issuecomment-454373569
-data MeasuredPath = MeasuredPath
-    { mpDist    :: Double
+data BuyPath = BuyPath
+    { mpPrice   :: Double
     , mpOrders  :: Maybe (NonEmpty (Edge SomeSellOrder))
     } deriving (Eq, Generic)
 
-instance Ord MeasuredPath where
-    compare (MeasuredPath len1 vs1) (MeasuredPath len2 vs2) =
-        compare len1 len2 <> compare vs1 vs2
-instance Semigroup MeasuredPath where
+instance Ord BuyPath where
+    compare (BuyPath price1 vs1) (BuyPath price2 vs2) =
+        compare price1 price2 <> compare vs1 vs2
+        -- prefer:
+        --  * lowest price (1st priority)
+        --  * fewest orders (2nd priority) TODO: fewest number of orders preferred?
+instance Semigroup BuyPath where
     (<>) = min
-instance Monoid MeasuredPath where
-    mempty = MeasuredPath (1/0) Nothing
+instance Monoid BuyPath where
+    mempty = BuyPath (1/0) Nothing
 
-instance PrettyVal MeasuredPath
+instance PrettyVal BuyPath
 
 -- query
 --     :: forall g src dst.
@@ -55,29 +58,29 @@ instance PrettyVal MeasuredPath
 --   where
 --     src = fromString $ symbolVal (Proxy :: Proxy src)
 --     dst = fromString $ symbolVal (Proxy :: Proxy dst)
- 
+
 
 -- ^ Find the lowest price going from one 'Currency' to another
 query
     :: G.Graph g (Edge SomeSellOrder) Currency      -- ^ Graph with lowest-price edges/orders
     -> Currency                                     -- ^ Start vertex/currency
     -> Currency                                     -- ^ Start vertex/currency
-    -> MeasuredPath
+    -> Maybe (NonEmpty (Edge SomeSellOrder))        -- ^ Lowest-price path ('Nothing' if no path exists at all)
 query graph start end =
-    let pathGraph = GI.dijkstra combine (MeasuredPath 1 Nothing) [startVertex] graph
+    let pathGraph = GI.dijkstra multiplyWeight (BuyPath 1 Nothing) [startVertex] graph
         Just endVertex = GI.lookupVertex end graph
-    in GI.atVertex endVertex pathGraph
+    in mpOrders $ GI.atVertex endVertex pathGraph
   where
     Just startVertex = GI.lookupVertex start graph
-    combine     -- Source: https://github.com/andrewthad/impure-containers/issues/8#issuecomment-454373569
+    multiplyWeight
         :: Currency             -- src
         -> Currency             -- dst
-        -> MeasuredPath
+        -> BuyPath
         -> Edge SomeSellOrder
-        -> MeasuredPath
-    combine _src _ (MeasuredPath len edges) orderEdge =
-        MeasuredPath (len * weight orderEdge) (addEdge orderEdge edges)
-    addEdge :: Edge SomeSellOrder 
+        -> BuyPath
+    multiplyWeight _src _ (BuyPath len edges) orderEdge =
+        BuyPath (len * weight orderEdge) (addEdge orderEdge edges)
+    addEdge :: Edge SomeSellOrder
             -> Maybe (NonEmpty (Edge SomeSellOrder))
             -> Maybe (NonEmpty (Edge SomeSellOrder))
     addEdge edge Nothing      = Just $ edge :| []
