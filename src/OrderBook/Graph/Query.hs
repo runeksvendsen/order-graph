@@ -31,7 +31,7 @@ type GraphPath = Thrist Order
 
 -- | Source: https://github.com/andrewthad/impure-containers/issues/8#issuecomment-454373569
 data BuyPath = BuyPath
-    { mpPrice   :: Double
+    { mpPrice   :: Rational
     , mpOrders  :: Maybe (NonEmpty (Edge SomeSellOrder))
     } deriving (Eq, Generic)
 
@@ -44,7 +44,7 @@ instance Ord BuyPath where
 instance Semigroup BuyPath where
     (<>) = min
 instance Monoid BuyPath where
-    mempty = BuyPath (1/0) Nothing
+    mempty = BuyPath largeRational Nothing
 
 instance PrettyVal BuyPath
 

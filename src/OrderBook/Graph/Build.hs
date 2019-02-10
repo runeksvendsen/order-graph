@@ -50,7 +50,7 @@ build
     -> [SomeSellOrder]                  -- ^ Orders
     -> m ()
 build mGraph orders = do
-    minOrderPriceVar <- Prim.newMutVar (-1 :: Double)
+    minOrderPriceVar <- Prim.newMutVar (-1 :: Rational)
     -- Find minimum sell order price
     forM_ orders $ \order -> do
         Prim.modifyMutVar minOrderPriceVar (min (soPrice order))

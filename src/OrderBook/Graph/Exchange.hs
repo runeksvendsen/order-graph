@@ -7,10 +7,11 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE FlexibleInstances #-}
 module OrderBook.Graph.Exchange
 ( -- * Types
   Qty, rawQty
-, Price
+, Price, rawPrice
 , Order, oQty, oPrice
   -- * Utility functions
 , maxQty
@@ -28,16 +29,23 @@ import           Data.Thrist
 
 -- ^ Some quantity of "thing"
 newtype Qty' numType (thing :: Symbol) = Qty' numType
-    deriving (Eq, Show, Ord, Num)
-type Qty = Qty' Double
+    deriving (Eq, Ord, Num)
+type Qty = Qty' Rational
 
 rawQty :: Qty' numType thing -> numType
 rawQty (Qty' qty) = qty
 
+instance (KnownSymbol thing, Real numType) => Show (Qty' numType thing) where
+    show (Qty' qty) =
+        printf "%f %s" (realToFrac qty :: Double) (symbolVal (Proxy :: Proxy thing))
+
 -- ^ A price for exchanging some quantity of "src" for "dst"
 newtype Price' numType (src :: Symbol) (dst :: Symbol) = Price' numType
     deriving (Eq, Show, Ord, Num)
-type Price = Price' Double
+type Price = Price' Rational
+
+rawPrice :: Price' numType src dst -> numType
+rawPrice (Price' price) = price
 
 instance Num numType => Cat.Category (Price' numType) where
     id = Price' 1
@@ -66,7 +74,7 @@ data Order' numType (src :: Symbol) (dst :: Symbol) = Order'
     (Qty' numType src)
     (Price' numType src dst)
         deriving (Eq, Show, Ord)
-type Order = Order' Double
+type Order = Order' Rational
 
 oQty :: Order' numType src dst -> Qty' numType src
 oQty (Order' qty _) = qty
@@ -74,8 +82,8 @@ oQty (Order' qty _) = qty
 oPrice :: Order' numType src dst -> Price' numType src dst
 oPrice (Order' _ price) = price
 
-instance (Ord numType, Fractional numType) => Cat.Category (Order' numType) where
-    id = Order' (Qty' $ 1/0) Cat.id
+instance Cat.Category Order where
+    id = Order' (Qty' largeRational) Cat.id -- TODO: HACK
     Order' q1 p1 . Order' q2 p2 =
         let newQtyB = min q1 (exchange q2 p2)
             bToA = invert p2
@@ -153,3 +161,10 @@ asList
     -> [r]
 asList _ Nil        = []
 asList f (Cons h t) = f h : asList f t
+
+instance (KnownSymbol src, KnownSymbol dst) => Show (Thrist Order src dst) where
+    show = show . asList
+        (\o -> ( realToFrac . rawQty . oQty $ o :: Double
+               , realToFrac . rawPrice . oPrice $ o :: Double
+               )
+        )

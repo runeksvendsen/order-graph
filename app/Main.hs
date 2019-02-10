@@ -85,16 +85,16 @@ allSellOrders = do
 doEverything :: [SomeSellOrder] -> IO ()
 doEverything orders = do
     putStrLn $ "Sell order count: " ++ show (length orders)
-    let buildGraphQuery sellOrders' =
-            void $ GI.create $ \mGraph -> do
-                Lib.build mGraph sellOrders'
-                matchedOrders <- Lib.match mGraph buyOrder
-                pprint matchedOrders
     let benchmarkable = Criterion.perBatchEnv (const $ return orders) buildGraphQuery
     Criterion.benchmark benchmarkable
   where
     buyOrder :: Lib.BuyOrder "BTC" Numeraire
     buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buildGraphQuery sellOrders' =
+            void $ GI.create $ \mGraph -> do
+                Lib.build mGraph sellOrders'
+                GI.freeze mGraph >>= \g -> putStrLn $ "Symbol count: " ++ show (GI.sizeInt $ GI.size g)
+                void $ Lib.match mGraph buyOrder
 
 withLogging :: IO a -> IO a
 withLogging ioa = Log.withStderrLogging $ do

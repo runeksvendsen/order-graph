@@ -11,6 +11,7 @@ module OrderBook.Graph.Internal.Prelude
 , justOrFail
 , pp
 , pprint
+, largeRational
 )
 
 where
@@ -28,6 +29,9 @@ import Control.DeepSeq                      as MoreStuff    (NFData)
 import Control.Monad.Fix                    as MoreStuff    (mfix)
 import Text.Show.Pretty                     as MoreStuff    (PrettyVal(..), valToStr)
 import Data.Type.Equality                   as MoreStuff
+import Text.Printf                          as MoreStuff
+import Data.Ratio                           as MoreStuff
+import Data.Int                             (Int64)
 
 
 pp :: PrettyVal a => a -> String
@@ -45,3 +49,6 @@ justOrFail (textMsg, a) =
 
 instance PrettyVal a => PrettyVal (NonEmpty a) where
     prettyVal (first :| lst) = prettyVal (first : lst)
+
+largeRational :: Rational
+largeRational = fromIntegral (maxBound :: Int64) % 1

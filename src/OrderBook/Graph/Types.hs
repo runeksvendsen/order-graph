@@ -38,7 +38,7 @@ class ( Eq nodeLabel
       ) => IsEdge edge nodeLabel | edge -> nodeLabel where
     fromNode :: edge -> nodeLabel   -- ^ Label associated with the edge's "from" node
     toNode   :: edge -> nodeLabel   -- ^ Label associated with the edge's "to" node
-    weight   :: edge -> Double      -- ^ Edge's weight
+    weight   :: edge -> Rational    -- ^ Edge's weight
 
 -- | An edge in a graph.
 -- Used to create alternative implementations of
@@ -46,12 +46,15 @@ class ( Eq nodeLabel
 
 data Edge a = Edge
     { getEdge :: a
-    , getNormalizationFactor :: Double
+    , getNormalizationFactor :: Rational
     -- ^ The "weight factor" is used because Dijkstra does not support negative edge weights.
     -- However, since we're doing multiplication of edge weights (rather than addition)
     -- the edge weight must be greater than or eqaul to 1.
     }
     deriving (Read, Generic, Functor)
+
+instance Show a => Show (Edge a) where
+    show = show . getEdge
 
 instance PrettyVal a => PrettyVal (Edge a)
 
@@ -79,9 +82,17 @@ data SomeSellOrder' price qty =
     , soVenue :: T.Text
     } deriving (Read, Functor, Generic)
 
+instance Show SomeSellOrder where
+    show SomeSellOrder'{..} =
+        printf "Order { %s qty=%f price=%f %s/%s }"
+            soVenue
+            (realToFrac soQty :: Double)
+            (realToFrac soPrice :: Double)
+            (toS soBase :: String)
+            (toS soQuote :: String)
+
 instance (NFData price, NFData qty) => NFData (SomeSellOrder' price qty)
 instance (PrettyVal price, PrettyVal qty) => PrettyVal (SomeSellOrder' price qty)
--- instance PrettyVal SomeSellOrder' p
 
 instance Eq (Edge SomeSellOrder) where
     e1 == e2 =
@@ -99,8 +110,8 @@ instance IsEdge (Edge SomeSellOrder) Currency where
 
 
 
-type SomeSellOrder = SomeSellOrder' Double Double
-type SomeOrderSemigroup = SomeSellOrder' (Product Double) (Min Double)
+type SomeSellOrder = SomeSellOrder' Rational Rational
+type SomeOrderSemigroup = SomeSellOrder' (Product Rational) (Min Rational)
 
 
 -- | An offer to buy 'base' in exchange for 'quote'
