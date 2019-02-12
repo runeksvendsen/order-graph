@@ -4,6 +4,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph.Match
 ( match
 , BuyOrder
@@ -13,7 +14,6 @@ where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types                      ( IsEdge(..), Edge(..), Currency
-                                                            , matchedOrder
                                                             )
 import           OrderBook.Graph.Build                      ( SomeSellOrder
                                                             , SomeSellOrder'(..)
@@ -27,6 +27,7 @@ import qualified Data.Graph.Mutable                         as GM
 import qualified Data.Graph.Immutable                       as GI
 import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Heap                                  as H
+import qualified Data.Text                                  as T
 
 
 -- | "base" and "quote" are destination and source currencies, respectively
@@ -47,7 +48,7 @@ match
     => G.MGraph (PrimState m) g Build.SellOrderHeap Currency
     -> BuyOrder base quote
     -> m [SomeSellOrder]
-match = matchR []
+match g = fmap reverse . matchR [] g
 
 matchR
     :: forall m g base quote.
@@ -62,25 +63,30 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
     case Query.query graph src dst of
         Nothing        -> return matchedOrdersR
         Just orderPath -> do
-            let matchedEdges = subtractMatchedQty orderPath
-            forM_ matchedEdges $ \matchedEdge -> do
-                    let fromLabel = fromNode matchedEdge
-                        toLabel = toNode matchedEdge
-                        from = getVertex fromLabel
-                        to = getVertex toLabel
-                    -- The edge should always be present in the graph if it's returned by 'Query.query'
-                    orderHeapM <- GM.lookupEdge mGraph from to
-                    let orderHeap = justOrFail ("Edge not in graph", (fromLabel,toLabel)) orderHeapM
-                    let updatedHeap = replaceSubtractedOrder orderHeap matchedEdge
-                    case H.isEmpty updatedHeap of
-                        True ->  GM.removeEdge mGraph from to
-                        False -> GM.insertEdge mGraph from to updatedHeap
+            let (newEdges, matchedOrder) = subtractMatchedQty orderPath
+            forM_ newEdges (updateEdgeHeap getVertex) 
             -- TODO: check BuyOrder quantity and maxPrice
-            matchR (matchedOrdersR ++ NE.toList (fmap getEdge matchedEdges)) mGraph bo
+            matchR (matchedOrder : matchedOrdersR) mGraph bo
   where
+    updateEdgeHeap 
+        :: (Currency -> G.Vertex g)     -- ^ Get a vertex from a vertex label
+        -> Edge SomeSellOrder           -- ^ Updated top order
+        -> m ()
+    updateEdgeHeap getVertex matchedEdge = do
+        let fromLabel = fromNode matchedEdge
+            toLabel = toNode matchedEdge
+            from = getVertex fromLabel
+            to = getVertex toLabel
+        -- The edge should always be present in the graph if it's returned by 'Query.query'
+        orderHeapM <- GM.lookupEdge mGraph from to
+        let orderHeap = justOrFail ("Edge not in graph", (fromLabel,toLabel)) orderHeapM
+        let updatedHeap = replaceSubtractedOrder orderHeap matchedEdge
+        case H.isEmpty updatedHeap of
+            True ->  GM.removeEdge mGraph from to
+            False -> GM.insertEdge mGraph from to updatedHeap
     replaceSubtractedOrder
         :: H.MinHeap (Edge SomeSellOrder)   -- Heap, with old order on top
-        -> Edge SomeSellOrder               -- New top order
+        -> Edge SomeSellOrder               -- New top order (if qty==0 then remove)
         -> H.MinHeap (Edge SomeSellOrder)
     replaceSubtractedOrder existingEdgeHeap (Edge newOrder _) =
         -- TODO: move normFac to 'BuyPath'
@@ -102,15 +108,23 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
 --      , Order "ETH" "LOL"
 --      ]
 --   at least one of the orders will end up with zero quantity.
-subtractMatchedQty :: NonEmpty (Edge SomeSellOrder) -> NonEmpty (Edge SomeSellOrder)
-subtractMatchedQty edges = fmap (`Edge` normFac) $
+subtractMatchedQty 
+    :: NonEmpty (Edge SomeSellOrder)    -- ^ Order path/sequence
+    -> ( NonEmpty (Edge SomeSellOrder)  -- ^ New orders (old orders with the matched order subtracted)
+       , SomeSellOrder                  -- ^ Matched order
+       )
+subtractMatchedQty edges = 
     Exchange.withSomeSellOrders someSellOrders $ \orders ->
-        let qtyToRemove = Exchange.maxQty orders
-            newOrders = Exchange.minusQty orders qtyToRemove
+        let maxOrder = Exchange.maxOrder orders
+            newOrders = Exchange.minusQty orders (Exchange.oQty maxOrder)
             newOrderQtys = Exchange.asList (Exchange.rawQty . Exchange.oQty) newOrders
         in
-            NE.zipWith setQty someSellOrders (NE.fromList newOrderQtys)
+            ( fmap (`Edge` normFac) $ NE.zipWith setQty someSellOrders (NE.fromList newOrderQtys)
+            , Exchange.toSomeSellOrder maxOrder venues
+            )
   where
+    -- The venues moved through, separated by ","
+    venues = T.concat . NE.toList . NE.intersperse "," $ NE.map soVenue someSellOrders
     someSellOrders = fmap getEdge edges
     normFac = getNormalizationFactor $ NE.head edges
     setQty someSellOrder qty = someSellOrder { soQty = qty }

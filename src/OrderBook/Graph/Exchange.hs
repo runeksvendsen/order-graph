@@ -8,15 +8,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph.Exchange
 ( -- * Types
   Qty, rawQty
 , Price, rawPrice
 , Order, oQty, oPrice
   -- * Utility functions
-, maxQty
+, maxOrder
 , minusQty
 , withSomeSellOrders
+, toSomeSellOrder
 , asList
 )
 where
@@ -25,6 +27,7 @@ import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types                  (SomeSellOrder'(..), SomeSellOrder)
 import qualified Control.Category                       as Cat
 import           Data.Thrist
+import qualified Data.Text                              as T
 
 
 -- ^ Some quantity of "thing"
@@ -89,21 +92,17 @@ instance Cat.Category Order where
             bToA = invert p2
         in Order' (exchange newQtyB bToA) (p1 Cat.. p2)
 
-
-
-
-
 -- ^ Find the maximum quantity that can be moved from "A" to "Z"
 --    through a list of 'Order's of the following form:
 --
 --   [Order A B, Order B C, Order C D, ..., Order X Y, Order Y Z]
-maxQty
+maxOrder
     :: Thrist Order src dst
     -- ^ List of orders of the specified form
-    -> Qty src
+    -> Order src dst
     -- ^ Maximum quantity that can be moved through the given list of orders.
-maxQty =
-    oQty . foldrThrist (flip (Cat..)) Cat.id
+maxOrder =
+    foldrThrist (flip (Cat..)) Cat.id
 
 -- ^ Subtract the given quantity from the quantities of all the orders in the list
 minusQty
@@ -168,3 +167,17 @@ instance (KnownSymbol src, KnownSymbol dst) => Show (Thrist Order src dst) where
                , realToFrac . rawPrice . oPrice $ o :: Double
                )
         )
+
+toSomeSellOrder
+    :: forall src dst.
+       (KnownSymbol src, KnownSymbol dst)
+    => Order src dst    -- ^ Order
+    -> T.Text           -- ^ Venue
+    -> SomeSellOrder
+toSomeSellOrder order venue = SomeSellOrder'
+    { soPrice = rawPrice $ oPrice order
+    , soQty   = rawQty $ oQty order
+    , soBase  = fromString $ symbolVal (Proxy :: Proxy src)
+    , soQuote = fromString $ symbolVal (Proxy :: Proxy dst)
+    , soVenue = venue
+    }
