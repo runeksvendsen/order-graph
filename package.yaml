@@ -52,3 +52,25 @@ executables:
     - criterion
     - aeson
     - directory
+
+tests:
+  crypto-venues-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - order-graph
+    - vector
+    - HUnit
+    - hspec-expectations-pretty-diff
+    - QuickCheck
+    - hspec
+    - tasty
+    - tasty-smallcheck
+    - tasty-quickcheck
+    - smallcheck
+    - hspec-smallcheck
+    - hspec-expectations-pretty-diff

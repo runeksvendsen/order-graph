@@ -21,7 +21,7 @@ import GHC.TypeLits                         as TypeLits
 import Data.Proxy                           as Proxy
 import Data.Maybe                           as Maybe
 import Control.Monad.Primitive              as Prim         (PrimMonad, PrimState)
-import Control.Monad                        as Monad        (forM_, when)
+import Control.Monad                        as Monad        (forM_, when, void)
 import Data.List.NonEmpty                   as MoreStuff    (NonEmpty(..), cons, uncons, nonEmpty)
 import Data.String                          as MoreStuff    (fromString)
 import GHC.Generics                         as MoreStuff    (Generic)
