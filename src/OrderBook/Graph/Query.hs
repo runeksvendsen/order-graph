@@ -48,18 +48,6 @@ instance Monoid BuyPath where
 
 instance PrettyVal BuyPath
 
--- query
---     :: forall g src dst.
---        (KnownSymbol src, KnownSymbol dst)
---     => G.Graph g (Edge SomeSellOrder) Currency      -- ^ Graph with lowest-price edges/orders
---     -> GraphPath src dst
--- query g =
---     convertOrFail . map getEdge . mpOrders $ query' g src dst
---   where
---     src = fromString $ symbolVal (Proxy :: Proxy src)
---     dst = fromString $ symbolVal (Proxy :: Proxy dst)
-
-
 -- ^ Find the lowest price going from one 'Currency' to another
 query
     :: G.Graph g (Edge SomeSellOrder) Currency      -- ^ Graph with lowest-price edges/orders
