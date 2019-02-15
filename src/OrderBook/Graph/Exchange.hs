@@ -20,6 +20,7 @@ module OrderBook.Graph.Exchange
 , withSomeSellOrders
 , toSomeSellOrder
 , asList
+, invertSomeSellOrder
 )
 where
 
@@ -84,6 +85,12 @@ oQty (Order' qty _) = qty
 
 oPrice :: Order' numType src dst -> Price' numType src dst
 oPrice (Order' _ price) = price
+
+invertOrder
+    :: Order src dst
+    -> Order dst src
+invertOrder (Order' qty price) =
+    Order' (exchange qty price) (invert price)
 
 instance Cat.Category Order where
     id = Order' (Qty' largeRational) Cat.id -- TODO: HACK
@@ -181,3 +188,10 @@ toSomeSellOrder order venue = SomeSellOrder'
     , soQuote = fromString $ symbolVal (Proxy :: Proxy dst)
     , soVenue = venue
     }
+
+invertSomeSellOrder
+    :: SomeSellOrder
+    -> SomeSellOrder
+invertSomeSellOrder sso =
+    withSomeSellOrder sso $ \order ->
+        toSomeSellOrder (invertOrder order) (soVenue sso)

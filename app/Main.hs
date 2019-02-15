@@ -6,12 +6,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Main where
 
-import           Protolude                                  (lefts, rights, toS, forM_, void)
-import           OrderBook.Graph.Internal.Prelude           (pprint)
-import           OrderBook.Graph.Internal.Util              (fromOB)
+import           Protolude                                  (lefts, rights, toS, forM_, void, (%))
+import qualified OrderBook.Graph.Internal.Util              as Util
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
-import qualified OrderBook.Graph.Build                      as Lib
-import qualified OrderBook.Graph.Match                      as Lib
+import qualified OrderBook.Graph                            as Lib
 import qualified OrderBook.Types                            as OB
 import qualified CryptoVenues.Types.AppM                    as AppM
 import qualified CryptoDepth.Fetch                          as Fetch
@@ -19,16 +17,14 @@ import qualified CryptoDepth.Internal.Types                 as IT
 
 import qualified Control.Logging                            as Log
 import qualified Data.Graph.Immutable                       as GI
-import qualified Money
 import qualified Data.Text                                  as T
-import qualified Data.Vector                                as Vec
-import           Data.String                                (fromString)
-import           GHC.TypeLits                               (KnownSymbol, symbolVal)
+
 import           Data.Proxy                                 (Proxy(..))
 import qualified Network.HTTP.Client                        as HTTP
 import qualified Network.HTTP.Client.TLS                    as HTTPS
 import qualified Criterion
 import qualified Data.Aeson                                 as Json
+import           Data.Aeson                                 ((.=))
 import           System.Directory                           (listDirectory)
 
 
@@ -44,10 +40,37 @@ import           System.Directory                           (listDirectory)
 --     decodeFileOrFail file =
 --         either (throwError file) return =<< Json.eitherDecodeFileStrict file
 
+marketDepthWriteFile
+    :: FilePath
+    -> [SomeSellOrder]
+    -> IO ()
+marketDepthWriteFile obPath sellOrders =
+    void $ GI.create $ \mGraph -> do
+        Lib.build mGraph sellOrders
+        asks <- trimOrders <$> Lib.match mGraph asksOrder
+        bids <- trimOrders <$> Lib.match mGraph bidsOrder
+        let jsonOB = Json.object
+              [ "bids" .= map toJson (map Lib.invertSomeSellOrder bids)
+              , "asks" .= map toJson asks
+              ]
+        Json.encodeFile obPath jsonOB
+  where
+    trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
+    trimOrders = Util.merge . Util.trimSlippage (50%1)
+    asksOrder :: Lib.BuyOrder "BTC" "USD"
+    asksOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    bidsOrder :: Lib.BuyOrder "USD" "BTC"
+    bidsOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    toJson :: SomeSellOrder -> Json.Value
+    toJson sso = Json.toJSON -- format: ["0.03389994", 34.14155996]
+        ( show (realToFrac $ soPrice sso :: Double)
+        , realToFrac $ soQty sso :: Double
+        )
+
 main = withLogging $ do
     man <- HTTP.newManager HTTPS.tlsManagerSettings
     orders <- throwErrM $ AppM.runAppM man maxRetries $ allSellOrders
-    doEverything orders
+    marketDepthWriteFile "web/btcusd.json" orders
   where
     throwErrM ioA = ioA >>= either (error . show) return
 
@@ -81,7 +104,7 @@ allSellOrders = do
     forM_ errors (Log.warn' . toS . show)
     return $ concatMap fromABook books
   where
-    fromABook (IT.ABook ob) = fromOB ob
+    fromABook (IT.ABook ob) = Util.fromOB ob
 
 doEverything :: [SomeSellOrder] -> IO ()
 doEverything orders = do

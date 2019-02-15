@@ -3,6 +3,8 @@
 module OrderBook.Graph.Internal.Util
 ( fromOB
 , toSellBuyOrders
+, merge
+, trimSlippage
 ) where
 
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
@@ -54,3 +56,37 @@ fromSellOrder venue OB.Order{..} = SomeSellOrder'
     , soQuote = fromString $ symbolVal (Proxy :: Proxy quote)
     , soVenue = venue
     }
+
+-- | merge adjacent orders with same price (ignoring venue)
+merge
+    :: [SomeSellOrder]
+    -- ^ List of orders sorted by price ("soBase" and "soQuote" the same for all orders)
+    -> [SomeSellOrder]
+merge [] = []
+merge (firstOrder : remainingOrders) =
+    foldr handleOrder [firstOrder] remainingOrders
+  where
+    mergeOrders order1 order2 = order1 { soQty = soQty order1 + soQty order2 }
+    handleOrder _     [] = error "merge bug"
+    handleOrder order orderList@(newestOrder : orderListTail) =
+        if soPrice order == soPrice newestOrder
+            then mergeOrders newestOrder order : orderListTail
+            else order : orderList
+
+-- | Remove orders whose price is some specified percentage
+--    further away than the first order's price.
+--   E.g. "trimSlippage (10%1) sellOrders"
+--    will remove the orders in "sellOrders" whose price is more/less than 10%
+--    of the first order in "sellOrders"
+trimSlippage
+    :: Rational
+    -- ^ Slippage in percent. E.g. 50%1 = 50%
+    -> [SomeSellOrder]
+    -- ^ List of orders sorted by price
+    -> [SomeSellOrder]
+trimSlippage _ [] = []
+trimSlippage percentDifference (firstOrder : remainingOrders) =
+    let startPrice = soPrice firstOrder
+        filterByPricePercentage order =
+            abs ((soPrice order - startPrice) / startPrice) <= (percentDifference / 100)
+    in firstOrder : filter filterByPricePercentage remainingOrders
