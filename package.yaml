@@ -8,8 +8,6 @@ author:              Rune K. Svendsen
 maintainer:          runesvend@gmail.com
 copyright:           CC0
 category:            value
-extra-source-files:
-- README.md
 
 dependencies:
   - base >= 4.7 && < 5
@@ -26,6 +24,7 @@ dependencies:
   - deepseq
   - pretty-show
   - thrist
+  - vector
 
 library:
   source-dirs: src
@@ -74,3 +73,4 @@ tests:
     - smallcheck
     - hspec-smallcheck
     - hspec-expectations-pretty-diff
+    - random-shuffle

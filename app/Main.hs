@@ -8,6 +8,7 @@ module Main where
 
 import           Protolude                                  (lefts, rights, toS, forM_, void)
 import           OrderBook.Graph.Internal.Prelude           (pprint)
+import           OrderBook.Graph.Internal.Util              (fromOB)
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
 import qualified OrderBook.Graph.Build                      as Lib
 import qualified OrderBook.Graph.Match                      as Lib
@@ -101,33 +102,3 @@ withLogging ioa = Log.withStderrLogging $ do
     Log.setLogLevel logLevel
     Log.setLogTimeFormat "%T:%3q"
     ioa
-
-
--- #### Order(book) conversion
-
--- | Convert all orders in an orderbook (consisting of both sell orders and buy orders)
---    into a list of sell orders
-fromOB
-    :: forall venue base quote.
-       (KnownSymbol venue, KnownSymbol base, KnownSymbol quote)
-    => OB.OrderBook venue base quote
-    -> [SomeSellOrder]
-fromOB OB.OrderBook{..} =
-    map (fromSellOrder venue) (Vec.toList $ OB.sellSide obAsks)
-    ++ map (fromSellOrder venue) (map OB.invert . Vec.toList $ OB.buySide obBids)
-  where
-    venue = fromString $ symbolVal (Proxy :: Proxy venue)
-
-fromSellOrder
-    :: forall base quote.
-       (KnownSymbol base, KnownSymbol quote)
-    => T.Text                   -- ^ Venue
-    -> OB.Order base quote      -- ^ Sell order
-    -> SomeSellOrder
-fromSellOrder venue OB.Order{..} = SomeSellOrder'
-    { soPrice = fromRational $ Money.exchangeRateToRational oPrice
-    , soQty   = fromRational $ toRational oQuantity
-    , soBase  = fromString $ symbolVal (Proxy :: Proxy base)
-    , soQuote = fromString $ symbolVal (Proxy :: Proxy quote)
-    , soVenue = venue
-    }

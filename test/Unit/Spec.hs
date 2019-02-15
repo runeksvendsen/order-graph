@@ -9,6 +9,8 @@ module Unit.Spec
 where
 
 import           OrderBook.Graph.Internal.Prelude
+import           Common.Util                        (assertMatchedOrders)
+
 import qualified OrderBook.Graph                    as Lib
 import qualified Data.Graph.Immutable               as GI
 
@@ -21,21 +23,6 @@ tests :: Test
 tests = TestList
   [ TestLabel "single order"  singleOrder
   ]
-
-assertMatchedOrders
-    :: ( KnownSymbol base
-       , KnownSymbol quote
-       )
-    => [Lib.SomeSellOrder]          -- ^ Input sell orders
-    -> Lib.BuyOrder base quote      -- ^ Buy orders
-    -> [Lib.SomeSellOrder]          -- ^ Expected matched orders
-    -> IO ()
-assertMatchedOrders sellOrders buyOrder expected = void $
-    GI.create $ \mGraph -> do
-        Lib.build mGraph sellOrders
-        matchedOrders <- Lib.match mGraph buyOrder
-        matchedOrders `shouldBe` expected
-
 
 singleOrder :: Test
 singleOrder =

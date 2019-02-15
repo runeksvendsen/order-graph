@@ -30,8 +30,8 @@ import qualified Data.Heap                                  as H
 import qualified Data.Text                                  as T
 
 
--- | "base" and "quote" are destination and source currencies, respectively
-data BuyOrder' numTyp (base :: Symbol) (quote :: Symbol) = BuyOrder'
+-- | 
+data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
     { boQuantity        :: numTyp
     , boMaxPrice        :: Maybe numTyp
       -- ^ (TODO: IGNORED FOR NOW) maximum price
@@ -64,11 +64,11 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
         Nothing        -> return matchedOrdersR
         Just orderPath -> do
             let (newEdges, matchedOrder) = subtractMatchedQty orderPath
-            forM_ newEdges (updateEdgeHeap getVertex) 
+            forM_ newEdges (updateEdgeHeap getVertex)
             -- TODO: check BuyOrder quantity and maxPrice
             matchR (matchedOrder : matchedOrdersR) mGraph bo
   where
-    updateEdgeHeap 
+    updateEdgeHeap
         :: (Currency -> G.Vertex g)     -- ^ Get a vertex from a vertex label
         -> Edge SomeSellOrder           -- ^ Updated top order
         -> m ()
@@ -108,12 +108,12 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
 --      , Order "ETH" "LOL"
 --      ]
 --   at least one of the orders will end up with zero quantity.
-subtractMatchedQty 
+subtractMatchedQty
     :: NonEmpty (Edge SomeSellOrder)    -- ^ Order path/sequence
     -> ( NonEmpty (Edge SomeSellOrder)  -- ^ New orders (old orders with the matched order subtracted)
        , SomeSellOrder                  -- ^ Matched order
        )
-subtractMatchedQty edges = 
+subtractMatchedQty edges =
     Exchange.withSomeSellOrders someSellOrders $ \orders ->
         let maxOrder = Exchange.maxOrder orders
             newOrders = Exchange.minusQty orders (Exchange.oQty maxOrder)
