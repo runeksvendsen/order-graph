@@ -12,7 +12,7 @@ import           Test.Hspec.Expectations.Pretty
 import           Test.Hspec.Runner
 
 
-scDepth = 7
+scDepth = 5
 
 main :: IO Counts
 main = do

@@ -9,6 +9,7 @@ module Common.Util
 where
 
 import           OrderBook.Graph.Internal.Prelude
+import           OrderBook.Graph.Internal.Util              (merge)
 import qualified OrderBook.Graph                            as Lib
 import qualified Data.Graph.Immutable                       as GI
 import           Test.Hspec.Expectations.Pretty
@@ -30,7 +31,7 @@ assertMatchedOrders sellOrders buyOrder expected = void $ do
         Lib.build mGraph shuffledSellOrders
         matchedOrders <- Lib.match mGraph buyOrder
         assertAscendingPriceSorted matchedOrders
-        matchedOrders `shouldBe` expected
+        merge matchedOrders `shouldBe` merge expected
 
 assertAscendingPriceSorted
     :: [Lib.SomeSellOrder]
