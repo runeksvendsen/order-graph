@@ -48,7 +48,9 @@ data Edge a = Edge
 instance Show a => Show (Edge a) where
     show = show . getEdge
 
-instance PrettyVal a => PrettyVal (Edge a)
+instance PrettyVal (Edge SomeSellOrder) where
+    prettyVal (Edge sso _) =
+        prettyVal (fmap realToFrac sso :: SomeSellOrder' Double)
 
 -- | Currency code, e.g. "EUR", "BTC", "USD", "ETH"
 newtype Currency = Currency T.Text
