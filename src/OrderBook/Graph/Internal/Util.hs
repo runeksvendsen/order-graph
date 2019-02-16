@@ -5,8 +5,10 @@ module OrderBook.Graph.Internal.Util
 , toSellBuyOrders
 , merge
 , trimSlippage
+, assertAscendingPriceSorted
 ) where
 
+import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
 import qualified OrderBook.Types                            as OB
 import qualified Money
@@ -90,3 +92,18 @@ trimSlippage percentDifference (firstOrder : remainingOrders) =
         filterByPricePercentage order =
             abs ((soPrice order - startPrice) / startPrice) <= (percentDifference / 100)
     in firstOrder : filter filterByPricePercentage remainingOrders
+
+
+assertAscendingPriceSorted
+    :: [SomeSellOrder]
+    -> IO ()
+assertAscendingPriceSorted [] = return ()
+assertAscendingPriceSorted (firstOrder : remainingOrders) =
+    void $ foldM adjacentOrdersSorted firstOrder remainingOrders
+  where
+    adjacentOrdersSorted prevOrder nextOrder =
+        if soPrice prevOrder <= soPrice nextOrder
+            then return nextOrder   -- Everything is ok
+            else do
+                putStrLn $ unlines ["Orders not sorted:", pp prevOrder, pp nextOrder]
+                return nextOrder

@@ -47,13 +47,24 @@ marketDepthWriteFile
 marketDepthWriteFile obPath sellOrders =
     void $ GI.create $ \mGraph -> do
         Lib.build mGraph sellOrders
-        asks <- trimOrders <$> Lib.match mGraph asksOrder
-        bids <- trimOrders <$> Lib.match mGraph bidsOrder
+        asks <- Lib.match mGraph asksOrder
+        bids <- Lib.match mGraph bidsOrder
+        -- TEST
+        putStrLn "Asserting sorted bids/asks..."
+        Util.assertAscendingPriceSorted asks
+        Util.assertAscendingPriceSorted bids
+        let trimmedAsks = trimOrders asks
+            trimmedBids = trimOrders bids
+        putStrLn "Asserting sorted trimmed{bids/asks}..."
+        Util.assertAscendingPriceSorted trimmedAsks
+        Util.assertAscendingPriceSorted trimmedBids
+        -- end TEST
         let jsonOB = Json.object
-              [ "bids" .= map toJson (map Lib.invertSomeSellOrder bids)
-              , "asks" .= map toJson asks
+              [ "bids" .= map toJson (map Lib.invertSomeSellOrder trimmedBids)
+              , "asks" .= map toJson trimmedAsks
               ]
         Json.encodeFile obPath jsonOB
+        putStrLn $ "Wrote " ++ show obPath
   where
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
     trimOrders = Util.merge . Util.trimSlippage (50%1)
