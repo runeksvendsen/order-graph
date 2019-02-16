@@ -13,20 +13,13 @@ module OrderBook.Graph.Types
 ( Edge(..)
 , IsEdge(..)
 , Currency
-, SomeSellOrder'(..), someOrder
-, SomeSellOrder, SomeBuyOrder
-, OrderGraph
-, GraphM
-, matchedOrder
+, SomeSellOrder'(..)
+, SomeSellOrder
 )
 where
 
 import           OrderBook.Graph.Internal.Prelude
 import qualified Data.Text                                  as T
-import qualified Data.Graph.Types                           as G
-import qualified Control.Monad.Trans.State.Strict           as S
-import           Data.Semigroup                             (Product(..), Min(..))
-import qualified Data.List.NonEmpty                         as NE
 import           Data.String                                (IsString)
 import           Data.Hashable                              (Hashable)
 
@@ -43,7 +36,6 @@ class ( Eq nodeLabel
 -- | An edge in a graph.
 -- Used to create alternative implementations of
 --  e.g. 'Eq' and 'Ord' for types used as graph edges.
-
 data Edge a = Edge
     { getEdge :: a
     , getNormalizationFactor :: Rational
@@ -71,16 +63,16 @@ instance StringConv Currency String where
     strConv l (Currency txt) = strConv l txt
 
 -- | A sell order.
---   An offer to exchange 'qty' of 'soBase' for 'soQuote',
---    at 'price' (which has unit: 'soQuote' per 'soBase').
-data SomeSellOrder' price qty =
+--   An offer to exchange 'soQty' of 'soBase' for 'soQuote',
+--    at 'soPrice' (which has unit: 'soQuote' per 'soBase').
+data SomeSellOrder' numType =
     SomeSellOrder'
-    { soPrice :: price
-    , soQty   :: qty
+    { soPrice :: numType
+    , soQty   :: numType
     , soBase  :: Currency
     , soQuote :: Currency
     , soVenue :: T.Text
-    } deriving (Read, Functor, Generic)
+    } deriving (Eq, Read, Functor, Generic)
 
 instance Show SomeSellOrder where
     show SomeSellOrder'{..} =
@@ -91,8 +83,8 @@ instance Show SomeSellOrder where
             (toS soBase :: String)
             (toS soQuote :: String)
 
-instance (NFData price, NFData qty) => NFData (SomeSellOrder' price qty)
-instance (PrettyVal price, PrettyVal qty) => PrettyVal (SomeSellOrder' price qty)
+instance NFData numType => NFData (SomeSellOrder' numType)
+instance PrettyVal numType => PrettyVal (SomeSellOrder' numType)
 
 instance Eq (Edge SomeSellOrder) where
     e1 == e2 =
@@ -108,69 +100,4 @@ instance IsEdge (Edge SomeSellOrder) Currency where
     toNode (Edge order _) = soBase order
     weight (Edge order normFac) = soPrice order * normFac
 
-
-
-type SomeSellOrder = SomeSellOrder' Rational Rational
-type SomeOrderSemigroup = SomeSellOrder' (Product Rational) (Min Rational)
-
-
--- | An offer to buy 'base' in exchange for 'quote'
-type SomeBuyOrder = SomeSellOrder
-
-
-someOrder :: SomeSellOrder' (Product price) (Min qty) -> SomeSellOrder' price qty
-someOrder so@SomeSellOrder'{..} =
-    so { soPrice = getProduct soPrice, soQty = getMin soQty}
-
-someOrderSemigroup :: SomeSellOrder -> SomeOrderSemigroup
-someOrderSemigroup so@SomeSellOrder'{..} =
-    so { soPrice = Product soPrice, soQty = Min soQty}
-
-matchedOrder :: NonEmpty SomeSellOrder -> SomeSellOrder
-matchedOrder = someOrder . foldr1 (<>) . NE.map someOrderSemigroup
-
--- | A graph with currencies as nodes and sell orders as edges
-type OrderGraph gr = G.Graph gr (Edge SomeSellOrder) Currency
-
--- | A graph monad with currencies as nodes and sell orders as edges
-type GraphM gr = S.State (OrderGraph gr)
-
--- | Comparing price only
-instance Eq price => Eq (SomeSellOrder' price qty) where
-    so1 == so2 =
-        soPrice so1 == soPrice so2
-
--- | Comparing price only
-instance Ord price => Ord (SomeSellOrder' price qty) where
-    so1 <= so2 =
-        soPrice so1 <= soPrice so2
-
-instance (Num price, Fractional qty, Ord qty, PrettyVal price, Show qty, qty ~ price)
-    => Monoid (SomeSellOrder' (Product price) (Min qty)) where
-        mempty =
-            SomeSellOrder'
-                (Product 1)
-                (Min $ 1/0)
-                "Monoid.mempty"
-                "Monoid.mempty"
-                "Monoid.mempty"
-
--- | NB: "so1 <> so2" will fail if "soQuote so1 /= soBase so2"
-instance (Num price, Ord qty, Fractional price, PrettyVal price, Show qty, qty ~ price)
-    => Semigroup (SomeSellOrder' (Product price) (Min qty)) where
-    -- Example:
-    --                     USD per BTC                                    ETH per USD
-    --           BTCUSD      /     BTC   USD                    USDETH      /     USD   ETH
-        so1@(SomeSellOrder' p1 q1 base1 quote1 v1) <> so2@(SomeSellOrder' p2 q2 base2 quote2 v2)
-    --                          \                                                \
-    --                          BTC                                              USD
-            | quote1 == base2 =
-    --          BTCETH
-                SomeSellOrder'
-                    (p1 <> p2)      -- ETH per BTC
-                    (q1 <> so2qty)  -- BTC
-                    base1           -- BTC
-                    quote2          -- ETH
-                    (v1 <> "," <> v2)
-            | otherwise = error $ "Incompatible orders: " ++ pp (someOrder so1, someOrder so2)
-                where so2qty = fmap (/ getProduct p1) q2
+type SomeSellOrder = SomeSellOrder' Rational
