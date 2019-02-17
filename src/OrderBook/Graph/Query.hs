@@ -11,9 +11,7 @@
 module OrderBook.Graph.Query
 ( Currency
 , SomeSellOrder'(..)
-, SomeSellOrder, SomeBuyOrder
-, OrderGraph
-, GraphM
+, SomeSellOrder
 , BuyPath(BuyPath), mpPrice, mpOrders
 , query
 )
