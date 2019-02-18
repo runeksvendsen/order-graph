@@ -16,8 +16,6 @@ where
 
 import OrderBook.Graph.Internal.Prelude
 import OrderBook.Graph.Types
-import Control.Monad
-import qualified Data.Primitive.MutVar                      as Prim
 import qualified Data.Graph.Types                           as G
 import qualified Data.Graph.Immutable                       as GI
 import qualified Data.Graph.Mutable                         as GM
@@ -50,16 +48,7 @@ build
     -> [SomeSellOrder]                  -- ^ Orders
     -> m ()
 build mGraph orders = do
-    minOrderPriceVar <- Prim.newMutVar (-1 :: Rational)
-    -- Find minimum sell order price
-    forM_ orders $ \order -> do
-        Prim.modifyMutVar minOrderPriceVar (min (soPrice order))
-    minOrderPrice <- Prim.readMutVar minOrderPriceVar
-    -- Calculate normalization factor
-    let normFactor = max 1.0 (roundUp $ 1.0 / minOrderPrice)    -- NB: exception if minOrderPrice==0
-        roundUp = fromInteger . ceiling
-    -- Add edges to graph
-    forM_ orders (addEdge mGraph . (`Edge` normFactor))
+    forM_ (buildEdges orders) (addEdge mGraph)
   where
     addEdge :: (PrimMonad m, IsEdge (Edge SomeSellOrder) v)
             => G.MGraph (PrimState m) g SellOrderHeap v
