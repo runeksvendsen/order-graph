@@ -28,9 +28,13 @@ import qualified Data.Graph.Immutable                       as GI
 import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Heap                                  as H
 import qualified Data.Text                                  as T
+-- DEBUG
+import qualified OrderBook.Graph.Internal.Util              as Util
+import  System.IO.Unsafe
+import  Debug.Trace
 
 
--- | 
+-- |
 data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
     { boQuantity        :: numTyp
     , boMaxPrice        :: Maybe numTyp
@@ -43,20 +47,20 @@ data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
 type BuyOrder = BuyOrder' Rational
 
 match
-    :: forall m g base quote.
-       (PrimMonad m, KnownSymbol base, KnownSymbol quote)
-    => G.MGraph (PrimState m) g Build.SellOrderHeap Currency
+    :: forall g base quote.
+       (KnownSymbol base, KnownSymbol quote)
+    => G.MGraph (PrimState IO) g Build.SellOrderHeap Currency
     -> BuyOrder base quote
-    -> m [SomeSellOrder]
+    -> IO [SomeSellOrder]
 match g = fmap reverse . matchR [] g
 
 matchR
-    :: forall m g base quote.
-       (PrimMonad m, KnownSymbol base, KnownSymbol quote)
+    :: forall g base quote.
+       (KnownSymbol base, KnownSymbol quote)
     => [SomeSellOrder]
-    -> G.MGraph (PrimState m) g Build.SellOrderHeap Currency
+    -> G.MGraph (PrimState IO) g Build.SellOrderHeap Currency
     -> BuyOrder base quote
-    -> m [SomeSellOrder]
+    -> IO [SomeSellOrder]
 matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
     graph <- Build.derive mGraph
     let getVertex v = justOrFail ("Vertex not found", v) (GI.lookupVertex v graph)
@@ -66,12 +70,31 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
             let (newEdges, matchedOrder) = subtractMatchedQty orderPath
             forM_ newEdges (updateEdgeHeap getVertex)
             -- TODO: check BuyOrder quantity and maxPrice
+            let checkOrders :: SomeSellOrder -> [SomeSellOrder] -> [String]
+                checkOrders _ [] = []
+                checkOrders order (prevOrder : prevOrderList) =
+                    if not (soPrice order >= soPrice prevOrder)
+                        then
+                            [   "Orders not sorted:"
+                                , pp order
+                                , pp prevOrder
+                                , ""
+
+                                , "Previous orders:"
+                                , pp prevOrderList
+                                ]
+                        else []
+            let debug = checkOrders matchedOrder matchedOrdersR
+            putStrLn $ unlines ["Order path:", pp orderPath, ""]
+            when (debug /= []) $ do
+                putStrLn $ unlines debug
+                error "Done"
             matchR (matchedOrder : matchedOrdersR) mGraph bo
   where
     updateEdgeHeap
         :: (Currency -> G.Vertex g)     -- ^ Get a vertex from a vertex label
         -> Edge SomeSellOrder           -- ^ Updated top order
-        -> m ()
+        -> IO ()
     updateEdgeHeap getVertex matchedEdge = do
         let fromLabel = fromNode matchedEdge
             toLabel = toNode matchedEdge

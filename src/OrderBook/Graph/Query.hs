@@ -65,7 +65,11 @@ query graph start end =
         -> Edge SomeSellOrder
         -> BuyPath
     multiplyWeight _src _ (BuyPath len edges) orderEdge =
-        BuyPath (len * weight orderEdge) (addEdge orderEdge edges)
+        let assertMinOne num =
+                if num < 1
+                    then error $ "multiplyWeight: num < 1: " ++ show num
+                    else num
+        in BuyPath (len * assertMinOne (weight orderEdge)) (addEdge orderEdge edges)
     addEdge :: Edge SomeSellOrder
             -> Maybe (NonEmpty (Edge SomeSellOrder))
             -> Maybe (NonEmpty (Edge SomeSellOrder))

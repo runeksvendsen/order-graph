@@ -101,6 +101,7 @@ assertAscendingPriceSorted [] = return ()
 assertAscendingPriceSorted (firstOrder : remainingOrders) =
     void $ foldM adjacentOrdersSorted firstOrder remainingOrders
   where
+    adjacentOrdersSorted :: SomeSellOrder -> SomeSellOrder -> IO SomeSellOrder
     adjacentOrdersSorted prevOrder nextOrder =
         if soPrice prevOrder <= soPrice nextOrder
             then return nextOrder   -- Everything is ok

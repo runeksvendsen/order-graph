@@ -50,14 +50,14 @@ marketDepthWriteFile obPath sellOrders =
         asks <- Lib.match mGraph asksOrder
         bids <- Lib.match mGraph bidsOrder
         -- TEST
-        putStrLn "Asserting sorted bids/asks..."
-        Util.assertAscendingPriceSorted asks
-        Util.assertAscendingPriceSorted bids
+        -- putStrLn "Asserting sorted bids/asks..."
+        -- Util.assertAscendingPriceSorted asks
+        -- Util.assertAscendingPriceSorted bids
         let trimmedAsks = trimOrders asks
             trimmedBids = trimOrders bids
-        putStrLn "Asserting sorted trimmed{bids/asks}..."
-        Util.assertAscendingPriceSorted trimmedAsks
-        Util.assertAscendingPriceSorted trimmedBids
+        -- putStrLn "Asserting sorted trimmed{bids/asks}..."
+        -- Util.assertAscendingPriceSorted trimmedAsks
+        -- Util.assertAscendingPriceSorted trimmedBids
         -- end TEST
         let jsonOB = Json.object
               [ "bids" .= map toJson (map Lib.invertSomeSellOrder trimmedBids)
@@ -81,7 +81,7 @@ marketDepthWriteFile obPath sellOrders =
 main = withLogging $ do
     man <- HTTP.newManager HTTPS.tlsManagerSettings
     orders <- throwErrM $ AppM.runAppM man maxRetries $ allSellOrders
-    marketDepthWriteFile "web/btcusd.json" orders
+    marketDepthWriteFile "/Users/runesvendsen/code/order-graph/web/btcusd.json" orders
   where
     throwErrM ioA = ioA >>= either (error . show) return
 
