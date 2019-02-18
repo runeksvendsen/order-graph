@@ -11,6 +11,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 module OrderBook.Graph.Types
 ( Edge(..)
+, buildEdges
 , IsEdge(..)
 , Currency
 , SomeSellOrder'(..)
@@ -104,5 +105,16 @@ instance IsEdge (Edge SomeSellOrder) Currency where
     fromNode (Edge order _) = soQuote order
     toNode (Edge order _) = soBase order
     weight (Edge order normFac) = soPrice order * normFac
+
+buildEdges
+    :: [SomeSellOrder]
+    -> [Edge SomeSellOrder]
+buildEdges orders =
+    let minPrice = foldl1 min (map soPrice orders)
+        -- NB: exception if minOrderPrice==0
+        normFactor = max 1.0 (roundUp $ 1.0 / minPrice)
+        roundUp = fromInteger . ceiling
+    in map (`Edge` normFactor) orders
+
 
 type SomeSellOrder = SomeSellOrder' Rational
