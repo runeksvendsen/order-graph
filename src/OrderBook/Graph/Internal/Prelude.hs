@@ -1,7 +1,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module OrderBook.Graph.Internal.Prelude
-( module Conv
+( module Prelude
+, module Conv
 , module TypeLits
 , module Proxy
 , module Maybe
@@ -16,6 +17,7 @@ module OrderBook.Graph.Internal.Prelude
 
 where
 
+import Prelude                              as Prelude
 import Protolude.Conv                       as Conv
 import GHC.TypeLits                         as TypeLits
 import Data.Proxy                           as Proxy

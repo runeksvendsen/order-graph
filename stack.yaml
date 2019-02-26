@@ -2,17 +2,13 @@ resolver: lts-12.5
 
 packages:
 - .
-- location:
-    git: https://github.com/runeksvendsen/orderbook.git
-    commit: 2e2551e1333ec7bc1c4745e6a547bdf4887d79b4
-  extra-dep: true
+#TMP
+- /Users/runesvendsen/code/orderbook
+- /Users/runesvendsen/code/crypto-venues
+
 - location:
     git: https://github.com/runeksvendsen/crypto-depth.git
     commit: b821b780b19800c480083e291804ee0e7790bd24
-  extra-dep: true
-- location:
-    git: https://github.com/runeksvendsen/crypto-venues.git
-    commit: d306a1483d8cdab4d9e8f665d0e003e1ff80be72
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/impure-containers.git
@@ -26,4 +22,3 @@ extra-deps:
 - thrist-0.4@sha256:f2b6b1b918aa2899669ebcb1c368d57fbd0d4d65e7e316d9203df813348ed732
 
 # heap
-
