@@ -12,37 +12,32 @@ module OrderBook.Graph.Query
 ( Currency
 , SomeSellOrder'(..)
 , SomeSellOrder
-, BuyPath(BuyPath), mpPrice, mpOrders
+, BuyPath(BuyPath), mpPrice, mpOrders, mpPath
 , query
 )
 where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types
-import           OrderBook.Graph.Exchange
 import qualified Data.Graph.Types                           as G
 import qualified Data.Graph.Immutable                       as GI
-import           Data.Thrist                                (Thrist(..))
 
-
-type GraphPath = Thrist Order
 
 -- | Source: https://github.com/andrewthad/impure-containers/issues/8#issuecomment-454373569
 data BuyPath = BuyPath
     { mpPrice   :: Rational
     , mpOrders  :: Maybe (NonEmpty (Edge SomeSellOrder))
+    , mpPath    :: [(Currency, Currency)]
     } deriving (Eq, Generic)
 
 instance Ord BuyPath where
-    compare (BuyPath price1 vs1) (BuyPath price2 vs2) =
-        compare price1 price2 <> compare vs1 vs2
-        -- prefer:
-        --  * lowest price (1st priority)
-        --  * fewest orders (2nd priority) TODO: fewest number of orders preferred?
+    compare (BuyPath price1 _ _) (BuyPath price2 _ _) =
+        compare price1 price2
+
 instance Semigroup BuyPath where
     (<>) = min
 instance Monoid BuyPath where
-    mempty = BuyPath largeRational Nothing
+    mempty = BuyPath largeRational Nothing []
 
 instance PrettyVal BuyPath
 
@@ -51,11 +46,11 @@ query
     :: G.Graph g (Edge SomeSellOrder) Currency      -- ^ Graph with lowest-price edges/orders
     -> Currency                                     -- ^ Start vertex/currency
     -> Currency                                     -- ^ Start vertex/currency
-    -> Maybe (NonEmpty (Edge SomeSellOrder))        -- ^ Lowest-price path ('Nothing' if no path exists at all)
+    -> BuyPath        -- ^ Lowest-price path ('Nothing' if no path exists at all)
 query graph start end =
-    let pathGraph = GI.dijkstra multiplyWeight (BuyPath 1 Nothing) [startVertex] graph
+    let pathGraph = GI.dijkstra multiplyWeight (BuyPath 1 Nothing []) [startVertex] graph
         Just endVertex = GI.lookupVertex end graph
-    in mpOrders $ GI.atVertex endVertex pathGraph
+    in GI.atVertex endVertex pathGraph
   where
     Just startVertex = GI.lookupVertex start graph
     multiplyWeight
@@ -64,12 +59,14 @@ query graph start end =
         -> BuyPath
         -> Edge SomeSellOrder
         -> BuyPath
-    multiplyWeight _src _ (BuyPath len edges) orderEdge =
-        let assertMinOne num =
-                if num < 1
-                    then error $ "multiplyWeight: num < 1: " ++ show num
-                    else num
-        in BuyPath (len * assertMinOne (weight orderEdge)) (addEdge orderEdge edges)
+    multiplyWeight _src _dst (BuyPath len edges pathL) orderEdge =
+        let newPathL = (_src, _dst) : pathL
+            assertMinOne num
+                | num < 1 = error $ "multiplyWeight: num < 1: " ++ show num
+                | otherwise = num
+        in BuyPath (len * assertMinOne (weight orderEdge))
+                   (addEdge orderEdge edges)
+                   newPathL
     addEdge :: Edge SomeSellOrder
             -> Maybe (NonEmpty (Edge SomeSellOrder))
             -> Maybe (NonEmpty (Edge SomeSellOrder))

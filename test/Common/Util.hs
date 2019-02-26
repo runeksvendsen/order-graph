@@ -13,6 +13,7 @@ import           OrderBook.Graph.Internal.Util              (merge)
 import qualified OrderBook.Graph                            as Lib
 import qualified Data.Graph.Immutable                       as GI
 import           Test.Hspec.Expectations.Pretty
+-- import           Test.Hspec.Expectations
 import qualified System.Random.Shuffle                      as Shuffle
 
 

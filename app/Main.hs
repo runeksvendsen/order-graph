@@ -47,7 +47,9 @@ marketDepthWriteFile
 marketDepthWriteFile obPath sellOrders =
     void $ GI.create $ \mGraph -> do
         Lib.build mGraph sellOrders
+        putStrLn "#################### ASKS ####################"
         asks <- Lib.match mGraph asksOrder
+        putStrLn "#################### BIDS ####################"
         bids <- Lib.match mGraph bidsOrder
         -- TEST
         -- putStrLn "Asserting sorted bids/asks..."

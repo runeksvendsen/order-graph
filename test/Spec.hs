@@ -14,7 +14,7 @@ import           Test.Hspec.Runner
 
 scDepth = 5
 
-main :: IO Counts
+main :: IO ()
 main = do
+    void $ runTestTT Unit.tests
     hspecWith defaultConfig { configSmallCheckDepth = scDepth } Property.spec
-    runTestTT Unit.tests

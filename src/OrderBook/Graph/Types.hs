@@ -22,7 +22,6 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import qualified Data.Text                                  as T
 import           Data.String                                (IsString)
-import           Data.Hashable                              (Hashable)
 
 
 -- | An edge in a graph
