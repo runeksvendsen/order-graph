@@ -41,7 +41,6 @@ executables:
     dependencies:
     - base
     - orderbook
-    - crypto-depth
     - crypto-venues
     - order-graph
     - logging

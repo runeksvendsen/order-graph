@@ -48,14 +48,14 @@ data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
 type BuyOrder = BuyOrder' Rational
 
 match
-    :: forall g base quote.
-       (KnownSymbol base, KnownSymbol quote)
-    => G.MGraph (PrimState IO) g Build.SellOrderHeap Currency
+    :: forall m g base quote.
+       (PrimMonad m, KnownSymbol base, KnownSymbol quote)
+    => G.MGraph (PrimState m) g Build.SellOrderHeap Currency
     -> BuyOrder base quote
-    -> IO [SomeSellOrder]
+    -> m [SomeSellOrder]
 match g bo = do
     dummyGraph <- Build.derive g
-    fmap reverse $ matchR [] g bo (dummyGraph, mempty)
+    fmap reverse $ matchR [] g bo
 
 -- |
 debugPrint
@@ -75,14 +75,13 @@ debugPrint (prevGraph, prevPath) (currGraph, currPath) = do
         putStrLn $ printf "%s\t->\t%s\t%s" (show from) (show to) (show edge)
 
 matchR
-    :: forall g base quote.
-       (KnownSymbol base, KnownSymbol quote)
+    :: forall m g base quote.
+       (PrimMonad m, KnownSymbol base, KnownSymbol quote)
     => [SomeSellOrder]
-    -> G.MGraph (PrimState IO) g Build.SellOrderHeap Currency
+    -> G.MGraph (PrimState m) g Build.SellOrderHeap Currency
     -> BuyOrder base quote
-    -> (G.Graph g (Edge SomeSellOrder) Currency, Query.BuyPath)
-    -> IO [SomeSellOrder]
-matchR matchedOrdersR mGraph bo@BuyOrder'{..} prevGraphPath = do
+    -> m [SomeSellOrder]
+matchR matchedOrdersR mGraph bo@BuyOrder'{..} = do
     graph <- Build.derive mGraph
     let getVertex v = justOrFail ("Vertex not found", v) (GI.lookupVertex v graph)
     let buyPath = Query.query graph src dst
@@ -91,41 +90,14 @@ matchR matchedOrdersR mGraph bo@BuyOrder'{..} prevGraphPath = do
         Just orderPath -> do
             let (newEdges, matchedOrder) = subtractMatchedQty orderPath
             forM_ newEdges (updateEdgeHeap getVertex)
-
-            let peek :: [a] -> [a]
-                peek []           = []
-                peek (x:[])       = [x]
-                peek (x1:x2:[])   = [x1,x2]
-                peek (x1:x2:x3:_) = [x1,x2,x3]
-
-            let checkOrders :: SomeSellOrder -> [SomeSellOrder] -> [String]
-                checkOrders _ [] = []
-                checkOrders order prevOrders@(prevOrder:_) =
-                    if not (soPrice order >= soPrice prevOrder)
-                        then
-                            [   ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-                                , "Orders not sorted:"
-                                , pp order
-                                , "Previous orders:"
-                                ] ++ map pp (peek prevOrders)
-                                  ++ ["Order path:", pp orderPath]
-
-                        else []
-            let debug = checkOrders matchedOrder matchedOrdersR
-            -- putStrLn $ unlines ["Order path:", pp orderPath, ""]
-            let nextGraphPath = (graph, buyPath)
-            when (debug /= []) $ do
-                putStrLn $ unlines debug
-                debugPrint prevGraphPath nextGraphPath
-                putStrLn "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-                putStrLn ""
-            matchR (matchedOrder : matchedOrdersR) mGraph bo nextGraphPath
+            matchR (matchedOrder : matchedOrdersR) mGraph bo
             -- TODO: check BuyOrder quantity and maxPrice
   where
     updateEdgeHeap
-        :: (Currency -> G.Vertex g)     -- ^ Get a vertex from a vertex label
+        :: PrimMonad m
+        => (Currency -> G.Vertex g)     -- ^ Get a vertex from a vertex label
         -> Edge SomeSellOrder           -- ^ Updated top order
-        -> IO ()
+        -> m ()
     updateEdgeHeap getVertex matchedEdge = do
         let fromLabel = fromNode matchedEdge
             toLabel = toNode matchedEdge

@@ -11,7 +11,6 @@ import           Protolude                                  (lefts, rights, toS,
 import qualified OrderBook.Graph.Internal.Util              as Util
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
 import qualified OrderBook.Graph                            as Lib
--- import qualified OrderBook.Types                            as OB
 import qualified CryptoVenues.Types.AppM                    as AppM
 import           CryptoVenues.Types.ABook                   (ABook(ABook))
 import qualified CryptoVenues.Fetch.Debug                   as Fetch
@@ -19,6 +18,8 @@ import qualified CryptoVenues.Fetch.Debug                   as Fetch
 import qualified Control.Logging                            as Log
 import qualified Data.Graph.Immutable                       as GI
 import qualified Data.Text                                  as T
+import           Data.List                                  (sortBy)
+import           Data.Ord                                   (comparing)
 
 import           Data.Proxy                                 (Proxy(..))
 import qualified Network.HTTP.Client                        as HTTP
@@ -68,26 +69,26 @@ marketDepthWriteFile obPath sellOrders =
         putStrLn "#################### ASKS ####################"
         asks <- Lib.match mGraph asksOrder
         putStrLn "#################### BIDS ####################"
-        bids <- Lib.match mGraph bidsOrder
+        bids <- map Lib.invertSomeSellOrder <$> Lib.match mGraph bidsOrder
         -- TEST
         -- putStrLn "Asserting sorted bids/asks..."
         -- Util.assertAscendingPriceSorted asks
         -- Util.assertAscendingPriceSorted bids
-        let trimmedAsks = trimOrders asks
-            trimmedBids = trimOrders bids
+        let trimmedAsks = trimOrders $ sortBy (comparing soPrice)        asks
+            trimmedBids = trimOrders $ sortBy (flip $ comparing soPrice) bids
         -- putStrLn "Asserting sorted trimmed{bids/asks}..."
         -- Util.assertAscendingPriceSorted trimmedAsks
         -- Util.assertAscendingPriceSorted trimmedBids
         -- end TEST
         let jsonOB = Json.object
-              [ "bids" .= map toJson (map Lib.invertSomeSellOrder trimmedBids)
+              [ "bids" .= map toJson trimmedBids
               , "asks" .= map toJson trimmedAsks
               ]
         Json.encodeFile obPath jsonOB
         putStrLn $ "Wrote " ++ show obPath
   where
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
-    trimOrders = Util.merge . Util.trimSlippage (50%1)
+    trimOrders = Util.compress 500 . Util.merge . Util.trimSlippage (50%1)
     asksOrder :: Lib.BuyOrder "BTC" "USD"
     asksOrder = Lib.BuyOrder' 1.0 Nothing Nothing
     bidsOrder :: Lib.BuyOrder "USD" "BTC"
