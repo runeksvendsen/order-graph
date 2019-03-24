@@ -146,6 +146,16 @@ withSomeSellOrder sso f =
                     let order = Order' (Qty' $ soQty sso) (Price' $ soPrice sso)
                     in f (order :: Order src dst)
 
+-- | Join a list of 'SomeSellOrder' to produce a 'Thrist' parameterized over
+--    the source and destination currency.
+--   The sequence of input sell orders must be of the following form:
+--      [ Order "BTC" "USD"
+--      , Order "USD" "EUR"
+--      , Order "EUR" "ETH"
+--      , Order "ETH" "LOL"
+--      ]
+--    ie. for any two adjacent sell orders the left order's "base"/"src" must be
+--    equal to the right order's "quote"/"dst".
 withSomeSellOrders
     :: NonEmpty SomeSellOrder
     -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Thrist Order src dst -> r)

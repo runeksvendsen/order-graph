@@ -7,11 +7,17 @@ packages:
 - /Users/runesvendsen/code/crypto-venues
 - location:
     git: https://github.com/runeksvendsen/impure-containers.git
-    commit: 2d65486882be1c2f177cea56343987254f1ca320
+    commit: 0f00dc9a617d5312b6fe5e9ddb9c2b4b9d0afdaf
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/bellman-ford.git
-    commit: e6136350e267ef4c0c9828e98cd1ce9d9dca511e
+    commit: 50017724df1bc3d59005034077eb1fccec4301b3
+  extra-dep: true
+- location:
+    git: https://github.com/runeksvendsen/mono-traversable.git
+    commit: d1c7e00240482b57ed61e9342cb227d44a02c70a
+    subdirs:
+      - mutable-containers
   extra-dep: true
 
 extra-deps:

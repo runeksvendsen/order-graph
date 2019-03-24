@@ -7,60 +7,76 @@
 module OrderBook.Graph.Build
 ( module OrderBook.Graph.Types
 , SellOrderGraph
-, SellOrderHeap
+, SortedOrders, first, rest, prepend, replaceHead
 , build
-, derive
 )
-
 where
 
-import OrderBook.Graph.Internal.Prelude
-import OrderBook.Graph.Types
-import qualified Data.Graph.Types                           as G
-import qualified Data.Graph.Immutable                       as GI
-import qualified Data.Graph.Mutable                         as GM
-import qualified Data.Heap                                  as H
+import           OrderBook.Graph.Internal.Prelude
+import           OrderBook.Graph.Types
+
+import qualified Data.Graph.Digraph                         as DG
+import           Data.List                                  (groupBy, sortOn)
+import qualified Data.List.NonEmpty                         as NE
 
 
-type SellOrderGraph s g = G.MGraph s g SellOrderHeap Currency
-type SellOrderHeap = H.MinHeap (Edge SomeSellOrder)
+type SellOrderGraph s g = DG.Digraph s g SortedOrders Currency
 
--- ^ Derive a graph which only contains the best-priced sell
---  order as each edge
-derive
-    :: PrimMonad m
-    => SellOrderGraph (PrimState m) g
-    -> m (G.Graph g (Edge SomeSellOrder) Currency)
-derive mGraph = do
-    graph <- GI.freeze mGraph
-    return $ GI.mapEdges heapKeepMin graph
-  where
-    heapKeepMin :: G.Vertex g -> G.Vertex g -> SellOrderHeap -> Edge SomeSellOrder
-    heapKeepMin _ _ edgeHeap = fromMaybe
-        (error $ "deriveGraph: empty edge heap")
-        (H.viewHead edgeHeap)
+-- | A list of sell orders sorted (ascending) by price
+newtype SortedOrders = SortedOrders { getOrders :: NE.NonEmpty SomeSellOrder }
+    deriving (Eq, Show)
 
--- ^ build a graph with each edge containing (a min-heap of)
---    *all* compatible sell orders
+first
+    :: SortedOrders
+    -> SomeSellOrder
+first = NE.head . getOrders
+
+rest
+    :: SortedOrders
+    -> Maybe SortedOrders
+rest = fmap SortedOrders . snd . NE.uncons . getOrders
+
+prepend
+    :: SomeSellOrder
+    -> SortedOrders
+    -> SortedOrders
+prepend so (SortedOrders orders) = SortedOrders (so `NE.cons` orders)
+
+replaceHead
+    :: SortedOrders
+    -> Maybe SomeSellOrder
+    -> Maybe SortedOrders
+replaceHead sortedOrders Nothing =
+    rest sortedOrders
+replaceHead (SortedOrders (_ NE.:| tail')) (Just order) =
+    Just $ SortedOrders (order NE.:| tail')
+
+instance DirectedEdge SortedOrders Currency where
+    fromNode = fromNode . NE.head . getOrders
+    toNode = toNode . NE.head . getOrders
+
+instance WeightedEdge SortedOrders Currency Double where
+    weight = fromRational . weight . NE.head . getOrders
+
+-- ^ build a graph where each edge is a list of sorted sell orders
 build
     :: (PrimMonad m)
     => SellOrderGraph (PrimState m) g   -- ^ Empty graph
     -> [SomeSellOrder]                  -- ^ Orders
     -> m ()
 build mGraph orders = do
-    forM_ (buildEdges orders) (addEdge mGraph)
+    forM_ (create orders) (DG.insertEdge mGraph)
+
+-- |
+create
+    :: [SomeSellOrder]  -- ^ A bunch of sell orders
+    -> [SortedOrders]
+create =
+    fmap (SortedOrders . NE.fromList . sortOn soPrice) . groupBy sameSrcDst
+        . fmap assertPositivePrice
   where
-    addEdge :: (PrimMonad m, IsEdge (Edge SomeSellOrder) v)
-            => G.MGraph (PrimState m) g SellOrderHeap v
-            -> Edge SomeSellOrder
-            -> m ()
-    addEdge graph edge = do
-        fromVertex <- GM.insertVertex graph (fromNode edge)
-        toVertex <- GM.insertVertex graph (toNode edge)
-        heapM <- GM.lookupEdge graph fromVertex toVertex
-        -- Add edge to heap
-        let heap = case heapM of
-                Nothing         -> H.singleton edge
-                Just orderHeap  -> H.insert edge orderHeap
-        -- Replace old edge-heap with new
-        GM.insertEdge graph fromVertex toVertex heap
+    assertPositivePrice order
+        | soPrice order >= 0 = order
+        | otherwise = error $ "negative-price order: " ++ show order
+    sameSrcDst oA oB =
+        soBase oA == soBase oB && soQuote oA == soQuote oB

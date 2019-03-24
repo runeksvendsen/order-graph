@@ -34,6 +34,8 @@ import Data.Type.Equality                   as MoreStuff
 import Text.Printf                          as MoreStuff
 import Data.Ratio                           as MoreStuff
 import Data.Hashable                        as MoreStuff    (Hashable)
+import Control.Monad.ST                     as MoreStuff
+import Control.Exception                    as MoreStuff    (assert)
 import Data.Int                             (Int64)
 
 

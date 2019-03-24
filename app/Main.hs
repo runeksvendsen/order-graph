@@ -15,8 +15,9 @@ import qualified CryptoVenues.Types.AppM                    as AppM
 import           CryptoVenues.Types.ABook                   (ABook(ABook))
 import qualified CryptoVenues.Fetch.Debug                   as Fetch
 
+import qualified Control.Monad.ST                           as ST
 import qualified Control.Logging                            as Log
-import qualified Data.Graph.Immutable                       as GI
+import qualified Data.Graph.Digraph                         as DG
 import qualified Data.Text                                  as T
 import           Data.List                                  (sortBy)
 import           Data.Ord                                   (comparing)
@@ -63,29 +64,20 @@ marketDepthWriteFile
     :: FilePath
     -> [SomeSellOrder]
     -> IO ()
-marketDepthWriteFile obPath sellOrders =
-    void $ GI.create $ \mGraph -> do
+marketDepthWriteFile obPath sellOrders = do
+    (bids, asks) <- ST.stToIO $ DG.withGraph $ \mGraph -> do
         Lib.build mGraph sellOrders
-        putStrLn "#################### ASKS ####################"
         asks <- Lib.match mGraph asksOrder
-        putStrLn "#################### BIDS ####################"
         bids <- map Lib.invertSomeSellOrder <$> Lib.match mGraph bidsOrder
-        -- TEST
-        -- putStrLn "Asserting sorted bids/asks..."
-        -- Util.assertAscendingPriceSorted asks
-        -- Util.assertAscendingPriceSorted bids
-        let trimmedAsks = trimOrders $ sortBy (comparing soPrice)        asks
-            trimmedBids = trimOrders $ sortBy (flip $ comparing soPrice) bids
-        -- putStrLn "Asserting sorted trimmed{bids/asks}..."
-        -- Util.assertAscendingPriceSorted trimmedAsks
-        -- Util.assertAscendingPriceSorted trimmedBids
-        -- end TEST
-        let jsonOB = Json.object
-              [ "bids" .= map toJson trimmedBids
-              , "asks" .= map toJson trimmedAsks
-              ]
-        Json.encodeFile obPath jsonOB
-        putStrLn $ "Wrote " ++ show obPath
+        return (bids, asks)
+    let trimmedAsks = trimOrders $ sortBy (comparing soPrice)        asks
+        trimmedBids = trimOrders $ sortBy (flip $ comparing soPrice) bids
+    let jsonOB = Json.object
+            [ "bids" .= map toJson trimmedBids
+            , "asks" .= map toJson trimmedAsks
+            ]
+    Json.encodeFile obPath jsonOB
+    putStrLn $ "Wrote " ++ show obPath
   where
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
     trimOrders = Util.compress 500 . Util.merge . Util.trimSlippage (50%1)
@@ -140,8 +132,10 @@ doEverything orders = do
   where
     buyOrder :: Lib.BuyOrder "BTC" Numeraire
     buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
-    buildGraphQuery sellOrders' =
-            void $ GI.create $ \mGraph -> do
-                Lib.build mGraph sellOrders'
-                GI.freeze mGraph >>= \g -> putStrLn $ "Symbol count: " ++ show (GI.sizeInt $ GI.size g)
-                void $ Lib.match mGraph buyOrder
+    buildGraphQuery sellOrders' = do
+            vertexCount <- ST.stToIO $ DG.withGraph
+                $ \mGraph -> do
+                    Lib.build mGraph sellOrders'
+                    void $ Lib.match mGraph buyOrder
+                    DG.vertexCount mGraph
+            putStrLn $ "Symbol count: " ++ show vertexCount
