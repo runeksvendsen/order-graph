@@ -8,22 +8,22 @@ jobs:
       - restore_cache:
           name: Restore cache
           keys:
-            - v2-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
+            - v3-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
       - run:
           name: Install GHC
           command: stack setup
       - run:
           name: Build library
-          command: stack build --trace
+          command: stack build
       - run:
           name: Build tests
-          command: stack test --no-run-tests --trace
+          command: stack test --no-run-tests
       - save_cache:
           name: Save cache
-          key: v2-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
+          key: v3-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
           paths:
             - /root/.stack
             - /root/project/.stack-work
       - run:
           name: Run tests
-          command: stack test --trace
+          command: stack test
