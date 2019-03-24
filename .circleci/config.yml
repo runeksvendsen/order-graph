@@ -19,13 +19,9 @@ jobs:
       - run:
           name: Install executable
           command: stack install --trace
-      - run:
-          name: Test cache folders
-          command: du -h -d 0 /root/.stack /root/project/.stack /root/project/.stack-work
       - save_cache:
           name: Cache Dependencies
           key: cci-demo-haskell-v1-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
           paths:
             - ".stack"
             - ".stack-work"
-
