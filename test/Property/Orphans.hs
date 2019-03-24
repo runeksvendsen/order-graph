@@ -17,20 +17,14 @@ import qualified Test.SmallCheck.Series      as SS
 suchThat :: Series m a -> (a -> Bool) -> Series m a
 suchThat s p = s >>= \x -> if p x then pure x else empty
 
-nonEmptyList :: Series Identity a -> Series m [a]
-nonEmptyList series = do
-   depth <- getDepth
-   return (depth `SS.list` series) `suchThat` (not . null)
-
 instance (KnownSymbol base, KnownSymbol quote, Monad m) =>
    Serial m (OrderBook venue base quote) where
       series = do
          midPrice <- series
          let buyOrderProp o  = oPrice o < midPrice
              sellOrderProp o = oPrice o > midPrice
-         depth <- getDepth
-         let buyOrders  = SS.list depth $ SS.series `suchThat` buyOrderProp
-             sellOrders = SS.list depth $ SS.series `suchThat` sellOrderProp
+         buyOrders  <- SS.series `suchThat` all buyOrderProp
+         sellOrders <- SS.series `suchThat` all sellOrderProp
          return $ OrderBook (BuySide . Vec.fromList $ sortBy (comparing Down) buyOrders)
                             (SellSide . Vec.fromList $ sort sellOrders)
 
@@ -42,8 +36,8 @@ instance (KnownSymbol base, KnownSymbol quote, Monad m) =>
          midPrice <- series
          let buyOrderProp o  = oPrice o < midPrice
              sellOrderProp o = oPrice o > midPrice
-         buyOrders  <- nonEmptyList $ SS.series `suchThat` buyOrderProp
-         sellOrders <- nonEmptyList $ SS.series `suchThat` sellOrderProp
+         buyOrders  <- SS.series `suchThat` all buyOrderProp `suchThat` (not . null)
+         sellOrders <- SS.series `suchThat` all sellOrderProp `suchThat` (not . null)
          return $ NonEmpty $ OrderBook (BuySide . Vec.fromList $ sortBy (comparing Down) buyOrders)
                                        (SellSide . Vec.fromList $ sort sellOrders)
 

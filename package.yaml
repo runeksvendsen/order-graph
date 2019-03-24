@@ -9,11 +9,15 @@ maintainer:          runesvend@gmail.com
 copyright:           CC0
 category:            value
 
+default-extensions:
+- FlexibleContexts
+
 dependencies:
   - base >= 4.7 && < 5
   - protolude
   - transformers
   - orderbook
+  - bellman-ford
   - unordered-containers
   - impure-containers
   - text
@@ -35,10 +39,11 @@ executables:
   order-graph-exe:
     main: Main.hs
     source-dirs: app
+    ghc-options:
+    - -fno-ignore-asserts
     dependencies:
     - base
     - orderbook
-    - crypto-depth
     - crypto-venues
     - order-graph
     - logging
@@ -60,10 +65,12 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -fno-ignore-asserts
     dependencies:
     - order-graph
     - vector
     - HUnit
+    - hspec-expectations
     - hspec-expectations-pretty-diff
     - QuickCheck
     - hspec
@@ -72,5 +79,4 @@ tests:
     - tasty-quickcheck
     - smallcheck
     - hspec-smallcheck
-    - hspec-expectations-pretty-diff
     - random-shuffle

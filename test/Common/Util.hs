@@ -11,8 +11,10 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Internal.Util              (merge)
 import qualified OrderBook.Graph                            as Lib
-import qualified Data.Graph.Immutable                       as GI
+import qualified Data.Graph.Digraph                         as DG
 import           Test.Hspec.Expectations.Pretty
+
+import qualified Control.Monad.ST                           as ST
 import qualified System.Random.Shuffle                      as Shuffle
 
 
@@ -27,11 +29,11 @@ assertMatchedOrders
     -> IO ()
 assertMatchedOrders sellOrders buyOrder expected = void $ do
     shuffledSellOrders <- Shuffle.shuffleM sellOrders
-    GI.create $ \mGraph -> do
+    matchedOrders <- ST.stToIO $ DG.withGraph $ \mGraph -> do
         Lib.build mGraph shuffledSellOrders
-        matchedOrders <- Lib.match mGraph buyOrder
-        assertAscendingPriceSorted matchedOrders
-        merge matchedOrders `shouldBe` merge expected
+        Lib.match mGraph buyOrder
+    assertAscendingPriceSorted matchedOrders
+    merge matchedOrders `shouldBe` merge expected
 
 assertAscendingPriceSorted
     :: [Lib.SomeSellOrder]

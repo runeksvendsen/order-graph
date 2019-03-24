@@ -11,8 +11,8 @@
 {-# LANGUAGE FunctionalDependencies #-}
 module OrderBook.Graph.Types
 ( Edge(..)
-, buildEdges
-, IsEdge(..)
+, DG.DirectedEdge(..)
+, GE.WeightedEdge(..)
 , Currency
 , SomeSellOrder'(..)
 , SomeSellOrder
@@ -20,30 +20,18 @@ module OrderBook.Graph.Types
 where
 
 import           OrderBook.Graph.Internal.Prelude
+
+import qualified Data.Graph.Digraph                         as DG
+import qualified Data.Graph.Edge                            as GE
 import qualified Data.Text                                  as T
 import           Data.String                                (IsString)
-import           Data.Hashable                              (Hashable)
 
-
--- | An edge in a graph
-class ( Eq nodeLabel
-      , Ord edge
-      , Hashable nodeLabel
-      ) => IsEdge edge nodeLabel | edge -> nodeLabel where
-    fromNode :: edge -> nodeLabel   -- ^ Label associated with the edge's "from" node
-    toNode   :: edge -> nodeLabel   -- ^ Label associated with the edge's "to" node
-    weight   :: edge -> Rational    -- ^ Edge's weight
 
 -- | An edge in a graph.
 -- Used to create alternative implementations of
 --  e.g. 'Eq' and 'Ord' for types used as graph edges.
 data Edge a = Edge
-    { getEdge :: a
-    , getNormalizationFactor :: Rational
-    -- ^ The "weight factor" is used because Dijkstra does not support negative edge weights.
-    -- However, since we're doing multiplication of edge weights (rather than addition)
-    -- the edge weight must be greater than or eqaul to 1.
-    }
+    { getEdge :: a }
     deriving (Read, Generic, Functor)
 
 instance Show a => Show (Edge a) where
@@ -76,6 +64,8 @@ data SomeSellOrder' numType =
     , soVenue :: T.Text
     } deriving (Eq, Read, Functor, Generic)
 
+type SomeSellOrder = SomeSellOrder' Rational
+
 instance Show SomeSellOrder where
     show SomeSellOrder'{..} =
         printf "Order { %s qty=%f price=%f %s/%s }"
@@ -93,28 +83,17 @@ instance PrettyVal SomeSellOrder where
         prettyVal (fmap realToFrac sso :: SomeSellOrder' Double)
 
 instance Eq (Edge SomeSellOrder) where
-    e1 == e2 =
-        weight e1 == weight e2
+    Edge e1 == Edge e2 =
+        GE.weight e1 == GE.weight e2
 
 instance Ord (Edge SomeSellOrder) where
-    e1 <= e2 =
-        weight e1 <= weight e2
+    Edge e1 <= Edge e2 =
+        GE.weight e1 <= GE.weight e2
 
-instance IsEdge (Edge SomeSellOrder) Currency where
+instance DG.DirectedEdge (SomeSellOrder' numType) Currency where
     -- We move in the opposite direction of the seller
-    fromNode (Edge order _) = soQuote order
-    toNode (Edge order _) = soBase order
-    weight (Edge order normFac) = soPrice order * normFac
+    fromNode = soQuote
+    toNode = soBase
 
-buildEdges
-    :: [SomeSellOrder]
-    -> [Edge SomeSellOrder]
-buildEdges orders =
-    let minPrice = foldl1 min (map soPrice orders)
-        -- NB: exception if minOrderPrice==0
-        normFactor = max 1.0 (roundUp $ 1.0 / minPrice)
-        roundUp = fromInteger . ceiling
-    in map (`Edge` normFactor) orders
-
-
-type SomeSellOrder = SomeSellOrder' Rational
+instance GE.WeightedEdge (SomeSellOrder' numType) Currency numType where
+    weight = soPrice
