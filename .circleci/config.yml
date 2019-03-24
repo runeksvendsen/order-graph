@@ -9,7 +9,7 @@ jobs:
           # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
           name: Restore Cached Dependencies
           keys:
-            - cci-demo-haskell-v1-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
+            - v2-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
       - run:
           name: Resolve/Update Dependencies
           command: stack setup
@@ -21,7 +21,7 @@ jobs:
           command: stack install --trace
       - save_cache:
           name: Cache Dependencies
-          key: cci-demo-haskell-v1-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
+          key: v2-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
           paths:
-            - ".stack"
-            - ".stack-work"
+            - /root/.stack
+            - /root/project/.stack-work
