@@ -2,9 +2,14 @@ resolver: lts-12.5
 
 packages:
 - .
-#TMP
-- /Users/runesvendsen/code/orderbook
-- /Users/runesvendsen/code/crypto-venues
+- location:
+    git: https://github.com/runeksvendsen/orderbook.git
+    commit: 1cfe64aeb59ddebcfb0b8353f82457d16766fa36
+  extra-dep: true
+- location:
+    git: https://github.com/runeksvendsen/crypto-venues.git
+    commit: de05c8b2ddd57fd59b19f39938ee01fa9e1b8c20
+  extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/impure-containers.git
     commit: 0f00dc9a617d5312b6fe5e9ddb9c2b4b9d0afdaf
