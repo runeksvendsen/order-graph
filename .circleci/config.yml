@@ -6,22 +6,24 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
-          name: Restore Cached Dependencies
+          name: Restore cache
           keys:
             - v2-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
       - run:
-          name: Resolve/Update Dependencies
+          name: Install GHC
           command: stack setup
       - run:
-          name: Run tests
-          command: stack test --trace
+          name: Build library
+          command: stack build --trace
       - run:
-          name: Install executable
-          command: stack install --trace
+          name: Build tests
+          command: stack test --no-run-tests --trace
       - save_cache:
-          name: Cache Dependencies
+          name: Save cache
           key: v2-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
           paths:
             - /root/.stack
             - /root/project/.stack-work
+      - run:
+          name: Run tests
+          command: stack test --trace
