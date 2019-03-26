@@ -16,7 +16,7 @@ import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types
 
 import qualified Data.Graph.Digraph                         as DG
-import           Data.List                                  (groupBy, sortOn)
+import           Data.List                                  (groupBy, sortOn, sortBy)
 import qualified Data.List.NonEmpty                         as NE
 
 
@@ -86,11 +86,17 @@ create
     :: [SomeSellOrder]  -- ^ A bunch of sell orders
     -> [SortedOrders]
 create =
-    fmap (SortedOrders . NE.fromList . sortOn soPrice) . groupBy sameSrcDst
+    -- TODO: sort order books instead of orders
+    fmap (SortedOrders . NE.fromList . sortOn soPrice) . groupByMarket
         . fmap assertPositivePrice
   where
     assertPositivePrice order
         | soPrice order >= 0 = order
         | otherwise = error $ "negative-price order: " ++ show order
+    groupByMarket = groupBy sameSrcDst . sortBy orderSrcDst
     sameSrcDst oA oB =
-        soBase oA == soBase oB && soQuote oA == soQuote oB
+        soBase oA == soBase oB &&
+        soQuote oA == soQuote oB
+    orderSrcDst oA oB =
+        soBase oA `compare` soBase oB <>
+        soQuote oA `compare` soQuote oB
