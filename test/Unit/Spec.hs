@@ -8,15 +8,12 @@ module Unit.Spec
 ( tests )
 where
 
-import           OrderBook.Graph.Internal.Prelude
 import           Common.Util                        (assertMatchedOrders)
 
 import qualified OrderBook.Graph                    as Lib
 import qualified OrderBook.Graph.Internal.Util      as Util
-import qualified Data.Graph.Immutable               as GI
 
 import           Test.HUnit
-import qualified Data.List.NonEmpty                 as NE
 import           Test.Hspec.Expectations.Pretty
 
 

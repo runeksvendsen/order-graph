@@ -28,7 +28,6 @@ import qualified Data.Graph.Types                           as G
 import qualified Data.Graph.Immutable                       as GI
 import qualified Data.Graph.Mutable                         as GM
 
-import Debug.Trace
 
 -- | Convert all orders in an orderbook (consisting of both sell orders and buy orders)
 --    into a list of sell orders

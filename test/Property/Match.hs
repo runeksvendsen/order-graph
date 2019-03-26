@@ -1,10 +1,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Property.Spec
+module Property.Match
 ( spec )
 where
 
-import           OrderBook.Graph.Internal.Prelude           hiding (NonEmpty)
 import qualified OrderBook.Graph.Internal.Util              as Util
 import           Common.Util                                (assertMatchedOrders)
 import           Property.Orphans                           (NonEmpty(..))
@@ -15,16 +14,10 @@ import qualified OrderBook.Types                            as OB
 import           Test.Hspec
 import qualified Test.Hspec.SmallCheck                      as SC
 import qualified Control.Category                           as Cat
-import qualified Test.SmallCheck.Series                     as Series
 
 
 spec :: Spec
-spec = parallel $ do
-    combineSpec
-    matchSpec
-
-matchSpec :: Spec
-matchSpec = parallel $ do
+spec = describe "Match" $ do
     describe "single orderbook" $ do
         it "BUY: outputs sell orders sorted by price" $
             SC.property singleOrderbookBuy
@@ -35,18 +28,6 @@ matchSpec = parallel $ do
             SC.property dualOrderbookBuy
         it "SELL: outputs buy orders, from composed order book, sorted by price" $
             SC.property dualOrderbookSell
-
-combineSpec :: Spec
-combineSpec = do
-    describe "combine" $ do
-        it "(const $ const Nothing) = id" $
-            SC.property $ \lst ->
-                Util.combine (\_ _ -> Nothing) lst `shouldBe` (lst :: [Int])
-        it "(const $ const $ Just value) (NonEmpty _) = [value]" $
-            let value = 1 :: Int in
-                SC.property $ \(Series.NonEmpty lst) ->
-                    when (length lst >= 2) $
-                        Util.combine (\_ _ -> Just value) lst `shouldBe` [value]
 
 -- |
 singleOrderbookBuy

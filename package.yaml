@@ -11,6 +11,7 @@ category:            value
 
 default-extensions:
 - FlexibleContexts
+- DeriveGeneric
 
 dependencies:
   - base >= 4.7 && < 5
@@ -41,6 +42,7 @@ executables:
     source-dirs: app
     ghc-options:
     - -fno-ignore-asserts
+    - -Wall
     dependencies:
     - base
     - orderbook
@@ -58,14 +60,12 @@ executables:
     - directory
 
 tests:
-  crypto-venues-test:
+  order-graph-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
     - -fno-ignore-asserts
+    - -Wall
     dependencies:
     - order-graph
     - vector

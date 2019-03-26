@@ -36,6 +36,7 @@ import Data.Ratio                           as MoreStuff
 import Data.Hashable                        as MoreStuff    (Hashable)
 import Control.Monad.ST                     as MoreStuff
 import Control.Exception                    as MoreStuff    (assert)
+import Debug.Trace                          as MoreStuff
 import Data.Int                             (Int64)
 
 

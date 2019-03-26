@@ -1,20 +1,25 @@
 module Main where
 
 import qualified Unit.Spec                          as Unit
-import qualified Property.Spec                      as Property
+import qualified Property.Combine                   as Combine
+import qualified Property.Build                     as Build
+import qualified Property.Match                     as Match
+
 import           OrderBook.Graph.Internal.Prelude
-import qualified OrderBook.Graph                    as Lib
-import qualified Data.Graph.Immutable               as GI
 
 import           Test.HUnit
-import qualified Data.List.NonEmpty                 as NE
-import           Test.Hspec.Expectations.Pretty
-import           Test.Hspec.Runner
+import qualified Test.Hspec.Runner                  as Run
+import           Test.Hspec                         (parallel)
 
 
-scDepth = 5
+scDepth = 4
 
 main :: IO ()
 main = do
     void $ runTestTT Unit.tests
-    hspecWith defaultConfig { configSmallCheckDepth = scDepth } Property.spec
+    runHspec $ parallel $ do
+        Combine.spec
+        Build.spec
+        Match.spec
+  where
+    runHspec = Run.hspecWith Run.defaultConfig { Run.configSmallCheckDepth = scDepth }

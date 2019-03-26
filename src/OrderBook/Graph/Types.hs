@@ -62,7 +62,7 @@ data SomeSellOrder' numType =
     , soBase  :: Currency
     , soQuote :: Currency
     , soVenue :: T.Text
-    } deriving (Eq, Read, Functor, Generic)
+    } deriving (Eq, Read, Ord, Functor, Generic)
 
 type SomeSellOrder = SomeSellOrder' Rational
 

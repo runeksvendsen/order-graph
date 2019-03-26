@@ -13,8 +13,6 @@ module OrderBook.Graph.Match
 where
 
 import           OrderBook.Graph.Internal.Prelude
-import           OrderBook.Graph.Types                      ( Edge(..), Currency
-                                                            )
 import           OrderBook.Graph.Build                      ( SomeSellOrder
                                                             , SomeSellOrder'(..)
                                                             )
@@ -71,8 +69,8 @@ matchR matchedOrdersR graph bo = do
         :: B.SortedOrders
         -> SomeSellOrder                -- ^ Updated top order
         -> ST s ()
-    updateEdgeHeap orderList matchedEdge = do
-        let newOrderListM = replaceSubtractedOrder orderList matchedEdge
+    updateEdgeHeap orderList newTopOrder = do
+        let newOrderListM = replaceSubtractedOrder orderList newTopOrder
         case newOrderListM of
             Nothing           -> DG.removeEdge graph orderList
             Just newOrderList -> DG.insertEdge graph newOrderList
