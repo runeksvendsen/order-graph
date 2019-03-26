@@ -36,6 +36,7 @@ main :: IO ()
 main = do
     [fileName] <- getArgs
     orders <- readOrdersFile fileName
+    putStrLn $ "Order count: " ++ show (length orders)
     marketDepthWriteFile "/Users/runesvendsen/code/order-graph/web/btcusd.json" orders
 
 readOrdersFile :: FilePath -> IO [SomeSellOrder]
