@@ -29,18 +29,18 @@ import qualified Criterion
 import qualified Data.Aeson                                 as Json
 import           Data.Aeson                                 ((.=))
 import           System.Directory                           (listDirectory)
+import           System.Environment                         (getArgs)
 
 
 main :: IO ()
 main = do
-    orders <- readOrdersFile
+    [fileName] <- getArgs
+    orders <- readOrdersFile fileName
     marketDepthWriteFile "/Users/runesvendsen/code/order-graph/web/btcusd.json" orders
 
-readOrdersFile :: IO [SomeSellOrder]
-readOrdersFile = do
-    booksList <- mapM decodeFileOrFail =<< getTestFiles
-    -- HACK: only read a single order book for now
-    let books = booksList !! 0
+readOrdersFile :: FilePath -> IO [SomeSellOrder]
+readOrdersFile filePath = do
+    books <- decodeFileOrFail filePath
     return $ concatMap fromABook (books :: [ABook])
   where
     throwError file str = error $ file ++ ": " ++ str
@@ -66,6 +66,7 @@ marketDepthWriteFile
     -> IO ()
 marketDepthWriteFile obPath sellOrders = do
     (bids, asks) <- ST.stToIO $ DG.withGraph $ \mGraph -> do
+
         Lib.build mGraph sellOrders
         asks <- Lib.match mGraph asksOrder
         bids <- map Lib.invertSomeSellOrder <$> Lib.match mGraph bidsOrder

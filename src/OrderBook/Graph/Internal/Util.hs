@@ -117,11 +117,10 @@ trimSlippage
     -> [SomeSellOrder]
 trimSlippage _ [] = []
 trimSlippage percentDifference (firstOrder : remainingOrders) =
-    let traceThatShit a = ("trimSlippage: " ++ show firstOrder) `trace` a
-        startPrice = soPrice firstOrder
+    let startPrice = soPrice firstOrder
         filterByPricePercentage order =
             abs ((soPrice order - startPrice) / startPrice) <= (percentDifference / 100)
-    in firstOrder : traceThatShit (filter filterByPricePercentage remainingOrders)
+    in firstOrder : filter filterByPricePercentage remainingOrders
 
 -- | Merge a large number of orders into a smaller number of orders
 --    by merging the volume of adjacent orders into a single order, so
