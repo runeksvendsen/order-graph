@@ -6,12 +6,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module OrderBook.Graph.Types.SortedOrders
 ( SortedOrders(..), first, rest, prepend, toList, replaceHead
+, Tag.Tagged(..)
 )
 where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types
 import qualified Data.List.NonEmpty                         as NE
+import qualified Data.Tagged                                as Tag
 
 
 -- | A list of sell orders sorted (ascending) by price
@@ -57,9 +59,15 @@ replaceHead
 replaceHead (SortedOrders ne) =
     fmap SortedOrders . replaceHeadNE ne
 
-instance DirectedEdge SortedOrders Currency where
-    fromNode = fromNode . NE.head . getOrders
-    toNode = toNode . NE.head . getOrders
+instance DirectedEdge (Tag.Tagged a SortedOrders) Currency where
+    fromNode = fromNode . NE.head . getOrders . Tag.unTagged
+    toNode = toNode . NE.head . getOrders . Tag.unTagged
 
-instance WeightedEdge SortedOrders Currency Double where
-    weight = fromRational . weight . NE.head . getOrders
+instance WeightedEdge (Tag.Tagged "buy" SortedOrders) Currency Double where
+    weight = fromRational . weight . NE.head . getOrders . Tag.unTagged
+
+instance WeightedEdge (Tag.Tagged "arb" SortedOrders) Currency Double where
+    weight so = 
+        let buySO :: Tag.Tagged "buy" SortedOrders
+            buySO = Tag.Tagged (Tag.unTagged so)
+        in log (weight buySO)

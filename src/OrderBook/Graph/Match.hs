@@ -7,6 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph.Match
 ( match
+, arbitrages
 , BuyOrder
 , BuyOrder'(..)
 )
@@ -23,6 +24,7 @@ import qualified OrderBook.Graph.Exchange                   as Exchange
 import qualified Data.Graph.Digraph                         as DG
 import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Text                                  as T
+import           Unsafe.Coerce                              (unsafeCoerce)
 
 
 -- |
@@ -40,21 +42,37 @@ type BuyOrder = BuyOrder' Rational
 match
     :: forall s g base quote.
        (KnownSymbol base, KnownSymbol quote)
-    => B.SellOrderGraph s g
+    => B.SellOrderGraph s g "buy"
     -> BuyOrder base quote
     -> ST s [SomeSellOrder]
 match g bo =
-    fmap reverse $ matchR [] g bo
+    fmap reverse $ queryUpdateGraph [] g bo (Query.buyPath g src dst)
+  where
+    src = fromString $ symbolVal (Proxy :: Proxy quote)
+    dst = fromString $ symbolVal (Proxy :: Proxy base)
 
-matchR
+arbitrages
     :: forall s g base quote.
        (KnownSymbol base, KnownSymbol quote)
-    => [SomeSellOrder]
-    -> B.SellOrderGraph s g
+    => B.SellOrderGraph s g "arb"
     -> BuyOrder base quote
+    -> ST s (B.SellOrderGraph s g "buy", [SomeSellOrder])
+arbitrages g bo = do
+    orders <- fmap reverse $ queryUpdateGraph [] g bo (Query.arbitrage g src)
+    return (unsafeCoerce g, orders)
+  where
+    src = fromString $ symbolVal (Proxy :: Proxy quote)
+
+queryUpdateGraph
+    :: forall s g base quote kind.
+       (KnownSymbol base, KnownSymbol quote)
+    => [SomeSellOrder]
+    -> B.SellOrderGraph s g kind
+    -> BuyOrder base quote
+    -> ST s (Maybe Query.BuyPath)
     -> ST s [SomeSellOrder]
-matchR matchedOrdersR graph bo = do
-    buyPathM <- Query.buyPath graph src dst
+queryUpdateGraph matchedOrdersR graph bo queryGraph = do
+    buyPathM <- queryGraph
     case buyPathM of
         Nothing -> return matchedOrdersR
         Just (Query.BuyPath orderPath) -> do
@@ -62,32 +80,32 @@ matchR matchedOrdersR graph bo = do
             --   So when composing sell orders we need them to be in reverse order.
             let revOrderPath = NE.reverse orderPath
                 (newEdges, matchedOrder) = subtractMatchedQty revOrderPath
-            forM_ (NE.zip revOrderPath newEdges) (uncurry updateEdgeHeap)
-            matchR (matchedOrder : matchedOrdersR) graph bo
-  where
-    updateEdgeHeap
-        :: B.SortedOrders
-        -> SomeSellOrder                -- ^ Updated top order
-        -> ST s ()
-    updateEdgeHeap orderList newTopOrder = do
-        let newOrderListM = replaceSubtractedOrder orderList newTopOrder
-        case newOrderListM of
-            Nothing           -> DG.removeEdge graph orderList
-            Just newOrderList -> DG.insertEdge graph newOrderList
-    replaceSubtractedOrder
-        :: B.SortedOrders       -- List of sorted orders, with old order at the head
-        -> SomeSellOrder        -- New head order (if qty==0 then remove)
-        -> Maybe B.SortedOrders -- List of sorted orders with top orders replaced/removed
-    replaceSubtractedOrder sortedOrders newOrder =
-        -- Assert that the first order of "sortedOrders" and "newOrder"
-        --  are the same except for quantity
-        assert (setQty 0 (B.first sortedOrders) == setQty 0 newOrder) $
-        B.replaceHead sortedOrders $
-            case soQty newOrder of
-                0 -> Nothing
-                _ -> Just newOrder
-    src = fromString $ symbolVal (Proxy :: Proxy quote)
-    dst = fromString $ symbolVal (Proxy :: Proxy base)
+            forM_ (NE.zip revOrderPath newEdges) (uncurry $ updateGraphEdge graph)
+            queryUpdateGraph (matchedOrder : matchedOrdersR) graph bo queryGraph
+
+updateGraphEdge
+    :: B.SellOrderGraph s g kind
+    -> B.SortedOrders
+    -> SomeSellOrder                -- ^ Updated top order
+    -> ST s ()
+updateGraphEdge graph orderList newTopOrder = do
+    let newOrderListM = replaceSubtractedOrder orderList newTopOrder
+    case newOrderListM of
+        Nothing           -> DG.removeEdge graph (B.Tagged orderList)
+        Just newOrderList -> DG.insertEdge graph (B.Tagged newOrderList)
+
+replaceSubtractedOrder
+    :: B.SortedOrders       -- List of sorted orders, with old order at the head
+    -> SomeSellOrder        -- New head order (if qty==0 then remove)
+    -> Maybe B.SortedOrders -- List of sorted orders with top orders replaced/removed
+replaceSubtractedOrder sortedOrders newOrder =
+    -- Assert that the first order of "sortedOrders" and "newOrder"
+    --  are the same except for quantity
+    assert (setQty 0 (B.first sortedOrders) == setQty 0 newOrder) $
+    B.replaceHead sortedOrders $
+        case soQty newOrder of
+            0 -> Nothing
+            _ -> Just newOrder
 
 -- ^ subtract the quantity of the order with the smallest quantity
 --    from all the other orders in the list.

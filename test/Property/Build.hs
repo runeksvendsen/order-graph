@@ -44,7 +44,8 @@ addEdgesCheckOutgoing orders = do
     outgoingEdges <- ST.stToIO $ DG.withGraph $ \graph -> do
         Build.build graph shuffledOrders
         foldM (collectOutgoing graph) [] =<< DG.vertices graph
-    sort (concat $ Build.toList <$> concat outgoingEdges) `shouldBe` sort orders
+    let graphOrders = concat $ Build.toList . Build.unTagged <$> concat outgoingEdges
+    sort graphOrders `shouldBe` sort orders
   where
     collectOutgoing graph accum vertex = do
         outEdges <- DG.outgoingEdges graph vertex

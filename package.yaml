@@ -12,6 +12,8 @@ category:            value
 default-extensions:
 - FlexibleContexts
 - DeriveGeneric
+- DataKinds
+- PolyKinds
 
 dependencies:
   - base >= 4.7 && < 5
@@ -30,6 +32,7 @@ dependencies:
   - pretty-show
   - thrist
   - vector
+  - tagged
 
 library:
   source-dirs: src

@@ -8,6 +8,7 @@ module OrderBook.Graph.Build
 ( module OrderBook.Graph.Types
 , SellOrderGraph
 , SortedOrders, first, rest, prepend, toList, replaceHead
+, Tagged(..)
 , build
 )
 where
@@ -21,16 +22,16 @@ import           Data.List                                  (groupBy, sortOn, so
 import qualified Data.List.NonEmpty                         as NE
 
 
-type SellOrderGraph s g = DG.Digraph s g SortedOrders Currency
+type SellOrderGraph s g kind = DG.Digraph s g (Tagged kind SortedOrders) Currency
 
 -- ^ build a graph where each edge is a list of sorted sell orders
 build
     :: (PrimMonad m)
-    => SellOrderGraph (PrimState m) g   -- ^ Empty graph
-    -> [SomeSellOrder]                  -- ^ Orders
+    => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
+    -> [SomeSellOrder]                      -- ^ Orders
     -> m ()
 build mGraph orders = do
-    forM_ (create orders) (DG.insertEdge mGraph)
+    forM_ (create orders) (DG.insertEdge mGraph . Tagged)
 
 -- |
 create
