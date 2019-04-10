@@ -31,8 +31,8 @@ assertMatchedOrders sellOrders buyOrder expected = void $ do
     shuffledSellOrders <- Shuffle.shuffleM sellOrders
     matchedOrders <- ST.stToIO $ DG.withGraph $ \mGraph -> do
         Lib.build mGraph shuffledSellOrders
-        (buyGraph, _) <- Lib.arbitrages mGraph buyOrder
-        Lib.match buyGraph buyOrder
+        (buyGraph, _) <- Lib.runArb mGraph $ Lib.arbitrages buyOrder
+        Lib.runMatch buyGraph $ Lib.match buyOrder
     assertAscendingPriceSorted matchedOrders
     merge matchedOrders `shouldBe` merge expected
 

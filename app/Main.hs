@@ -4,6 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NumDecimals #-}    -- DEBUG
 module Main
 ( main )
 where
@@ -26,12 +27,23 @@ import qualified Data.Aeson                                 as Json
 import           Data.Aeson                                 ((.=))
 import           System.Environment                         (getArgs)
 import           Debug.Trace                                (trace)
+-- DEBUG
+import Control.Concurrent
+import Control.Exception.Base
 
 
 main :: IO ()
 main = do
     [fileName] <- getArgs
     readOrdersWriteFile fileName
+
+main' = debugMain
+
+debugMain = do
+    tid <- forkIO $
+        readOrdersWriteFile "test/data/10-ob.json"
+    threadDelay 300e6
+    throwTo tid (ErrorCall "lol")
 
 readOrdersWriteFile :: FilePath -> IO ()
 readOrdersWriteFile fileName = do
@@ -54,25 +66,29 @@ marketDepthWriteFile
     -> IO ()
 marketDepthWriteFile obPath sellOrders = do
     (bids, asks) <- ST.stToIO $ DG.withGraph $ \mGraph -> do
+        -- Build
         log "Building graph..."
         Lib.build mGraph sellOrders
         DG.vertexCount mGraph >>= \vertexCount -> log $ "Vertex count: " ++ show vertexCount
-        log "Finding arbitrages..."
-        (buyGraph, arbs) <- Lib.arbitrages mGraph asksOrder
-        log $ unlines ["Arbitrages:", pp arbs]
-        log "Matching sell orders..."
-        asks <- Lib.match buyGraph asksOrder
-        log "Matching buy orders..."
-        bids <- map Lib.invertSomeSellOrder <$> Lib.match buyGraph bidsOrder
-        return (bids, asks)
+        -- Arbitrages
+        buyGraph <- Lib.runArb mGraph $ do
+            log "Finding arbitrages..."
+            (_, arbsA)        <- Lib.arbitrages asksOrder
+            log $ unlines ["Ask arbitrages:", pp arbsA]
+            (buyGraph, arbsB) <- Lib.arbitrages bidsOrder
+            log $ unlines ["Bids arbitrages:", pp arbsB]
+            return buyGraph
+        -- Match
+        Lib.runMatch buyGraph $ do
+            log "Matching sell orders..."
+            asks <- Lib.match asksOrder
+            log "Matching buy orders..."
+            bids <- map Lib.invertSomeSellOrder <$> Lib.match bidsOrder
+            return (bids, asks)
     log "Writing order book.."
     let trimmedAsks = trimOrders $ sortBy (comparing soPrice)        asks
         trimmedBids = trimOrders $ sortBy (flip $ comparing soPrice) bids
-    let jsonOB = Json.object
-            [ "bids" .= map toJson trimmedBids
-            , "asks" .= map toJson trimmedAsks
-            ]
-    Json.encodeFile obPath jsonOB
+    Json.encodeFile obPath (mkJsonOb trimmedBids trimmedAsks)
     putStrLn $ "Wrote " ++ show obPath
   where
     log str = str `trace` return ()
@@ -82,6 +98,18 @@ marketDepthWriteFile obPath sellOrders = do
     asksOrder = Lib.BuyOrder' 1.0 Nothing Nothing
     bidsOrder :: Lib.BuyOrder "USD" "BTC"
     bidsOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+
+-- | Write JSON order book
+mkJsonOb
+    :: [SomeSellOrder]  -- ^ Bids
+    -> [SomeSellOrder]  -- ^ Asks
+    -> Json.Value
+mkJsonOb bids asks =
+    Json.object
+        [ "bids" .= map toJson bids
+        , "asks" .= map toJson asks
+        ]
+  where
     toJson :: SomeSellOrder -> Json.Value
     toJson sso = Json.toJSON -- format: ["0.03389994", 34.14155996]
         ( show (realToFrac $ soPrice sso :: Double)
