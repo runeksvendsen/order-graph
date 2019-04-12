@@ -41,7 +41,7 @@ singleOrderbookBuy (NonEmpty ob) =
   where
     (obSellOrders, _) = Util.toSellBuyOrders ob
     buyOrder :: Lib.BuyOrder "A" "B"   -- I have "B" and I want "A"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited
 
 -- |
 singleOrderbookSell
@@ -55,7 +55,7 @@ singleOrderbookSell (NonEmpty ob) =
   where
     (_, obBuyOrders) = Util.toSellBuyOrders ob
     buyOrder :: Lib.BuyOrder "B" "A"   -- I have "A" and I want "B"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited
 
 -- |
 dualOrderbookBuy
@@ -73,7 +73,7 @@ dualOrderbookBuy (NonEmpty obAB) (NonEmpty obBC) =
     -- "ob1 Cat.. ob2" ignores the venue, so we set this to what "Lib.match" produces
     obSellOrders = map (\so -> so { Lib.soVenue = "TestVenue,TestVenue" }) obSellOrders'
     buyOrder :: Lib.BuyOrder "A" "C"   -- I have "C" and I want "A"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited
 
 -- |
 dualOrderbookSell
@@ -91,4 +91,4 @@ dualOrderbookSell (NonEmpty obAB) (NonEmpty obBC) =
     -- "ob1 Cat.. ob2" ignores the venue, so we set this to what "Lib.match" produces
     obBuyOrders = map (\so -> so { Lib.soVenue = "TestVenue,TestVenue" }) obBuyOrders'
     buyOrder :: Lib.BuyOrder "C" "A"   -- I have "A" and I want "C"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited

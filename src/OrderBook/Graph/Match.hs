@@ -10,6 +10,7 @@ module OrderBook.Graph.Match
 , arbitrages
 , BuyOrder
 , BuyOrder'(..)
+, unlimited
 )
 where
 
@@ -29,15 +30,73 @@ import           Unsafe.Coerce                              (unsafeCoerce)
 
 -- |
 data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
-    { boQuantity        :: numTyp
+    { boQuantity        :: Maybe numTyp
     , boMaxPrice        :: Maybe numTyp
       -- ^ (TODO: IGNORED FOR NOW) maximum price
     , boMaxSlippage     :: Maybe numTyp
-      -- ^ (per-market) maximum percentage difference
+      -- ^ maximum percentage difference
       -- between price of first and last matched order
     }
 
 type BuyOrder = BuyOrder' Rational
+
+-- | A buy order whose execution will continue until there
+--    is no path from 'src' to 'dst'.
+unlimited
+    :: Fractional numTyp
+    => BuyOrder' numTyp dst src
+unlimited = BuyOrder'
+    { boQuantity    = Nothing
+    , boMaxPrice    = Nothing
+    , boMaxSlippage = Nothing
+    }
+
+type MatchResult = MatchResult' Rational
+
+-- | Result of executing a 'BuyOrder'
+data MatchResult' numTyp = MatchResult'
+    { mrOrders      :: [SomeSellOrder' numTyp]          -- ^ Matched orders
+    , mrFirstOrder  :: Maybe (SomeSellOrder' numTyp)    -- ^ First matched order
+    , mrQuantity    :: numTyp                           -- ^ Matched quantity
+    } deriving (Eq, Show)
+
+empty :: Num numTyp => MatchResult' numTyp
+empty = MatchResult'
+    { mrOrders      = []
+    , mrFirstOrder  = Nothing
+    , mrQuantity    = 0
+    }
+
+addOrder
+    :: (Real numTyp, Show numTyp)
+    => MatchResult' numTyp
+    -> SomeSellOrder' numTyp
+    -> MatchResult' numTyp
+addOrder (MatchResult' [] Nothing _) order =
+    MatchResult' [order] (Just order) (soQty order)
+addOrder (MatchResult' orders firstOrder@Just{} qty) order =
+    MatchResult' (order : orders) firstOrder (qty + soQty order)
+addOrder mr@(MatchResult' _ Nothing _) _ =
+    error $ "invalid MatchResult' " ++ show mr
+
+-- | Stop order execution if this returns 'True'
+--
+--  TODO: check maximum price
+orderFilled
+    :: (Fractional numTyp, Real numTyp, Show numTyp)
+    => BuyOrder' numTyp base quote
+    -> MatchResult' numTyp
+    -> Bool
+orderFilled _ (MatchResult' _ Nothing _) = False
+orderFilled _ mr@(MatchResult' [] Just{} _) = error $ "invalid MatchResult' " ++ show mr
+orderFilled (BuyOrder' qtyM _ slipM) (MatchResult' (latest:_) (Just first) mrQty) =
+    qtyFilled || slippageReached
+  where
+    checkProp propM f = maybe False f propM
+    qtyFilled = checkProp qtyM $ \qty -> mrQty >= qty
+    slippageReached = checkProp slipM $ \maxSlippage ->
+        let slippagePct = (soPrice latest - soPrice first) / soPrice first * 100
+        in slippagePct > maxSlippage
 
 match
     :: forall s g base quote.
@@ -46,42 +105,48 @@ match
     -> BuyOrder base quote
     -> ST s [SomeSellOrder]
 match g bo =
-    fmap reverse $ queryUpdateGraph [] g bo (Query.buyPath g src dst)
+    reverse . mrOrders <$> queryUpdateGraph g bo (Query.buyPath g src dst)
   where
     src = fromString $ symbolVal (Proxy :: Proxy quote)
     dst = fromString $ symbolVal (Proxy :: Proxy base)
 
+-- | NB: 'BuyOrder' is only used to specify 'src' currency.
+--   No other information from the 'BuyOrder' is used.
 arbitrages
     :: forall s g base quote.
        (KnownSymbol base, KnownSymbol quote)
     => B.SellOrderGraph s g "arb"
     -> BuyOrder base quote
     -> ST s (B.SellOrderGraph s g "buy", [SomeSellOrder])
-arbitrages g bo = do
-    orders <- fmap reverse $ queryUpdateGraph [] g bo (Query.arbitrage g src)
-    return (unsafeCoerce g, orders)
+arbitrages g _ = do
+    mr <- queryUpdateGraph g unlimitedBuyOrder (Query.arbitrage g src)
+    return (unsafeCoerce g, reverse $ mrOrders mr)
   where
     src = fromString $ symbolVal (Proxy :: Proxy quote)
+    unlimitedBuyOrder :: BuyOrder base quote
+    unlimitedBuyOrder = unlimited
 
 queryUpdateGraph
     :: forall s g base quote kind.
        (KnownSymbol base, KnownSymbol quote)
-    => [SomeSellOrder]
-    -> B.SellOrderGraph s g kind
+    => B.SellOrderGraph s g kind
     -> BuyOrder base quote
     -> ST s (Maybe Query.BuyPath)
-    -> ST s [SomeSellOrder]
-queryUpdateGraph matchedOrdersR graph bo queryGraph = do
-    buyPathM <- queryGraph
-    case buyPathM of
-        Nothing -> return matchedOrdersR
-        Just (Query.BuyPath orderPath) -> do
-            -- | The buyer moves in the opposite direction of the seller.
-            --   So when composing sell orders we need them to be in reverse order.
-            let revOrderPath = NE.reverse orderPath
-                (newEdges, matchedOrder) = subtractMatchedQty revOrderPath
-            forM_ (NE.zip revOrderPath newEdges) (uncurry $ updateGraphEdge graph)
-            queryUpdateGraph (matchedOrder : matchedOrdersR) graph bo queryGraph
+    -> ST s MatchResult
+queryUpdateGraph graph bo queryGraph =
+    go empty
+  where
+    go mr = do
+        buyPathM <- if not (orderFilled bo mr) then queryGraph else return Nothing
+        case buyPathM of
+            Nothing -> return mr
+            Just (Query.BuyPath orderPath) -> do
+                -- | The buyer moves in the opposite direction of the seller.
+                --   So when composing sell orders we need them to be in reverse order.
+                let revOrderPath = NE.reverse orderPath
+                    (newEdges, matchedOrder) = subtractMatchedQty revOrderPath
+                forM_ (NE.zip revOrderPath newEdges) (uncurry $ updateGraphEdge graph)
+                go (addOrder mr matchedOrder)
 
 updateGraphEdge
     :: B.SellOrderGraph s g kind

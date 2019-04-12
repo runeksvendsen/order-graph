@@ -30,7 +30,7 @@ singleOrder =
     TestCase $ assertMatchedOrders [testOrder] buyOrder [testOrder]
   where
     buyOrder :: Lib.BuyOrder "BTC" "USD"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited
     testOrder :: Lib.SomeSellOrder
     testOrder = Lib.SomeSellOrder'
         { soPrice = 100

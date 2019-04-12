@@ -58,6 +58,7 @@ marketDepthWriteFile obPath sellOrders = do
         Lib.build mGraph sellOrders
         DG.vertexCount mGraph >>= \vertexCount -> log $ "Vertex count: " ++ show vertexCount
         log "Finding arbitrages..."
+        -- TODO: also check arbitrages for "bidsOrder" (different 'src' vertex)
         (buyGraph, arbs) <- Lib.arbitrages mGraph asksOrder
         log $ unlines ["Arbitrages:", pp arbs]
         log "Matching sell orders..."
@@ -77,11 +78,12 @@ marketDepthWriteFile obPath sellOrders = do
   where
     log str = str `trace` return ()
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
-    trimOrders = Util.compress 500 . Util.merge . Util.trimSlippage (50%1)
+    trimOrders = Util.compress 500 . Util.merge
+    slippageCapOrder = Lib.unlimited { Lib.boMaxSlippage = Just 50 }
     asksOrder :: Lib.BuyOrder "BTC" "USD"
-    asksOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    asksOrder = slippageCapOrder
     bidsOrder :: Lib.BuyOrder "USD" "BTC"
-    bidsOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    bidsOrder = slippageCapOrder
     toJson :: SomeSellOrder -> Json.Value
     toJson sso = Json.toJSON -- format: ["0.03389994", 34.14155996]
         ( show (realToFrac $ soPrice sso :: Double)

@@ -66,7 +66,7 @@ data SomeSellOrder' numType =
 
 type SomeSellOrder = SomeSellOrder' Rational
 
-instance Show SomeSellOrder where
+instance Real numType => Show (SomeSellOrder' numType) where
     show SomeSellOrder'{..} =
         printf "Order { %s qty=%f price=%f %s/%s }"
             soVenue
