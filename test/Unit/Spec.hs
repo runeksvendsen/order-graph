@@ -8,7 +8,7 @@ module Unit.Spec
 ( tests )
 where
 
-import           Common.Util                        (assertMatchedOrders)
+import           Common.Util                        (assertMatchedOrders, shouldBeIgnoringVenue)
 
 import qualified OrderBook.Graph                    as Lib
 import qualified OrderBook.Graph.Internal.Util      as Util
@@ -27,7 +27,8 @@ tests = TestList
 
 singleOrder :: Test
 singleOrder =
-    TestCase $ assertMatchedOrders [testOrder] buyOrder [testOrder]
+    TestCase $ assertMatchedOrders [testOrder] buyOrder
+        (`shouldBeIgnoringVenue` Util.merge [testOrder])
   where
     buyOrder :: Lib.BuyOrder "BTC" "USD"
     buyOrder = Lib.unlimited

@@ -5,7 +5,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Common.Util
-( assertMatchedOrders )
+( assertMatchedOrders
+, shouldBeIgnoringVenue
+)
 where
 
 import           OrderBook.Graph.Internal.Prelude
@@ -25,16 +27,16 @@ assertMatchedOrders
        )
     => [Lib.SomeSellOrder]          -- ^ Input sell orders
     -> Lib.BuyOrder base quote      -- ^ Buy order
-    -> [Lib.SomeSellOrder]          -- ^ Expected matched orders
+    -> ([Lib.SomeSellOrder] -> IO ())   -- ^ Receives matched orders
     -> IO ()
-assertMatchedOrders sellOrders buyOrder expected = void $ do
+assertMatchedOrders sellOrders buyOrder f = void $ do
     shuffledSellOrders <- Shuffle.shuffleM sellOrders
     matchedOrders <- ST.stToIO $ DG.withGraph $ \mGraph -> do
         Lib.build mGraph shuffledSellOrders
         (buyGraph, _) <- Lib.arbitrages mGraph buyOrder
         Lib.match buyGraph buyOrder
     assertAscendingPriceSorted matchedOrders
-    merge matchedOrders `shouldBe` merge expected
+    f (merge matchedOrders)
 
 assertAscendingPriceSorted
     :: [Lib.SomeSellOrder]
@@ -50,3 +52,14 @@ assertAscendingPriceSorted (firstOrder : remainingOrders) =
                 expectationFailure $ unlines ["Orders not sorted:", pp prevOrder, pp nextOrder]
                 -- Line below never reached
                 return undefined
+
+-- Compare two SomeSellOrder lists ignoring 'soVenue'
+shouldBeIgnoringVenue
+    :: [Lib.SomeSellOrder]  -- ^ Actual
+    -> [Lib.SomeSellOrder]  -- ^ Expected
+    -> IO ()
+shouldBeIgnoringVenue actual expected =
+    clearVenues actual `shouldBe` clearVenues expected
+  where
+    clearVenues = map clearVenue
+    clearVenue so = so { Lib.soVenue = "" }
