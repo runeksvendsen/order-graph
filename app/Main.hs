@@ -58,9 +58,14 @@ marketDepthWriteFile obPath sellOrders = do
         Lib.build mGraph sellOrders
         DG.vertexCount mGraph >>= \vertexCount -> log $ "Vertex count: " ++ show vertexCount
         log "Finding arbitrages..."
-        -- TODO: also check arbitrages for "bidsOrder" (different 'src' vertex)
-        (buyGraph, arbs) <- Lib.arbitrages mGraph asksOrder
-        log $ unlines ["Arbitrages:", pp arbs]
+        -- Asks
+        (_, arbsA) <- Lib.arbitrages mGraph asksOrder
+        log $ unlines ["Arbitrages (asks):", pp arbsA]
+        -- Bids
+        --  If there's no path from "asks" start vertex to its end vertex,
+        --   then the below might find additional negative cycles.
+        (buyGraph, arbsB) <- Lib.arbitrages mGraph bidsOrder
+        log $ unlines ["Arbitrages (bids):", pp arbsB]
         log "Matching sell orders..."
         asks <- Lib.match buyGraph asksOrder
         log "Matching buy orders..."
