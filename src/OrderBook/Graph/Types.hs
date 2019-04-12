@@ -51,6 +51,10 @@ instance StringConv String Currency where
     strConv _ = fromString
 instance StringConv Currency String where
     strConv l (Currency txt) = strConv l txt
+instance StringConv Currency T.Text where
+    strConv _ (Currency txt) = txt
+instance StringConv T.Text Currency where
+    strConv _ = Currency
 
 -- | A sell order.
 --   An offer to exchange 'soQty' of 'soBase' for 'soQuote',

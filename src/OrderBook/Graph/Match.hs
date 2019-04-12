@@ -129,7 +129,9 @@ subtractMatchedQty sortedOrders =
   where
     someSellOrders = fmap B.first sortedOrders
     -- The venues moved through, separated by ","
-    venues = T.concat . NE.toList . NE.intersperse "," $ NE.map soVenue someSellOrders
+    venues = T.concat . NE.toList . NE.intersperse " <-> " $ NE.map venueWithMarket someSellOrders
+    -- venue + market name. Example: "bitstamp(BTC/USD)"
+    venueWithMarket so = soVenue so <> "(" <> toS (soBase so) <> "/" <> toS (soQuote so) <> ")"
 
 -- | Helper function
 setQty
