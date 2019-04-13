@@ -57,6 +57,7 @@ marketDepthWriteFile obPath sellOrders = do
         log "Building graph..."
         Lib.build mGraph sellOrders
         DG.vertexCount mGraph >>= \vertexCount -> log $ "Vertex count: " ++ show vertexCount
+        DG.edgeCount mGraph >>= \edgeCount -> log $ "Edge count:   " ++ show edgeCount
         log "Finding arbitrages..."
         -- Asks
         (_, arbsA) <- Lib.arbitrages mGraph asksOrder
