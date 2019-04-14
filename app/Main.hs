@@ -9,8 +9,8 @@ module Main
 where
 
 import           Prelude
+import qualified Options                                    as Opt
 import           OrderBook.Graph.Internal.Prelude
-import           Protolude                                  ((%))
 import qualified OrderBook.Graph.Internal.Util              as Util
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
 import qualified OrderBook.Graph                            as Lib
@@ -24,20 +24,43 @@ import           Data.Ord                                   (comparing)
 
 import qualified Data.Aeson                                 as Json
 import           Data.Aeson                                 ((.=))
-import           System.Environment                         (getArgs)
 import           Debug.Trace                                (trace)
+import           System.FilePath                            ((</>))
+import qualified System.FilePath                            as FP
 
 
 main :: IO ()
 main = do
-    [fileName] <- getArgs
-    readOrdersWriteFile fileName
+    options <- Opt.execParser Opt.opts
+    forM_ (Opt.inputFiles options) $ \inputFile ->
+        withBidsAsksOrder options $ \bidsOrder asksOrder -> do
+            orders <- readOrdersFile inputFile
+            putStrLn $ "Order count: " ++ show (length orders)
+            marketDepthWriteFile
+                (mkOutFile options inputFile)
+                bidsOrder
+                asksOrder
+                orders
+  where
+    mkOutFile options inputFile = Opt.outputDir options </> FP.takeFileName inputFile
 
-readOrdersWriteFile :: FilePath -> IO ()
-readOrdersWriteFile fileName = do
-    orders <- readOrdersFile fileName
-    putStrLn $ "Order count: " ++ show (length orders)
-    marketDepthWriteFile "/Users/runesvendsen/code/order-graph/web/btcusd.json" orders
+withBidsAsksOrder
+    :: Opt.Options
+    -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Lib.BuyOrder dst src
+                                                           -> Lib.BuyOrder src dst
+                                                           -> r
+       )
+    -> r
+withBidsAsksOrder options f =
+    case someSymbolVal (Opt.numeraire options) of
+        SomeSymbol (Proxy :: Proxy numeraire) ->
+            case someSymbolVal (Opt.crypto options) of
+                SomeSymbol (Proxy :: Proxy crypto) ->
+                    f (buyOrder :: Lib.BuyOrder numeraire crypto)
+                      (buyOrder :: Lib.BuyOrder crypto numeraire)
+  where
+    buyOrder = Lib.unlimited
+        { Lib.boMaxSlippage = Just . fromIntegral . Opt.maxSlippage $ options }
 
 readOrdersFile :: FilePath -> IO [SomeSellOrder]
 readOrdersFile filePath = do
@@ -49,10 +72,13 @@ readOrdersFile filePath = do
         either (throwError file) return =<< Json.eitherDecodeFileStrict file
 
 marketDepthWriteFile
-    :: FilePath
+    :: (KnownSymbol src, KnownSymbol dst)
+    => FilePath
+    -> Lib.BuyOrder dst src     -- ^ Sell cryptocurrency for national currency
+    -> Lib.BuyOrder src dst     -- ^ Buy cryptocurrency for national currency
     -> [SomeSellOrder]
     -> IO ()
-marketDepthWriteFile obPath sellOrders = do
+marketDepthWriteFile obPath bidsOrder asksOrder sellOrders = do
     (bids, asks) <- ST.stToIO $ DG.withGraph $ \mGraph -> do
         log "Building graph..."
         Lib.build mGraph sellOrders
@@ -85,11 +111,6 @@ marketDepthWriteFile obPath sellOrders = do
     log str = str `trace` return ()
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
     trimOrders = Util.compress 500 . Util.merge
-    slippageCapOrder = Lib.unlimited { Lib.boMaxSlippage = Just 50 }
-    asksOrder :: Lib.BuyOrder "BTC" "USD"
-    asksOrder = slippageCapOrder
-    bidsOrder :: Lib.BuyOrder "USD" "BTC"
-    bidsOrder = slippageCapOrder
     toJson :: SomeSellOrder -> Json.Value
     toJson sso = Json.toJSON -- format: ["0.03389994", 34.14155996]
         ( show (realToFrac $ soPrice sso :: Double)
