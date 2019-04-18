@@ -51,6 +51,10 @@ instance StringConv String Currency where
     strConv _ = fromString
 instance StringConv Currency String where
     strConv l (Currency txt) = strConv l txt
+instance StringConv Currency T.Text where
+    strConv _ (Currency txt) = txt
+instance StringConv T.Text Currency where
+    strConv _ = Currency
 
 -- | A sell order.
 --   An offer to exchange 'soQty' of 'soBase' for 'soQuote',
@@ -66,7 +70,7 @@ data SomeSellOrder' numType =
 
 type SomeSellOrder = SomeSellOrder' Rational
 
-instance Show SomeSellOrder where
+instance Real numType => Show (SomeSellOrder' numType) where
     show SomeSellOrder'{..} =
         printf "Order { %s qty=%f price=%f %s/%s }"
             soVenue

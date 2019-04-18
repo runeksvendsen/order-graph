@@ -61,6 +61,8 @@ executables:
     - criterion
     - aeson
     - directory
+    - optparse-applicative
+    - filepath
 
 tests:
   order-graph-test:

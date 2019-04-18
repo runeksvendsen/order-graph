@@ -10,10 +10,12 @@ module OrderBook.Graph.Match
 , arbitrages
 , BuyOrder
 , BuyOrder'(..)
+, unlimited
 )
 where
 
 import           OrderBook.Graph.Internal.Prelude
+import           OrderBook.Graph.Match.Types
 import           OrderBook.Graph.Build                      ( SomeSellOrder
                                                             , SomeSellOrder'(..)
                                                             )
@@ -28,61 +30,53 @@ import qualified Data.Text                                  as T
 import           Unsafe.Coerce                              (unsafeCoerce)
 
 
--- |
-data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
-    { boQuantity        :: numTyp
-    , boMaxPrice        :: Maybe numTyp
-      -- ^ (TODO: IGNORED FOR NOW) maximum price
-    , boMaxSlippage     :: Maybe numTyp
-      -- ^ (per-market) maximum percentage difference
-      -- between price of first and last matched order
-    }
-
-type BuyOrder = BuyOrder' Rational
-
 match
     :: forall s g base quote.
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
     -> Query.BuyGraphM s g [SomeSellOrder]
 match bo =
-    reverse <$> queryUpdateGraph bo (Query.buyPath src dst)
+    reverse . mrOrders <$> queryUpdateGraph bo (Query.buyPath src dst)
   where
     src = fromString $ symbolVal (Proxy :: Proxy quote)
     dst = fromString $ symbolVal (Proxy :: Proxy base)
 
+-- | NB: 'BuyOrder' is only used to specify 'src' currency.
+--   No other information from the 'BuyOrder' is used.
 arbitrages
     :: forall s g base quote.
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
     -> Query.ArbGraphM s g (B.SellOrderGraph s g "buy", [SomeSellOrder])
 arbitrages bo = do
-    orders <- queryUpdateGraph bo (Query.arbitrage src)
+    mr <- queryUpdateGraph unlimitedBuyOrder (Query.arbitrage src)
     g <- BF.getGraph
-    return (unsafeCoerce g, reverse orders)
+    return (unsafeCoerce g, reverse $ mrOrders mr)
   where
     src = fromString $ symbolVal (Proxy :: Proxy quote)
+    unlimitedBuyOrder :: BuyOrder base quote
+    unlimitedBuyOrder = unlimited
 
 queryUpdateGraph
     :: forall s g base quote kind.
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
     -> Query.AnyGraphM s g kind (Maybe Query.BuyPath)
-    -> Query.AnyGraphM s g kind [SomeSellOrder]
+    -> Query.AnyGraphM s g kind MatchResult
 queryUpdateGraph bo queryGraph =
-    go []
+    go empty
   where
-    go accum = do
-        buyPathM <- queryGraph
+    go mr = do
+        buyPathM <- if not (orderFilled bo mr) then queryGraph else return Nothing
         case buyPathM of
-            Nothing -> return accum
+            Nothing -> return mr
             Just (Query.BuyPath orderPath) -> do
-                -- The buyer moves in the opposite direction of the seller.
+                -- | The buyer moves in the opposite direction of the seller.
                 --   So when composing sell orders we need them to be in reverse order.
                 let revOrderPath = NE.reverse orderPath
                     (newEdges, matchedOrder) = subtractMatchedQty revOrderPath
                 forM_ (NE.zip revOrderPath newEdges) (uncurry updateGraphEdge)
-                go (matchedOrder : accum)
+                go (addOrder mr matchedOrder)
 
 updateGraphEdge
     :: B.SortedOrders
@@ -135,7 +129,9 @@ subtractMatchedQty sortedOrders =
   where
     someSellOrders = fmap B.first sortedOrders
     -- The venues moved through, separated by ","
-    venues = T.concat . NE.toList . NE.intersperse "," $ NE.map soVenue someSellOrders
+    venues = T.concat . NE.toList . NE.intersperse " <-> " $ NE.map venueWithMarket someSellOrders
+    -- venue + market name. Example: "bitstamp(BTC/USD)"
+    venueWithMarket so = soVenue so <> "(" <> toS (soBase so) <> "/" <> toS (soQuote so) <> ")"
 
 -- | Helper function
 setQty

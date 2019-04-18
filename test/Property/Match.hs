@@ -5,7 +5,9 @@ module Property.Match
 where
 
 import qualified OrderBook.Graph.Internal.Util              as Util
-import           Common.Util                                (assertMatchedOrders)
+import           Common.Util                                ( assertMatchedOrders
+                                                            , shouldBeIgnoringVenue
+                                                            )
 import           Property.Orphans                           (NonEmpty(..))
 import qualified OrderBook.Graph                            as Lib
 
@@ -37,11 +39,11 @@ singleOrderbookBuy (NonEmpty ob) =
     assertMatchedOrders
         (Util.fromOB ob)
         buyOrder
-        obSellOrders -- I have "A" and I want "B"
+        (`shouldBeIgnoringVenue` Util.merge obSellOrders) -- I have "A" and I want "B"
   where
     (obSellOrders, _) = Util.toSellBuyOrders ob
     buyOrder :: Lib.BuyOrder "A" "B"   -- I have "B" and I want "A"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited
 
 -- |
 singleOrderbookSell
@@ -51,11 +53,11 @@ singleOrderbookSell (NonEmpty ob) =
     assertMatchedOrders
         (Util.fromOB ob)
         buyOrder
-        obBuyOrders -- I have "B" and I want "A"
+        (`shouldBeIgnoringVenue` Util.merge obBuyOrders) -- I have "B" and I want "A"
   where
     (_, obBuyOrders) = Util.toSellBuyOrders ob
     buyOrder :: Lib.BuyOrder "B" "A"   -- I have "A" and I want "B"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited
 
 -- |
 dualOrderbookBuy
@@ -66,14 +68,14 @@ dualOrderbookBuy (NonEmpty obAB) (NonEmpty obBC) =
     assertMatchedOrders
         (Util.fromOB obAB ++ Util.fromOB obBC)
         buyOrder
-        obSellOrders -- I have "A" and I want "C"
+        (`shouldBeIgnoringVenue` Util.merge obSellOrders) -- I have "A" and I want "C"
   where
     composedOB = obBC Cat.. obAB
     (obSellOrders', _) = Util.toSellBuyOrders composedOB
     -- "ob1 Cat.. ob2" ignores the venue, so we set this to what "Lib.match" produces
     obSellOrders = map (\so -> so { Lib.soVenue = "TestVenue,TestVenue" }) obSellOrders'
     buyOrder :: Lib.BuyOrder "A" "C"   -- I have "C" and I want "A"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited
 
 -- |
 dualOrderbookSell
@@ -84,11 +86,11 @@ dualOrderbookSell (NonEmpty obAB) (NonEmpty obBC) =
     assertMatchedOrders
         (Util.fromOB obAB ++ Util.fromOB obBC)
         buyOrder
-        obBuyOrders -- I have "C" and I want "A"
+        (`shouldBeIgnoringVenue` Util.merge obBuyOrders) -- I have "C" and I want "A"
   where
     composedOB = obBC Cat.. obAB
     (_, obBuyOrders') = Util.toSellBuyOrders composedOB
     -- "ob1 Cat.. ob2" ignores the venue, so we set this to what "Lib.match" produces
     obBuyOrders = map (\so -> so { Lib.soVenue = "TestVenue,TestVenue" }) obBuyOrders'
     buyOrder :: Lib.BuyOrder "C" "A"   -- I have "A" and I want "C"
-    buyOrder = Lib.BuyOrder' 1.0 Nothing Nothing
+    buyOrder = Lib.unlimited
