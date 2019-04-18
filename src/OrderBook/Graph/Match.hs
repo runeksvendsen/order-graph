@@ -46,7 +46,7 @@ match
     => BuyOrder base quote
     -> Query.BuyGraphM s g [SomeSellOrder]
 match bo =
-    queryUpdateGraph bo (Query.buyPath src dst)
+    reverse <$> queryUpdateGraph bo (Query.buyPath src dst)
   where
     src = fromString $ symbolVal (Proxy :: Proxy quote)
     dst = fromString $ symbolVal (Proxy :: Proxy base)
@@ -59,7 +59,7 @@ arbitrages
 arbitrages bo = do
     orders <- queryUpdateGraph bo (Query.arbitrage src)
     g <- BF.getGraph
-    return (unsafeCoerce g, orders)
+    return (unsafeCoerce g, reverse orders)
   where
     src = fromString $ symbolVal (Proxy :: Proxy quote)
 
@@ -82,7 +82,6 @@ queryUpdateGraph bo queryGraph =
                 let revOrderPath = NE.reverse orderPath
                     (newEdges, matchedOrder) = subtractMatchedQty revOrderPath
                 forM_ (NE.zip revOrderPath newEdges) (uncurry updateGraphEdge)
-                pp matchedOrder `trace` return ()
                 go (matchedOrder : accum)
 
 updateGraphEdge
