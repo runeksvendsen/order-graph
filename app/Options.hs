@@ -40,10 +40,12 @@ data Mode
       --   Argument specifies orderbook output directory.
     | Benchmark
       -- ^ Run benchmark of order matching algorithm
+    | BenchmarkCsv FilePath
+      -- ^ Same as 'Benchmark' but also results to CSV file
       deriving (Eq, Show)
 
 modeOpt :: Parser Mode
-modeOpt = visualizeOpt <|> benchOpt
+modeOpt = visualizeOpt <|> benchOpt <|> benchCsvOpt
 
 visualizeOpt :: Parser Mode
 visualizeOpt = Visualize <$> strOption
@@ -56,6 +58,12 @@ benchOpt :: Parser Mode
 benchOpt = flag' Benchmark
   (  long "bench"
   <> help "Benchmark" )
+
+benchCsvOpt :: Parser Mode
+benchCsvOpt = BenchmarkCsv <$> strOption
+  (  long "bench-csv"
+  <> metavar "CSVFILE"
+  <> help "Benchmark and also write results to CSV file" )
 
 inputFilesOpt :: Parser (NE.NonEmpty FilePath)
 inputFilesOpt = fmap NE.fromList . some $ argument str

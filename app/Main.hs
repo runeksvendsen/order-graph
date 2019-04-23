@@ -31,6 +31,7 @@ import qualified System.FilePath                            as FP
 import qualified Criterion
 import qualified Criterion.Main                             as Criterion
 import qualified Criterion.Main.Options                     as Criterion
+import qualified Criterion.Types                            as Criterion
 import qualified Data.List.NonEmpty                         as NE
 
 
@@ -40,7 +41,8 @@ main = do
     let executions = NE.map (execution options) (Opt.inputFiles options)
     let execute = case Opt.mode options of
             Opt.Visualize outputDir -> visualize outputDir
-            Opt.Benchmark           -> benchmark
+            Opt.Benchmark           -> benchmark Nothing
+            Opt.BenchmarkCsv csvOut -> benchmark (Just csvOut)
     execute $ NE.toList executions
 
 data Execution = Execution
@@ -69,12 +71,17 @@ visualize outputDir executions =
     runExecution (Execution inputFile preRun mainRun) =
         preRun >>= mainRun >>= writeChartFile (mkOutFilename inputFile)
 
-benchmark :: [Execution] -> IO ()
-benchmark executions =
+-- |
+benchmark
+    :: Maybe FilePath   -- ^ Write results to CSV file?
+    -> [Execution]
+    -> IO ()
+benchmark csvFileM executions =
     Criterion.runMode mode $
         map benchExecution executions
   where
-    mode = Criterion.Run Criterion.defaultConfig Criterion.Prefix [""]
+    mode = Criterion.Run config Criterion.Prefix [""]
+    config = Criterion.defaultConfig { Criterion.csvFile = csvFileM }
     benchExecution (Execution inputFile preRun mainRun) =
         benchSingle inputFile preRun (void . mainRun)
 
