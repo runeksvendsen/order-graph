@@ -128,8 +128,7 @@ matchOrders bidsOrder asksOrder sellOrders =
         log "Building graph..."
         Lib.build mGraph sellOrders
         DG.vertexCount mGraph >>= \vertexCount -> log $ "Vertex count: " ++ show vertexCount
-        -- TODO: fix BellmanFord
-        -- DG.edgeCount mGraph >>= \edgeCount -> log $ "Edge count:   " ++ show edgeCount
+        DG.edgeCount mGraph >>= \edgeCount -> log $ "Edge count:   " ++ show edgeCount
         -- Arbitrages
         buyGraph <- Lib.runArb mGraph $ do
             log "Finding arbitrages..."
