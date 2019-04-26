@@ -40,7 +40,7 @@ main = do
     options <- Opt.execParser Opt.opts
     let executions = NE.map (execution options) (Opt.inputFiles options)
     let execute = case Opt.mode options of
-            Opt.Visualize outputDir -> visualize outputDir
+            Opt.Visualize outputDir -> visualize options outputDir
             Opt.Benchmark           -> benchmark Nothing
             Opt.BenchmarkCsv csvOut -> benchmark (Just csvOut)
     execute $ NE.toList executions
@@ -62,14 +62,15 @@ execution options inputFile =
         withBidsAsksOrder options $ \bidsOrder asksOrder ->
             matchOrders bidsOrder asksOrder orders
 
-visualize :: FilePath -> [Execution] -> IO ()
-visualize outputDir executions =
+visualize :: Opt.Options -> FilePath -> [Execution] -> IO ()
+visualize options outputDir executions =
     sequence_ $
         map runExecution executions
   where
-    mkOutFilename inputFile = outputDir </> FP.takeFileName inputFile
+    mkOutFileName path = FP.takeBaseName path <> "-" <> Opt.crypto options <> FP.takeExtension path
+    mkOutFilePath inputFile = outputDir </> mkOutFileName inputFile
     runExecution (Execution inputFile preRun mainRun) =
-        preRun >>= mainRun >>= writeChartFile (mkOutFilename inputFile)
+        preRun >>= mainRun >>= writeChartFile (mkOutFilePath inputFile)
 
 -- |
 benchmark
