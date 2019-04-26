@@ -12,6 +12,7 @@ where
 
 import           Prelude                                    hiding (log)
 import qualified Options                                    as Opt
+import qualified Util
 import           OrderBook.Graph.Internal.Prelude           hiding (log)
 import qualified OrderBook.Graph.Internal.Util              as Util
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
@@ -21,7 +22,7 @@ import           CryptoVenues.Types.ABook                   (ABook(ABook))
 
 import qualified Control.Monad.ST                           as ST
 import qualified Data.Graph.Digraph                         as DG
-import           Data.List                                  (sortBy)
+import           Data.List                                  (sortBy, nub)
 import           Data.Ord                                   (comparing)
 
 import qualified Data.Aeson                                 as Json
@@ -116,7 +117,10 @@ withBidsAsksOrder options f =
 
 readOrdersFile :: FilePath -> IO [SomeSellOrder]
 readOrdersFile filePath = do
+    log $ "Reading order books from " ++ show filePath ++ "..."
     books <- decodeFileOrFail filePath
+    -- Log venues
+    log ("Venues:") >> logVenues (nub $ map Util.getBookVenue books)
     let orders = concatMap fromABook (books :: [ABook])
     log $ "Order count: " ++ show (length orders)
     return orders
@@ -124,6 +128,7 @@ readOrdersFile filePath = do
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail file =
         either (throwError file) return =<< Json.eitherDecodeFileStrict file
+    logVenues venues = forM_ venues $ \venue -> log ("\t" ++ toS venue)
 
 matchOrders
     :: (KnownSymbol src, KnownSymbol dst)
