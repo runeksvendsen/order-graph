@@ -130,6 +130,17 @@ readOrdersFile filePath = do
         either (throwError file) return =<< Json.eitherDecodeFileStrict file
     logVenues venues = forM_ venues $ \venue -> log ("\t" ++ toS venue)
 
+buildGraph
+    :: PrimMonad m
+    => [SomeSellOrder]                              -- ^ Sell orders
+    -> Lib.SellOrderGraph (PrimState m) g "arb"     -- ^ Empty graph
+    -> m (Word, Word)                               -- ^ (Vertex count, edge count)
+buildGraph sellOrders graph = do
+    Lib.build graph sellOrders
+    vertexCount <- DG.vertexCount graph
+    edgeCount <- DG.edgeCount graph
+    return (vertexCount, edgeCount)
+
 matchOrders
     :: (KnownSymbol src, KnownSymbol dst)
     => Lib.BuyOrder dst src     -- ^ Sell cryptocurrency for national currency
@@ -139,9 +150,9 @@ matchOrders
 matchOrders bidsOrder asksOrder sellOrders =
     ST.stToIO $ DG.withGraph $ \mGraph -> do
         log "Building graph..."
-        Lib.build mGraph sellOrders
-        DG.vertexCount mGraph >>= \vertexCount -> log $ "Vertex count: " ++ show vertexCount
-        DG.edgeCount mGraph >>= \edgeCount -> log $ "Edge count:   " ++ show edgeCount
+        (vertexCount, edgeCount) <- buildGraph sellOrders mGraph
+        log $ "Vertex count: " ++ show vertexCount
+        log $ "Edge count:   " ++ show edgeCount
         -- Arbitrages
         buyGraph <- Lib.runArb mGraph $ do
             log "Finding arbitrages..."
