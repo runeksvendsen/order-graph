@@ -78,13 +78,13 @@ benchmark
     :: Maybe FilePath   -- ^ Write results to CSV file?
     -> [Execution]
     -> IO ()
-benchmark csvFileM executions =
-    Criterion.runMode mode $
-        map benchExecution executions
+benchmark csvFileM executions = do
+    benchmarks <- mapM benchExecution executions
+    Criterion.runMode mode benchmarks
   where
     mode = Criterion.Run config Criterion.Prefix [""]
     config = Criterion.defaultConfig { Criterion.csvFile = csvFileM }
-    benchExecution (Execution inputFile preRun mainRun) =
+    benchExecution (Execution inputFile preRun mainRun) = do
         benchSingle inputFile preRun (void . mainRun)
 
 -- |
@@ -92,9 +92,12 @@ benchSingle
     :: FilePath                     -- ^ Order book input file name
     -> IO [SomeSellOrder]           -- ^ Read order book from file
     -> ([SomeSellOrder] -> IO ())   -- ^ Run algorithm
-    -> Criterion.Benchmark
-benchSingle obFile readOrders action =
-    Criterion.bench obFile $
+    -> IO Criterion.Benchmark
+benchSingle obFile readOrders action = do
+    sellOrders <- readOrders
+    (vertexCount, edgeCount) <- ST.stToIO $ DG.withGraph (buildGraph sellOrders)
+    let name = obFile ++ " V=" ++ show vertexCount ++ " E=" ++ show edgeCount
+    return $ Criterion.bench name $
         Criterion.perBatchEnv (const readOrders) action
 
 withBidsAsksOrder
