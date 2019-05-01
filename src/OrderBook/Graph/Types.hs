@@ -16,6 +16,7 @@ module OrderBook.Graph.Types
 , Currency
 , SomeSellOrder'(..)
 , SomeSellOrder
+, NumType
 )
 where
 
@@ -68,7 +69,8 @@ data SomeSellOrder' numType =
     , soVenue :: T.Text
     } deriving (Eq, Read, Ord, Functor, Generic)
 
-type SomeSellOrder = SomeSellOrder' Rational
+type NumType = Rational
+type SomeSellOrder = SomeSellOrder' NumType
 
 instance Real numType => Show (SomeSellOrder' numType) where
     show SomeSellOrder'{..} =

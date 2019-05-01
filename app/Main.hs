@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE NumDecimals #-}    -- DEBUG
+{-# LANGUAGE TypeApplications #-}
 module Main
 ( main )
 where
@@ -41,6 +41,7 @@ main = do
     options <- Opt.execParser Opt.opts
     let executions = NE.map (execution options) (Opt.inputFiles options)
     let execute = case Opt.mode options of
+            Opt.Analyze             -> analyze options
             Opt.Visualize outputDir -> visualize options outputDir
             Opt.Benchmark           -> benchmark Nothing
             Opt.BenchmarkCsv csvOut -> benchmark (Just csvOut)
@@ -62,6 +63,39 @@ execution options inputFile =
     mainRun orders =
         withBidsAsksOrder options $ \bidsOrder asksOrder ->
             matchOrders bidsOrder asksOrder orders
+
+analyze :: Opt.Options -> [Execution] -> IO ()
+analyze options executions =
+    forM_ executions $ \(Execution inputFile preRun mainRun) -> do
+        (buyOrders, sellOrders) <- preRun >>= mainRun
+        -- print stuff
+        logLine "Order book file" inputFile
+        logLine "Market (base/quote)" (ordersMarket buyOrders)
+        logLine "Maximum slippage" (show (Opt.maxSlippage options) ++ "%")
+        logLiquidity "buy liquidity" buyOrders
+        logLiquidity "sell liquidity" sellOrders
+        logLiquidity "SUM" (buyOrders ++ sellOrders)
+        putStrLn "-----------------------------------------------------"
+        putStrLn ""
+  where
+    thousandSeparator numStr = reverse $ foldr (\(index, char) accum -> if index /= 0 && index `mod` 3 == 0 then ',' : char : accum else char : accum) [] (zip [0..] (reverse numStr))
+    showAmount :: Lib.NumType -> String
+    showAmount = thousandSeparator . show @Integer . floor
+    logLiquidity :: String -> [SomeSellOrder] -> IO ()
+    logLiquidity liquidityText orders =
+        logLine liquidityText
+                (showAmount (fst $ orderInfo orders) ++ " " ++ toS (snd $ orderInfo orders))
+    -- Get (liquidity, baseCurrency) for orders
+    quoteSum order = Lib.soQty order * Lib.soPrice order
+    ordersMarket orderList = fromMaybe "<no orders>" $ orderMarket <$> headMay orderList
+    orderMarket order = toS (Lib.soBase order) ++ "/" ++ toS (Lib.soQuote order)
+    orderInfo orderList =
+        ( sum $ map quoteSum orderList
+        , fromMaybe "<no orders>" $ Lib.soQuote <$> headMay orderList
+        )
+    logLine :: String -> String -> IO ()
+    logLine title message =
+            putStrLn $ printf "%-25s%s" title message
 
 visualize :: Opt.Options -> FilePath -> [Execution] -> IO ()
 visualize options outputDir executions =
@@ -108,9 +142,9 @@ withBidsAsksOrder
        )
     -> r
 withBidsAsksOrder options f =
-    case someSymbolVal (Opt.numeraire options) of
+    case someSymbolVal (uppercase $ Opt.numeraire options) of
         SomeSymbol (Proxy :: Proxy numeraire) ->
-            case someSymbolVal (Opt.crypto options) of
+            case someSymbolVal (uppercase $ Opt.crypto options) of
                 SomeSymbol (Proxy :: Proxy crypto) ->
                     f (buyOrder :: Lib.BuyOrder numeraire crypto)
                       (buyOrder :: Lib.BuyOrder crypto numeraire)

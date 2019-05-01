@@ -1,11 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module OrderBook.Graph.Internal.Prelude
-( module Prelude
-, module Conv
-, module TypeLits
-, module Proxy
-, module Maybe
+( module Export
 , module Prim
 , module Monad
 , module MoreStuff
@@ -13,15 +9,17 @@ module OrderBook.Graph.Internal.Prelude
 , pp
 , pprint
 , largeRational
+, uppercase
 )
 
 where
 
-import Prelude                              as Prelude
-import Protolude.Conv                       as Conv
-import GHC.TypeLits                         as TypeLits
-import Data.Proxy                           as Proxy
-import Data.Maybe                           as Maybe
+import Prelude                              as Export
+import Protolude.Conv                       as Export
+import Protolude.Safe                       as Export
+import GHC.TypeLits                         as Export
+import Data.Proxy                           as Export
+import Data.Maybe                           as Export
 import Control.Monad.Primitive              as Prim         (PrimMonad, PrimState)
 import Control.Monad                        as Monad        (forM_, when, void, foldM)
 import Data.List.NonEmpty                   as MoreStuff    (NonEmpty(..), cons, uncons, nonEmpty)
@@ -38,6 +36,7 @@ import Control.Monad.ST                     as MoreStuff
 import Control.Exception                    as MoreStuff    (assert)
 import Debug.Trace                          as MoreStuff
 import Data.Int                             (Int64)
+import Data.Char                            (toUpper)
 
 
 pp :: PrettyVal a => a -> String
@@ -58,3 +57,6 @@ instance PrettyVal a => PrettyVal (NonEmpty a) where
 
 largeRational :: Rational
 largeRational = fromIntegral (maxBound :: Int64) % 1
+
+uppercase :: String -> String
+uppercase = map toUpper

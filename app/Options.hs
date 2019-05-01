@@ -35,7 +35,9 @@ options = Options
 
 -- |
 data Mode
-    = Visualize FilePath
+    = Analyze
+      -- ^ Print information about cryptocurrency liquidity
+    | Visualize FilePath
       -- ^ Write matched orders to orderbook file for visualization in a depth chart.
       --   Argument specifies orderbook output directory.
     | Benchmark
@@ -45,7 +47,7 @@ data Mode
       deriving (Eq, Show)
 
 modeOpt :: Parser Mode
-modeOpt = visualizeOpt <|> benchOpt <|> benchCsvOpt
+modeOpt = visualizeOpt <|> benchOpt <|> benchCsvOpt <|> analyzeOpt
 
 visualizeOpt :: Parser Mode
 visualizeOpt = Visualize <$> strOption
@@ -64,6 +66,11 @@ benchCsvOpt = BenchmarkCsv <$> strOption
   (  long "bench-csv"
   <> metavar "CSVFILE"
   <> help "Benchmark and also write results to CSV file" )
+
+analyzeOpt :: Parser Mode
+analyzeOpt = flag' Analyze
+  (  long "analyze"
+  <> help "Print information about the liquidity of the cryptocurrency" )
 
 inputFilesOpt :: Parser (NE.NonEmpty FilePath)
 inputFilesOpt = fmap NE.fromList . some $ argument str
