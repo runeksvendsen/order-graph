@@ -17,22 +17,17 @@ runArb
     -> ST s a
 runArb graph =
     BF.runBF graph sumWeight
-  where
-    sumWeight
-        :: Double
-        -> B.Tagged "arb" B.SortedOrders
-        -> Double
-    sumWeight weight' edge = weight' + BF.weight edge
 
 runMatch
     :: B.SellOrderGraph s g "buy"
     -> Q.BuyGraphM s g a
     -> ST s a
 runMatch graph =
-    BF.runBF graph multiplyWeight
-  where
-    multiplyWeight
-        :: Double
-        -> B.Tagged "buy" B.SortedOrders
-        -> Double
-    multiplyWeight weight' edge = weight' * BF.weight edge
+    BF.runBF graph sumWeight
+
+sumWeight
+    :: BF.WeightedEdge e v Double
+    => Double
+    -> e
+    -> Double
+sumWeight weight' edge = weight' + BF.weight edge

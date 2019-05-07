@@ -45,12 +45,6 @@ buyPath start end = do
     BF.bellmanFord start
     pathM <- BF.pathTo end
     return $ BuyPath . NE.fromList <$> fmap B.unTagged <$> pathM
-  where
-    multiplyWeight
-        :: Double
-        -> B.Tagged "buy" B.SortedOrders
-        -> Double
-    multiplyWeight weight' edge = weight' * BF.weight edge
 
 -- | find an arbitrage opportunity
 arbitrage
@@ -60,9 +54,3 @@ arbitrage start = do
     BF.bellmanFord start
     pathM <- BF.negativeCycle
     return $ BuyPath <$> fmap B.unTagged <$> pathM
-  where
-    sumWeight
-        :: Double
-        -> B.Tagged "arb" B.SortedOrders
-        -> Double
-    sumWeight weight' edge = weight' + BF.weight edge

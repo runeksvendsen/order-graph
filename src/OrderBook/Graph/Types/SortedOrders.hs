@@ -63,11 +63,5 @@ instance DirectedEdge (Tag.Tagged a SortedOrders) Currency where
     fromNode = fromNode . NE.head . getOrders . Tag.unTagged
     toNode = toNode . NE.head . getOrders . Tag.unTagged
 
-instance WeightedEdge (Tag.Tagged "buy" SortedOrders) Currency Double where
-    weight = fromRational . weight . NE.head . getOrders . Tag.unTagged
-
-instance WeightedEdge (Tag.Tagged "arb" SortedOrders) Currency Double where
-    weight so = 
-        let buySO :: Tag.Tagged "buy" SortedOrders
-            buySO = Tag.Tagged (Tag.unTagged so)
-        in log (weight buySO)
+instance WeightedEdge (Tag.Tagged a SortedOrders) Currency Double where
+    weight = log . fromRational . weight . NE.head . getOrders . Tag.unTagged

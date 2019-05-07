@@ -71,11 +71,8 @@ queryUpdateGraph bo queryGraph =
         case buyPathM of
             Nothing -> return mr
             Just (Query.BuyPath orderPath) -> do
-                -- | The buyer moves in the opposite direction of the seller.
-                --   So when composing sell orders we need them to be in reverse order.
-                let revOrderPath = NE.reverse orderPath
-                    (newEdges, matchedOrder) = subtractMatchedQty revOrderPath
-                forM_ (NE.zip revOrderPath newEdges) (uncurry updateGraphEdge)
+                let (newEdges, matchedOrder) = subtractMatchedQty orderPath
+                forM_ (NE.zip orderPath newEdges) (uncurry updateGraphEdge)
                 go (addOrder mr matchedOrder)
 
 updateGraphEdge
