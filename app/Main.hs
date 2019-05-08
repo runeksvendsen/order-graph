@@ -194,13 +194,9 @@ matchOrders bidsOrder asksOrder sellOrders =
         buyGraph <- Lib.runArb mGraph $ do
             log "Finding arbitrages..."
             -- Asks
-            (_, arbsA) <- Lib.arbitrages asksOrder
-            log $ unlines ["Arbitrages (asks):", pp arbsA]
-            -- Bids
-            --  If there's no path from "asks" start vertex to its end vertex,
-            --   then the below might find additional negative cycles.
-            (buyGraph, arbsB) <- Lib.arbitrages bidsOrder
-            log $ unlines ["Arbitrages (bids):", pp arbsB]
+            (buyGraph, arbs) <- Lib.arbitrages asksOrder
+            -- Finds all arbitrages (regardless of "src" vertex)
+            log $ unlines ["Arbitrages:", pp arbs]
             return buyGraph
         -- Match
         Lib.runMatch buyGraph $ do

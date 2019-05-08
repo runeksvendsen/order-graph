@@ -16,7 +16,7 @@ packages:
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/bellman-ford.git
-    commit: 7d5eb5058816393dc7493aec6144ee71c061dc76
+    commit: 88ded12de3e7e93e745fba95e3800abff34fb8ab
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/mono-traversable.git
