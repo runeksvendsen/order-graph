@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
+-- {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeApplications #-}
@@ -36,6 +36,7 @@ import qualified Criterion.Types                            as Criterion
 import qualified Control.Logging                            as Log
 import           System.IO.Unsafe                           (unsafePerformIO)
 import qualified Control.Monad.Parallel                     as Par
+import qualified Data.Csv.Incremental                       as Csv
 
 
 main :: IO ()
@@ -48,6 +49,8 @@ main = Opt.withOptions $ \options ->
             case Opt.mode options of
                     Opt.Analyze ->
                         (Just . logLiquidityInfo) <$> analyze (Opt.maxSlippage options) execution
+                    Opt.AnalyzeCsv csvFile ->
+                        (Just . csvLiquidityInfo) <$> analyze (Opt.maxSlippage options) execution
                     Opt.Visualize outputDir -> do
                         visualize crypto outputDir execution
                         return Nothing
@@ -59,15 +62,27 @@ main = Opt.withOptions $ \options ->
                         return Nothing
         forM_ (catMaybes logResult) putStrLn
 
-forAll :: (Par.MonadParallel m)
-       => Opt.Mode
+forAll :: Opt.Mode
        -> [a]
-       -> (a -> m b)
-       -> m [b]
-forAll  Opt.Analyze         = flip Par.mapM
-forAll (Opt.Visualize _)    = flip Par.mapM
-forAll  Opt.Benchmark       = flip mapM
-forAll (Opt.BenchmarkCsv _) = flip mapM
+       -> (a -> IO b)
+       -> IO [b]
+forAll  Opt.Analyze             = flip Par.mapM
+forAll (Opt.AnalyzeCsv csvFile) = \lst f -> do
+    putStrLn csvHeader
+    (flip Par.mapM) lst f
+forAll (Opt.Visualize _)        = flip Par.mapM
+forAll  Opt.Benchmark           = flip mapM
+forAll (Opt.BenchmarkCsv _)     = flip mapM
+
+csvHeader :: String
+csvHeader = toS . Csv.encode $ Csv.encodeRecord
+    ( "file"
+    , "market"
+    , "max_slippage"
+    , "buy_liquidity"
+    , "sell_liquidity"
+    , "sum_liquidity"
+    )
 
 data Execution = Execution
     { inputFile     :: FilePath
@@ -151,6 +166,21 @@ logLiquidityInfo LiquidityInfo{..} = unlines $
     logLine :: String -> String -> String
     logLine title message =
             printf "%-25s%s" title message
+
+-- csvLiquidityInfo :: LiquidityInfo -> Csv.Builder
+
+csvLiquidityInfo LiquidityInfo{..} = toS . Csv.encode $
+    Csv.encodeRecord
+        ( liInputFile
+        , showBaseQuote liBaseQuote
+        , liMaxSlippage
+        , round liBuyLiquidity                     :: Integer
+        , round liSellLiquidity                    :: Integer
+        , round $ liBuyLiquidity + liSellLiquidity :: Integer
+        )
+  where
+    maybeQuote = fst <$> liBaseQuote
+    showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
 
 visualize :: Lib.Currency -> FilePath -> Execution -> IO ()
 visualize currency outputDir Execution{..} =
@@ -290,8 +320,8 @@ mkJsonOb
     -> Json.Value
 mkJsonOb bids asks =
     Json.object
-        [ "bids" .= map toJson bids
-        , "asks" .= map toJson asks
+        [ toS "bids" .= map toJson bids
+        , toS "asks" .= map toJson asks
         ]
   where
     toJson :: SomeSellOrder -> Json.Value
@@ -304,4 +334,4 @@ fromABook :: ABook -> [SomeSellOrder]
 fromABook (ABook ob) = Util.fromOB ob
 
 log :: Monad m => String -> m ()
-log = return . unsafePerformIO . Log.loggingLogger Log.LevelInfo ""
+log = return . unsafePerformIO . Log.loggingLogger Log.LevelInfo (toS "")

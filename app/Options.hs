@@ -54,6 +54,8 @@ data Crypto
 data Mode
     = Analyze
       -- ^ Print information about cryptocurrency liquidity
+    | AnalyzeCsv FilePath
+      -- ^ Write information about cryptocurrency liquidity to CSV file
     | Visualize FilePath
       -- ^ Write matched orders to orderbook file for visualization in a depth chart.
       --   Argument specifies orderbook output directory.
@@ -64,7 +66,7 @@ data Mode
       deriving (Eq, Show)
 
 modeOpt :: Parser Mode
-modeOpt = visualizeOpt <|> benchOpt <|> benchCsvOpt <|> analyzeOpt
+modeOpt = visualizeOpt <|> benchOpt <|> benchCsvOpt <|> analyzeOpt <|> analyzeCsvOpt
 
 setLogLevel :: Options -> IO ()
 setLogLevel = Log.setLogLevel . logLevel
@@ -91,6 +93,12 @@ analyzeOpt :: Parser Mode
 analyzeOpt = flag' Analyze
   (  long "analyze"
   <> help "Print information about the liquidity of the cryptocurrency" )
+
+analyzeCsvOpt :: Parser Mode
+analyzeCsvOpt = AnalyzeCsv <$> strOption
+  (  long "analyze-csv"
+  <> help "Write information about cryptocurrency liquidity to CSV file" )
+
 
 inputFilesOpt :: Parser (NE.NonEmpty FilePath)
 inputFilesOpt = fmap NE.fromList . some $ argument str

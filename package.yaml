@@ -63,6 +63,7 @@ executables:
     - directory
     - optparse-applicative
     - filepath
+    - cassava
 
 tests:
   order-graph-test:
