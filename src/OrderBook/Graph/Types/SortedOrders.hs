@@ -65,3 +65,9 @@ instance DirectedEdge (Tag.Tagged a SortedOrders) Currency where
 
 instance WeightedEdge (Tag.Tagged a SortedOrders) Currency Double where
     weight = log . fromRational . weight . NE.head . getOrders . Tag.unTagged
+
+-- instance WeightedEdge (Tag.Tagged "arb" SortedOrders) Currency Double where
+--     weight so =
+--         let buySo :: Tag.Tagged "buy" SortedOrders
+--             buySo = Tag.Tagged $ Tag.unTagged so
+--         in negate $ weight buySo

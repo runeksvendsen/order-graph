@@ -16,6 +16,7 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types
 import           OrderBook.Graph.Types.SortedOrders
+import           OrderBook.Graph.Internal.Util              (toSellBuyOrders)
 
 import qualified Data.Graph.Digraph                         as DG
 import           Data.List                                  (groupBy, sortOn, sortBy)

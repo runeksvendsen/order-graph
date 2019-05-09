@@ -1,21 +1,25 @@
 module Options
 ( opts
 , Options(..)
+, Crypto(..)
 , Mode(..)
 -- * Re-exports
 , execParser
 )
 where
 
+import           OrderBook.Graph.Internal.Prelude           hiding (log)
 import           Options.Applicative
-import qualified Data.List.NonEmpty             as NE
+import qualified Data.List.NonEmpty                         as NE
+
+import qualified OrderBook.Graph                            as Lib
 
 
 data Options = Options
   { inputFiles  :: NE.NonEmpty FilePath
   , maxSlippage :: Word
-  , numeraire   :: String
-  , crypto      :: String
+  , numeraire   :: Lib.Currency
+  , crypto      :: Crypto
   , mode        :: Mode
   } deriving (Eq, Show)
 
@@ -32,6 +36,13 @@ options = Options
       <*> numeraireOpt
       <*> cryptoOpt
       <*> modeOpt
+
+-- | Represents either a single cryptocurrency or all cryptocurrencies
+data Crypto
+  = Single Lib.Currency
+  | AllCryptos
+    deriving (Eq, Show)
+
 
 -- |
 data Mode
@@ -85,18 +96,27 @@ maxSlippageOpt = option auto
   <> metavar "MAX_SLIPPAGE"
   <> help "Stop after this percentage slippage is reached" )
 
-numeraireOpt :: Parser String
-numeraireOpt = strOption
+numeraireOpt :: Parser Lib.Currency
+numeraireOpt = toS . uppercase <$> strOption
   ( long "numeraire"
   <> short 'n'
   <> value "USD"
   <> metavar "NUMERAIRE"
   <> help "Sell/buy crypto for this national currency (e.g. EUR, USD, GBP)" )
 
+cryptoOpt :: Parser Crypto
+cryptoOpt = cryptoOptSingle <|> cryptoOptAll
 
-cryptoOpt :: Parser String
-cryptoOpt = strOption
+cryptoOptSingle :: Parser Crypto
+cryptoOptSingle = Single . toS . uppercase <$> strOption
   ( long "crypto"
   <> short 'c'
   <> metavar "CRYPTOCURRENCY"
   <> help "Sell/buy this cryptocurrency (e.g. BTC, ETH)" )
+
+cryptoOptAll :: Parser Crypto
+cryptoOptAll = flag' AllCryptos
+  (  long "all-cryptos"
+  <> short 'a'
+  <> help "Run for all cryptocurrencies instead of a single"
+  )

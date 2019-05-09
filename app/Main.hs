@@ -22,7 +22,7 @@ import           CryptoVenues.Types.ABook                   (ABook(ABook))
 
 import qualified Control.Monad.ST                           as ST
 import qualified Data.Graph.Digraph                         as DG
-import           Data.List                                  (sortBy, nub)
+import           Data.List                                  (sortBy, nub, (\\))
 import           Data.Ord                                   (comparing)
 
 import qualified Data.Aeson                                 as Json
@@ -39,44 +39,57 @@ import qualified Data.List.NonEmpty                         as NE
 main :: IO ()
 main = do
     options <- Opt.execParser Opt.opts
-    let executions = NE.map (execution options) (Opt.inputFiles options)
-    let execute = case Opt.mode options of
-            Opt.Analyze             -> analyze options
-            Opt.Visualize outputDir -> visualize options outputDir
-            Opt.Benchmark           -> benchmark Nothing
-            Opt.BenchmarkCsv csvOut -> benchmark (Just csvOut)
-    execute $ NE.toList executions
+    forM_ (Opt.inputFiles options) $ \inputFile -> do
+        sellOrders <- readOrdersFile inputFile
+        graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph sellOrders)
+        let executionCryptoList = mkExecutions options graphInfo inputFile
+        forM_ executionCryptoList $ \(execution, crypto) -> do
+            let execute = case Opt.mode options of
+                    Opt.Analyze             -> analyze (Opt.maxSlippage options)
+                    Opt.Visualize outputDir -> visualize crypto outputDir
+                    Opt.Benchmark           -> benchmark Nothing
+                    Opt.BenchmarkCsv csvOut -> benchmark (Just csvOut)
+            execute execution
+
 
 data Execution = Execution
     { inputFile     :: FilePath
       -- ^ Input order book file
+    , graphInfo     :: GraphInfo
+      -- ^ Information about the graph
     , preRun        :: IO [SomeSellOrder]
       -- ^ Produce input data
     , mainRun       :: [SomeSellOrder] -> IO ([SomeSellOrder], [SomeSellOrder])
       -- ^ Process input data
     }
 
-execution :: Opt.Options -> FilePath -> Execution
-execution options inputFile =
-    Execution inputFile (readOrdersFile inputFile) mainRun
+mkExecutions :: Opt.Options -> GraphInfo -> FilePath -> [(Execution, Lib.Currency)]
+mkExecutions options graphInfo inputFile = do
+    map (\crypto -> (mkExecution crypto, crypto)) allCryptos
   where
-    mainRun orders =
-        withBidsAsksOrder options $ \bidsOrder asksOrder ->
+    allCryptos = case Opt.crypto options of
+            Opt.Single crypto -> [crypto]
+            Opt.AllCryptos    -> giVertices graphInfo \\ [numeraire]
+    mkExecution crypto =
+        Execution inputFile graphInfo (readOrdersFile inputFile) (mainRun crypto)
+    mainRun crypto orders =
+        withBidsAsksOrder maxSlippage numeraire crypto $ \bidsOrder asksOrder ->
             matchOrders bidsOrder asksOrder orders
+    maxSlippage = Opt.maxSlippage options
+    numeraire   = Opt.numeraire options
 
-analyze :: Opt.Options -> [Execution] -> IO ()
-analyze options executions =
-    forM_ executions $ \(Execution inputFile preRun mainRun) -> do
-        (buyOrders, sellOrders) <- preRun >>= mainRun
-        -- print stuff
-        logLine "Order book file" inputFile
-        logLine "Market (base/quote)" (ordersMarket buyOrders)
-        logLine "Maximum slippage" (show (Opt.maxSlippage options) ++ "%")
-        logLiquidity "buy liquidity" buyOrders
-        logLiquidity "sell liquidity" sellOrders
-        logLiquidity "SUM" (buyOrders ++ sellOrders)
-        putStrLn "-----------------------------------------------------"
-        putStrLn ""
+analyze :: Word -> Execution -> IO ()
+analyze maxSlippage Execution{..} = do
+    (buyOrders, sellOrders) <- preRun >>= mainRun
+    -- print stuff
+    logLine "Order book file" inputFile
+    logLine "Market (base/quote)" (ordersMarket buyOrders)
+    logLine "Maximum slippage" (show maxSlippage ++ "%")
+    logLiquidity "buy liquidity" buyOrders
+    logLiquidity "sell liquidity" sellOrders
+    logLiquidity "SUM" (buyOrders ++ sellOrders)
+    putStrLn "-----------------------------------------------------"
+    putStrLn ""
   where
     thousandSeparator numStr = reverse $ foldr (\(index, char) accum -> if index /= 0 && index `mod` 3 == 0 then ',' : char : accum else char : accum) [] (zip [0..] (reverse numStr))
     showAmount :: Lib.NumType -> String
@@ -97,60 +110,58 @@ analyze options executions =
     logLine title message =
             putStrLn $ printf "%-25s%s" title message
 
-visualize :: Opt.Options -> FilePath -> [Execution] -> IO ()
-visualize options outputDir executions =
-    sequence_ $
-        map runExecution executions
+visualize :: Lib.Currency -> FilePath -> Execution -> IO ()
+visualize currency outputDir Execution{..} =
+    preRun >>= mainRun >>= writeChartFile outFilePath
   where
-    mkOutFileName path = FP.takeBaseName path <> "-" <> Opt.crypto options <> FP.takeExtension path
-    mkOutFilePath inputFile = outputDir </> mkOutFileName inputFile
-    runExecution (Execution inputFile preRun mainRun) =
-        preRun >>= mainRun >>= writeChartFile (mkOutFilePath inputFile)
+    mkOutFileName path = FP.takeBaseName path <> "-" <> toS currency <> FP.takeExtension path
+    outFilePath = outputDir </> mkOutFileName inputFile
+
 
 -- |
 benchmark
     :: Maybe FilePath   -- ^ Write results to CSV file?
-    -> [Execution]
+    -> Execution
     -> IO ()
-benchmark csvFileM executions = do
-    benchmarks <- mapM benchExecution executions
-    Criterion.runMode mode benchmarks
+benchmark csvFileM Execution{..} = do
+    benchmark' <- benchSingle inputFile graphInfo preRun (void . mainRun)
+    Criterion.runMode mode [benchmark']
   where
     mode = Criterion.Run config Criterion.Prefix [""]
     config = Criterion.defaultConfig { Criterion.csvFile = csvFileM }
-    benchExecution (Execution inputFile preRun mainRun) = do
-        benchSingle inputFile preRun (void . mainRun)
 
 -- |
 benchSingle
     :: FilePath                     -- ^ Order book input file name
+    -> GraphInfo
     -> IO [SomeSellOrder]           -- ^ Read order book from file
     -> ([SomeSellOrder] -> IO ())   -- ^ Run algorithm
     -> IO Criterion.Benchmark
-benchSingle obFile readOrders action = do
-    sellOrders <- readOrders
-    (vertexCount, edgeCount) <- ST.stToIO $ DG.withGraph (buildGraph sellOrders)
-    let name = obFile ++ " V=" ++ show vertexCount ++ " E=" ++ show edgeCount
+benchSingle obFile GraphInfo{..} readOrders action = do
+    let name = obFile ++ " V=" ++ show (length giVertices) ++ " E=" ++ show giEdgeCount
     return $ Criterion.bench name $
         Criterion.perBatchEnv (const readOrders) action
 
+-- |
 withBidsAsksOrder
-    :: Opt.Options
+    :: Word         -- ^ Maximum slippage in percent
+    -> Lib.Currency -- ^ Numeraire
+    -> Lib.Currency -- ^ Cryptocurrency
     -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Lib.BuyOrder dst src
                                                            -> Lib.BuyOrder src dst
                                                            -> r
        )
     -> r
-withBidsAsksOrder options f =
-    case someSymbolVal (uppercase $ Opt.numeraire options) of
+withBidsAsksOrder maxSlippage numeraire crypto f =
+    case someSymbolVal (toS numeraire) of
         SomeSymbol (Proxy :: Proxy numeraire) ->
-            case someSymbolVal (uppercase $ Opt.crypto options) of
+            case someSymbolVal (toS crypto) of
                 SomeSymbol (Proxy :: Proxy crypto) ->
                     f (buyOrder :: Lib.BuyOrder numeraire crypto)
                       (buyOrder :: Lib.BuyOrder crypto numeraire)
   where
     buyOrder = Lib.unlimited
-        { Lib.boMaxSlippage = Just . fromIntegral . Opt.maxSlippage $ options }
+        { Lib.boMaxSlippage = Just . fromIntegral $ maxSlippage }
 
 readOrdersFile :: FilePath -> IO [SomeSellOrder]
 readOrdersFile filePath = do
@@ -171,12 +182,20 @@ buildGraph
     :: PrimMonad m
     => [SomeSellOrder]                              -- ^ Sell orders
     -> Lib.SellOrderGraph (PrimState m) g "arb"     -- ^ Empty graph
-    -> m (Word, Word)                               -- ^ (Vertex count, edge count)
+    -> m GraphInfo
 buildGraph sellOrders graph = do
     Lib.build graph sellOrders
-    vertexCount <- DG.vertexCount graph
+    currencies <- DG.vertexLabels graph
     edgeCount <- DG.edgeCount graph
-    return (vertexCount, edgeCount)
+    return $ GraphInfo
+        { giVertices    = currencies
+        , giEdgeCount   = edgeCount
+        }
+
+data GraphInfo = GraphInfo
+    { giVertices    :: [Lib.Currency]
+    , giEdgeCount   :: Word
+    }
 
 matchOrders
     :: (KnownSymbol src, KnownSymbol dst)
@@ -187,7 +206,9 @@ matchOrders
 matchOrders bidsOrder asksOrder sellOrders =
     ST.stToIO $ DG.withGraph $ \mGraph -> do
         log "Building graph..."
-        (vertexCount, edgeCount) <- buildGraph sellOrders mGraph
+        graphInfo <- buildGraph sellOrders mGraph
+        let vertexCount = length (giVertices graphInfo)
+            edgeCount = giEdgeCount graphInfo
         log $ "Vertex count: " ++ show vertexCount
         log $ "Edge count:   " ++ show edgeCount
         -- Arbitrages
