@@ -52,8 +52,6 @@ executables:
     - crypto-venues
     - order-graph
     - logging
-    - http-client
-    - http-client-tls
     - monad-parallel
     - unordered-containers
     - safe-money
