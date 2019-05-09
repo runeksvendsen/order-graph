@@ -12,7 +12,15 @@ stack setup
 git checkout 0c157ea2faf7e12c2d3282ec685d56fed51594d6
 ```
 
-3. Build and run the executable:
+3. Build CLI executable:
+
+```
+stack build
+```
+
+4. Grab a cup of coffee
+
+5. Run CLI executable:
 
 ```
 stack run -- <CLI arguments go here>
