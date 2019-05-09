@@ -35,6 +35,7 @@ import qualified Criterion.Main.Options                     as Criterion
 import qualified Criterion.Types                            as Criterion
 import qualified Control.Logging                            as Log
 import           System.IO.Unsafe                           (unsafePerformIO)
+import qualified Control.Monad.Parallel                     as Par
 
 
 main :: IO ()
@@ -43,14 +44,30 @@ main = Opt.withOptions $ \options ->
         sellOrders <- readOrdersFile inputFile
         graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph sellOrders)
         let executionCryptoList = mkExecutions options graphInfo inputFile
-        forM_ executionCryptoList $ \(execution, crypto) -> do
-            let execute = case Opt.mode options of
-                    Opt.Analyze             -> analyze (Opt.maxSlippage options)
-                    Opt.Visualize outputDir -> visualize crypto outputDir
-                    Opt.Benchmark           -> benchmark Nothing
-                    Opt.BenchmarkCsv csvOut -> benchmark (Just csvOut)
-            execute execution
+        logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
+            case Opt.mode options of
+                    Opt.Analyze ->
+                        (Just . logLiquidityInfo) <$> analyze (Opt.maxSlippage options) execution
+                    Opt.Visualize outputDir -> do
+                        visualize crypto outputDir execution
+                        return Nothing
+                    Opt.Benchmark -> do
+                        benchmark Nothing execution
+                        return Nothing
+                    Opt.BenchmarkCsv csvOut -> do
+                        benchmark (Just csvOut) execution
+                        return Nothing
+        forM_ (catMaybes logResult) putStrLn
 
+forAll :: (Par.MonadParallel m)
+       => Opt.Mode
+       -> [a]
+       -> (a -> m b)
+       -> m [b]
+forAll  Opt.Analyze         = flip Par.mapM
+forAll (Opt.Visualize _)    = flip Par.mapM
+forAll  Opt.Benchmark       = flip mapM
+forAll (Opt.BenchmarkCsv _) = flip mapM
 
 data Execution = Execution
     { inputFile     :: FilePath
@@ -78,37 +95,62 @@ mkExecutions options graphInfo inputFile = do
     maxSlippage = Opt.maxSlippage options
     numeraire   = Opt.numeraire options
 
-analyze :: Word -> Execution -> IO ()
+-- |
+data LiquidityInfo = LiquidityInfo
+    { liInputFile       :: FilePath
+    , liBaseQuote       :: Maybe (Lib.Currency, Lib.Currency)
+      -- ^ (base, quote) currency
+    , liMaxSlippage     :: Word
+    , liBuyLiquidity    :: Lib.NumType
+    , liSellLiquidity   :: Lib.NumType
+    }
+
+analyze :: Word -> Execution -> IO LiquidityInfo
 analyze maxSlippage Execution{..} = do
     (buyOrders, sellOrders) <- preRun >>= mainRun
-    -- print stuff
-    logLine "Order book file" inputFile
-    logLine "Market (base/quote)" (ordersMarket buyOrders)
-    logLine "Maximum slippage" (show maxSlippage ++ "%")
-    logLiquidity "buy liquidity" buyOrders
-    logLiquidity "sell liquidity" sellOrders
-    logLiquidity "SUM" (buyOrders ++ sellOrders)
-    putStrLn "-----------------------------------------------------"
-    putStrLn ""
+    let buyLiquidity = quoteSum buyOrders
+        sellLiquidity = quoteSum sellOrders
+    return $ LiquidityInfo
+        { liInputFile       = inputFile
+        , liBaseQuote       = ordersMarket (buyOrders ++ sellOrders)
+        , liMaxSlippage     = maxSlippage
+        , liBuyLiquidity    = buyLiquidity
+        , liSellLiquidity   = sellLiquidity
+        }
   where
+    ordersMarket orderList = orderMarket <$> headMay orderList
+    orderMarket order = (Lib.soBase order, Lib.soQuote order)
+    quoteSum orderList = sum $ map quoteQuantity orderList
+    quoteQuantity order = Lib.soQty order * Lib.soPrice order
+
+logLiquidityInfo :: LiquidityInfo -> String
+logLiquidityInfo LiquidityInfo{..} = unlines $
+    [ logLine "Order book file" liInputFile
+    , logLine "Market (base/quote)" $ showBaseQuote liBaseQuote
+    , logLine "Maximum slippage" (show liMaxSlippage ++ "%")
+    ] ++ case liBaseQuote of
+        Nothing -> []
+        Just (_, quoteCurrency) ->
+            [ logLiquidity "buy liquidity" liBuyLiquidity quoteCurrency
+            , logLiquidity "sell liquidity" liSellLiquidity quoteCurrency
+            , logLiquidity "SUM" (liBuyLiquidity + liSellLiquidity) quoteCurrency
+            ]
+      ++
+    [ "-----------------------------------------------------"
+    ,  ""
+    ]
+  where
+    showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
     thousandSeparator numStr = reverse $ foldr (\(index, char) accum -> if index /= 0 && index `mod` 3 == 0 then ',' : char : accum else char : accum) [] (zip [0..] (reverse numStr))
     showAmount :: Lib.NumType -> String
     showAmount = thousandSeparator . show @Integer . floor
-    logLiquidity :: String -> [SomeSellOrder] -> IO ()
-    logLiquidity liquidityText orders =
+    logLiquidity :: String -> Lib.NumType -> Lib.Currency -> String
+    logLiquidity liquidityText amount quoteCurrency =
         logLine liquidityText
-                (showAmount (fst $ orderInfo orders) ++ " " ++ toS (snd $ orderInfo orders))
-    -- Get (liquidity, baseCurrency) for orders
-    quoteSum order = Lib.soQty order * Lib.soPrice order
-    ordersMarket orderList = fromMaybe "<no orders>" $ orderMarket <$> headMay orderList
-    orderMarket order = toS (Lib.soBase order) ++ "/" ++ toS (Lib.soQuote order)
-    orderInfo orderList =
-        ( sum $ map quoteSum orderList
-        , fromMaybe "<no orders>" $ Lib.soQuote <$> headMay orderList
-        )
-    logLine :: String -> String -> IO ()
+                (showAmount amount ++ " " ++ toS quoteCurrency)
+    logLine :: String -> String -> String
     logLine title message =
-            putStrLn $ printf "%-25s%s" title message
+            printf "%-25s%s" title message
 
 visualize :: Lib.Currency -> FilePath -> Execution -> IO ()
 visualize currency outputDir Execution{..} =
