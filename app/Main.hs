@@ -33,12 +33,12 @@ import qualified Criterion
 import qualified Criterion.Main                             as Criterion
 import qualified Criterion.Main.Options                     as Criterion
 import qualified Criterion.Types                            as Criterion
-import qualified Data.List.NonEmpty                         as NE
+import qualified Control.Logging                            as Log
+import           System.IO.Unsafe                           (unsafePerformIO)
 
 
 main :: IO ()
-main = do
-    options <- Opt.execParser Opt.opts
+main = Opt.withOptions $ \options ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
         sellOrders <- readOrdersFile inputFile
         graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph sellOrders)
@@ -262,4 +262,4 @@ fromABook :: ABook -> [SomeSellOrder]
 fromABook (ABook ob) = Util.fromOB ob
 
 log :: Monad m => String -> m ()
-log str = return () -- str `trace` return ()
+log = return . unsafePerformIO . Log.loggingLogger Log.LevelInfo ""

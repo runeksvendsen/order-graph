@@ -1,16 +1,15 @@
 module Options
-( opts
+( withOptions
 , Options(..)
 , Crypto(..)
 , Mode(..)
--- * Re-exports
-, execParser
 )
 where
 
 import           OrderBook.Graph.Internal.Prelude           hiding (log)
 import           Options.Applicative
 import qualified Data.List.NonEmpty                         as NE
+import qualified Control.Logging                            as Log
 
 import qualified OrderBook.Graph                            as Lib
 
@@ -21,7 +20,14 @@ data Options = Options
   , numeraire   :: Lib.Currency
   , crypto      :: Crypto
   , mode        :: Mode
+  , logLevel    :: Log.LogLevel
   } deriving (Eq, Show)
+
+withOptions :: (Options -> IO ()) -> IO ()
+withOptions f = do
+    parsedOptions <- execParser opts
+    setLogLevel parsedOptions
+    Log.withStderrLogging (f parsedOptions)
 
 opts :: ParserInfo Options
 opts = info options $
@@ -36,13 +42,13 @@ options = Options
       <*> numeraireOpt
       <*> cryptoOpt
       <*> modeOpt
+      <*> verboseOpt
 
 -- | Represents either a single cryptocurrency or all cryptocurrencies
 data Crypto
   = Single Lib.Currency
   | AllCryptos
     deriving (Eq, Show)
-
 
 -- |
 data Mode
@@ -59,6 +65,9 @@ data Mode
 
 modeOpt :: Parser Mode
 modeOpt = visualizeOpt <|> benchOpt <|> benchCsvOpt <|> analyzeOpt
+
+setLogLevel :: Options -> IO ()
+setLogLevel = Log.setLogLevel . logLevel
 
 visualizeOpt :: Parser Mode
 visualizeOpt = Visualize <$> strOption
@@ -119,4 +128,11 @@ cryptoOptAll = flag' AllCryptos
   (  long "all-cryptos"
   <> short 'a'
   <> help "Run for all cryptocurrencies instead of a single"
+  )
+
+verboseOpt :: Parser Log.LogLevel
+verboseOpt = flag Log.LevelError Log.LevelDebug
+  (  long "verbose"
+  <> short 'v'
+  <> help "Print all information"
   )
