@@ -12,7 +12,7 @@ stack setup
 git checkout 0c157ea2faf7e12c2d3282ec685d56fed51594d6
 ```
 
-3. Install transitive dependencies
+3. Install external dependencies
 
 ```
 sudo apt-get install build-essential libgmp3-dev zlib1g-dev
