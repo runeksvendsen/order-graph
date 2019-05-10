@@ -54,7 +54,7 @@ executables:
     - crypto-venues
     - order-graph
     - logging
-    - monad-parallel
+    - unliftio
     - unordered-containers
     - safe-money
     - vector

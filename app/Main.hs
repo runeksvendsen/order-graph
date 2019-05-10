@@ -35,7 +35,7 @@ import qualified Criterion.Main.Options                     as Criterion
 import qualified Criterion.Types                            as Criterion
 import qualified Control.Logging                            as Log
 import           System.IO.Unsafe                           (unsafePerformIO)
-import qualified Control.Monad.Parallel                     as Par
+import qualified UnliftIO.Async                             as Async
 import qualified Data.Csv.Incremental                       as Csv
 
 
@@ -66,11 +66,11 @@ forAll :: Opt.Mode
        -> [a]
        -> (a -> IO b)
        -> IO [b]
-forAll  Opt.Analyze             = flip Par.mapM
+forAll  Opt.Analyze             = flip Async.pooledMapConcurrently
 forAll (Opt.AnalyzeCsv csvFile) = \lst f -> do
     putStrLn csvHeader
-    (flip Par.mapM) lst f
-forAll (Opt.Visualize _)        = flip Par.mapM
+    (flip Async.pooledMapConcurrently) lst f
+forAll (Opt.Visualize _)        = flip Async.pooledMapConcurrently
 forAll  Opt.Benchmark           = flip mapM
 forAll (Opt.BenchmarkCsv _)     = flip mapM
 
