@@ -37,6 +37,7 @@ import qualified Control.Logging                            as Log
 import           System.IO.Unsafe                           (unsafePerformIO)
 import qualified UnliftIO.Async                             as Async
 import qualified Data.Csv.Incremental                       as Csv
+import qualified System.IO                                  as IO
 
 
 main :: IO ()
@@ -49,7 +50,7 @@ main = Opt.withOptions $ \options ->
             case Opt.mode options of
                     Opt.Analyze ->
                         (Just . logLiquidityInfo) <$> analyze (Opt.maxSlippage options) execution
-                    Opt.AnalyzeCsv csvFile ->
+                    Opt.AnalyzeCsv ->
                         (Just . csvLiquidityInfo) <$> analyze (Opt.maxSlippage options) execution
                     Opt.Visualize outputDir -> do
                         visualize crypto outputDir execution
@@ -60,19 +61,30 @@ main = Opt.withOptions $ \options ->
                     Opt.BenchmarkCsv csvOut -> do
                         benchmark (Just csvOut) execution
                         return Nothing
-        forM_ (catMaybes logResult) putStrLn
+        forM_ (catMaybes logResult) putStr
 
+-- Parallelize everything, unless it's related to measuring speed/performance
 forAll :: Opt.Mode
+          -- ^ Mode
        -> [a]
-       -> (a -> IO b)
-       -> IO [b]
-forAll  Opt.Analyze             = flip Async.pooledMapConcurrently
-forAll (Opt.AnalyzeCsv csvFile) = \lst f -> do
-    putStrLn csvHeader
-    (flip Async.pooledMapConcurrently) lst f
-forAll (Opt.Visualize _)        = flip Async.pooledMapConcurrently
-forAll  Opt.Benchmark           = flip mapM
-forAll (Opt.BenchmarkCsv _)     = flip mapM
+          -- ^ Input list
+       -> (a -> IO (Maybe String))
+          -- ^ Do for all list items; return output
+       -> IO [Maybe String]
+          -- ^ All outputs
+forAll  Opt.AnalyzeCsv   =
+            let addCsvHeader = fmap (fmap (Just csvHeader :))
+            in addCsvHeader . concurrent
+forAll  Opt.Analyze         = concurrent
+forAll (Opt.Visualize _)    = concurrent
+forAll  Opt.Benchmark       = sequential
+forAll (Opt.BenchmarkCsv _) = sequential
+
+concurrent :: [a] -> (a -> IO b) -> IO [b]
+concurrent = flip Async.pooledMapConcurrently
+
+sequential :: [a] -> (a -> IO b) -> IO [b]
+sequential = flip mapM
 
 csvHeader :: String
 csvHeader = toS . Csv.encode $ Csv.encodeRecord

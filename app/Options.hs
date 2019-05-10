@@ -54,7 +54,7 @@ data Crypto
 data Mode
     = Analyze
       -- ^ Print information about cryptocurrency liquidity
-    | AnalyzeCsv FilePath
+    | AnalyzeCsv
       -- ^ Write information about cryptocurrency liquidity to CSV file
     | Visualize FilePath
       -- ^ Write matched orders to orderbook file for visualization in a depth chart.
@@ -95,7 +95,7 @@ analyzeOpt = flag' Analyze
   <> help "Print information about the liquidity of the cryptocurrency" )
 
 analyzeCsvOpt :: Parser Mode
-analyzeCsvOpt = AnalyzeCsv <$> strOption
+analyzeCsvOpt = flag' AnalyzeCsv
   (  long "analyze-csv"
   <> help "Write information about cryptocurrency liquidity to CSV file" )
 
