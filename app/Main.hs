@@ -43,7 +43,7 @@ import qualified System.IO                                  as IO
 main :: IO ()
 main = Opt.withOptions $ \options ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
-        sellOrders <- readOrdersFile inputFile
+        sellOrders <- readOrdersFile options inputFile
         graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph sellOrders)
         let executionCryptoList = mkExecutions options graphInfo inputFile
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
@@ -101,9 +101,9 @@ data Execution = Execution
       -- ^ Input order book file
     , graphInfo     :: GraphInfo
       -- ^ Information about the graph
-    , preRun        :: IO [SomeSellOrder]
+    , preRun        :: IO [ABook]
       -- ^ Produce input data
-    , mainRun       :: [SomeSellOrder] -> IO ([SomeSellOrder], [SomeSellOrder])
+    , mainRun       :: [ABook] -> IO ([SomeSellOrder], [SomeSellOrder])
       -- ^ Process input data
     }
 
@@ -115,11 +115,10 @@ mkExecutions options graphInfo inputFile = do
             Opt.Single crypto -> [crypto]
             Opt.AllCryptos    -> giVertices graphInfo \\ [numeraire]
     mkExecution crypto =
-        Execution inputFile graphInfo (readOrdersFile inputFile) (mainRun crypto)
+        Execution inputFile graphInfo (readOrdersFile options inputFile) (mainRun crypto)
     mainRun crypto orders =
-        withBidsAsksOrder maxSlippage numeraire crypto $ \bidsOrder asksOrder ->
+        withBidsAsksOrder numeraire crypto $ \bidsOrder asksOrder ->
             matchOrders bidsOrder asksOrder orders
-    maxSlippage = Opt.maxSlippage options
     numeraire   = Opt.numeraire options
 
 -- |
@@ -218,25 +217,24 @@ benchmark csvFileM Execution{..} = do
 benchSingle
     :: FilePath                     -- ^ Order book input file name
     -> GraphInfo
-    -> IO [SomeSellOrder]           -- ^ Read order book from file
-    -> ([SomeSellOrder] -> IO ())   -- ^ Run algorithm
+    -> IO [ABook]           -- ^ Read order book from file
+    -> ([ABook] -> IO ())   -- ^ Run algorithm
     -> IO Criterion.Benchmark
-benchSingle obFile GraphInfo{..} readOrders action = do
+benchSingle obFile GraphInfo{..} readBooks action = do
     let name = obFile ++ " V=" ++ show (length giVertices) ++ " E=" ++ show giEdgeCount
     return $ Criterion.bench name $
-        Criterion.perBatchEnv (const readOrders) action
+        Criterion.perBatchEnv (const readBooks) action
 
 -- |
 withBidsAsksOrder
-    :: Word         -- ^ Maximum slippage in percent
-    -> Lib.Currency -- ^ Numeraire
+    :: Lib.Currency -- ^ Numeraire
     -> Lib.Currency -- ^ Cryptocurrency
     -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Lib.BuyOrder dst src
                                                            -> Lib.BuyOrder src dst
                                                            -> r
        )
     -> r
-withBidsAsksOrder maxSlippage numeraire crypto f =
+withBidsAsksOrder numeraire crypto f =
     case someSymbolVal (toS numeraire) of
         SomeSymbol (Proxy :: Proxy numeraire) ->
             case someSymbolVal (toS crypto) of
@@ -245,18 +243,19 @@ withBidsAsksOrder maxSlippage numeraire crypto f =
                       (buyOrder :: Lib.BuyOrder crypto numeraire)
   where
     buyOrder = Lib.unlimited
-        { Lib.boMaxSlippage = Just . fromIntegral $ maxSlippage }
 
-readOrdersFile :: FilePath -> IO [SomeSellOrder]
-readOrdersFile filePath = do
+readOrdersFile :: Opt.Options -> FilePath -> IO [ABook]
+readOrdersFile options filePath = do
     log $ "Reading order books from " ++ show filePath ++ "..."
     books <- decodeFileOrFail filePath
     -- Log venues
     log ("Venues:") >> logVenues (nub $ map Util.getBookVenue books)
-    let orders = concatMap fromABook (books :: [ABook])
+    let orders = concatMap Util.fromABook (books :: [ABook])
+    log $ "Order book count: " ++ show (length books)
     log $ "Order count: " ++ show (length orders)
-    return orders
+    return $ map (Util.trimSlippageOB maxSlippage) books
   where
+    maxSlippage = fromIntegral $ Opt.maxSlippage options
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail file =
         either (throwError file) return =<< Json.eitherDecodeFileStrict file
@@ -264,7 +263,7 @@ readOrdersFile filePath = do
 
 buildGraph
     :: PrimMonad m
-    => [SomeSellOrder]                              -- ^ Sell orders
+    => [ABook]                              -- ^ Sell orders
     -> Lib.SellOrderGraph (PrimState m) g "arb"     -- ^ Empty graph
     -> m GraphInfo
 buildGraph sellOrders graph = do
@@ -285,7 +284,7 @@ matchOrders
     :: (KnownSymbol src, KnownSymbol dst)
     => Lib.BuyOrder dst src     -- ^ Sell cryptocurrency for national currency
     -> Lib.BuyOrder src dst     -- ^ Buy cryptocurrency for national currency
-    -> [SomeSellOrder]          -- ^ Input orders
+    -> [ABook]          -- ^ Input orders
     -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
 matchOrders bidsOrder asksOrder sellOrders =
     ST.stToIO $ DG.withGraph $ \mGraph -> do
@@ -341,9 +340,6 @@ mkJsonOb bids asks =
         ( show (realToFrac $ soPrice sso :: Double)
         , realToFrac $ soQty sso :: Double
         )
-
-fromABook :: ABook -> [SomeSellOrder]
-fromABook (ABook ob) = Util.fromOB ob
 
 log :: Monad m => String -> m ()
 log = return . unsafePerformIO . Log.loggingLogger Log.LevelInfo (toS "")

@@ -33,6 +33,7 @@ dependencies:
   - thrist
   - vector
   - tagged
+  - crypto-venues
 
 library:
   source-dirs: src

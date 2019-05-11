@@ -8,7 +8,7 @@ packages:
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/crypto-venues.git
-    commit: de05c8b2ddd57fd59b19f39938ee01fa9e1b8c20
+    commit: 7997eda4a13da28eb30d7ec42f3e0d6bc817d6f0
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/impure-containers.git

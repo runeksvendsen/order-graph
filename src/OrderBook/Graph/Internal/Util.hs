@@ -1,15 +1,16 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RankNTypes #-}
 module OrderBook.Graph.Internal.Util
 ( fromOB
+, fromABook
+, withABook
+, baseQuote
 , toSellBuyOrders
 , merge
 , trimSlippage
+, trimSlippageOB
 , assertAscendingPriceSorted
-, lookupVertex
-, lookupEdge
-, union
-, subgraph
 , combine
 , compress
 ) where
@@ -17,6 +18,8 @@ module OrderBook.Graph.Internal.Util
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
 import qualified OrderBook.Types                            as OB
+import           CryptoVenues.Types.ABook                   (ABook(ABook))
+
 import qualified Money
 import qualified Data.Text                                  as T
 import qualified Data.Vector                                as Vec
@@ -24,9 +27,6 @@ import qualified Data.List.NonEmpty                         as NE
 import           Data.String                                (fromString)
 import           GHC.TypeLits                               (KnownSymbol, symbolVal)
 import           Data.Proxy                                 (Proxy(..))
-import qualified Data.Graph.Types                           as G
-import qualified Data.Graph.Immutable                       as GI
-import qualified Data.Graph.Mutable                         as GM
 
 
 -- | Convert all orders in an orderbook (consisting of both sell orders and buy orders)
@@ -40,6 +40,32 @@ fromOB ob =
     sellOrders ++ buyOrders
   where
     (sellOrders, buyOrders) = toSellBuyOrders ob
+
+withABook
+    :: forall r.
+    ( forall venue base quote.
+      (KnownSymbol venue, KnownSymbol base, KnownSymbol quote)
+      => OB.OrderBook venue base quote
+      -> r
+    )
+    -> ABook
+    -> r
+withABook f (ABook ob) = f ob
+
+fromABook :: ABook -> [SomeSellOrder]
+fromABook = withABook fromOB
+
+baseQuote :: ABook -> (T.Text, T.Text)
+baseQuote (ABook ob) =
+    fromOb ob
+  where
+    fromOb :: forall venue base quote.
+              (KnownSymbol base, KnownSymbol quote)
+           => OB.OrderBook venue base quote
+           -> (T.Text, T.Text)
+    fromOb _ = ( toS $ symbolVal (Proxy :: Proxy base)
+               , toS $ symbolVal (Proxy :: Proxy quote)
+               )
 
 -- | Convert all orders in an orderbook (consisting of both sell orders and buy orders)
 --    into a pair of sell orders, where the first item is sell orders and
@@ -104,23 +130,52 @@ combine f =
             Just combinedA -> combinedA : remainingItems
             Nothing        -> item : accumList
 
--- | Remove orders whose price is some specified percentage
---    further away than the first order's price.
---   E.g. "trimSlippage (10%1) sellOrders"
---    will remove the orders in "sellOrders" whose price is more/less than 10%
---    of the first order in "sellOrders"
 trimSlippage
     :: Rational
     -- ^ Slippage in percent. E.g. 50%1 = 50%
     -> [SomeSellOrder]
     -- ^ List of orders sorted by price
     -> [SomeSellOrder]
-trimSlippage _ [] = []
-trimSlippage percentDifference (firstOrder : remainingOrders) =
-    let startPrice = soPrice firstOrder
+trimSlippage = trimSlippageGeneric soPrice
+
+-- | Remove orders whose price is some specified percentage
+--    further away than the first order's price.
+--   E.g. "trimSlippage 10 sellOrders"
+--    will remove the orders in "sellOrders" whose price is more/less than 10%
+--    of the first order in "sellOrders"
+trimSlippageGeneric
+    :: (Fractional numType, Ord numType)
+    => (order -> numType)
+    -> numType
+    -- ^ Slippage in percent. E.g. 50%1 = 50%
+    -> [order]
+    -- ^ List of trimmed orders sorted by price
+    -> [order]
+trimSlippageGeneric _ _ [] = []
+trimSlippageGeneric oPrice percentDifference (firstOrder : remainingOrders) =
+    let startPrice = oPrice firstOrder
         filterByPricePercentage order =
-            abs ((soPrice order - startPrice) / startPrice) <= (percentDifference / 100)
+            abs ((oPrice order - startPrice) / startPrice) <= (percentDifference / 100)
     in firstOrder : filter filterByPricePercentage remainingOrders
+
+trimSlippageOB maxSlippage (ABook ob) = ABook $
+    trimSlippageOB' maxSlippage ob
+
+-- ^ Same as "trimSlippage" but do it for an order book
+trimSlippageOB'
+    :: Rational
+    -- ^ Slippage in percent. E.g. 50%1 = 50%
+    -> OB.OrderBook venue base quote
+    -> OB.OrderBook venue base quote
+trimSlippageOB' maxSlippage ob =
+    let buySide = OB.buyOrders ob
+        sellSide = OB.sellOrders ob
+        rationalPrice = Money.exchangeRateToRational . OB.oPrice
+        trimObSide =
+            Vec.fromList . trimSlippageGeneric rationalPrice maxSlippage . Vec.toList
+    in OB.OrderBook
+            (OB.BuySide  $ trimObSide buySide)
+            (OB.SellSide $ trimObSide sellSide)
 
 -- | Merge a large number of orders into a smaller number of orders
 --    by merging the volume of adjacent orders into a single order, so
@@ -156,51 +211,3 @@ assertAscendingPriceSorted (firstOrder : remainingOrders) =
             else do
                 putStrLn $ unlines ["Orders not sorted:", pp prevOrder, pp nextOrder]
                 return nextOrder
-
-lookupVertex :: (Show v, Eq v) => G.Graph g e v -> v -> G.Vertex g
-lookupVertex g v = fromMaybe (error $ "No such vertex: " ++ show v) (GI.lookupVertex v g)
-
-lookupEdgeM :: (Show v, Eq v) => G.Graph g e v -> v -> v -> Maybe e
-lookupEdgeM g from to =
-    GI.lookupEdge (lookupVertex g from) (lookupVertex g to) g
-
-lookupEdge :: (Show v, Eq v) => G.Graph g e v -> v -> v -> e
-lookupEdge g from to = fromMaybe (error $ "No such edge: " ++ show (from, to)) $
-    lookupEdgeM g from to
-
--- |
-subgraph
-    :: (PrimMonad m, Eq v, Hashable v, Show v)
-    => G.MGraph (PrimState m) g1 e v     -- ^ Empty graph
-    -> G.Graph g2 e v
-    -> [(v, v)]                         -- ^ [(from, to)]
-    -> m (G.Graph g1 e v)
-subgraph mGraph g pathL = do
-    forM_ pathL $ \(from, to) -> do
-        fromV <- GM.insertVertex mGraph from
-        toV <- GM.insertVertex mGraph to
-        GM.insertEdge mGraph fromV toV (lookupEdge g from to)
-    GI.freeze mGraph
-
--- |
-union
-    :: (PrimMonad m, Eq v, Hashable v, Show v)
-    => G.MGraph (PrimState m) g1 e v     -- ^ Empty graph
-    -> G.Graph g2 e v                    -- ^ Primary    (edges take precedence)
-    -> G.Graph g3 e v                    -- ^ Secondary
-    -> m (G.Graph g1 e v)
-union mGraph ga gb = do
-    Vec.forM_ allVertices $ \from -> do
-        Vec.forM_ allVertices $ \to -> do
-            fromV <- GM.insertVertex mGraph from
-            toV <- GM.insertVertex mGraph to
-            insertEdgeIfPresent mGraph gb from to fromV toV
-            insertEdgeIfPresent mGraph ga from to fromV toV
-    GI.freeze mGraph
-  where
-    insertEdgeIfPresent mGraph' g from to fromV toV =
-        case GI.lookupEdge (lookupVertex g from) (lookupVertex g to) g of
-            Nothing -> return ()
-            Just e  -> GM.insertEdge mGraph' fromV toV e
-    getVertices = GI.verticesToVector . GI.vertices
-    allVertices = getVertices ga <> getVertices gb

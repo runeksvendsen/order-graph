@@ -16,7 +16,8 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types
 import           OrderBook.Graph.Types.SortedOrders
-import           OrderBook.Graph.Internal.Util              (toSellBuyOrders)
+import qualified OrderBook.Graph.Internal.Util              as Util
+import           CryptoVenues.Types.ABook                   (ABook(ABook))
 
 import qualified Data.Graph.Digraph                         as DG
 import           Data.List                                  (groupBy, sortOn, sortBy)
@@ -29,27 +30,41 @@ type SellOrderGraph s g kind = DG.Digraph s g (Tagged kind SortedOrders) Currenc
 build
     :: (PrimMonad m)
     => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
-    -> [SomeSellOrder]                      -- ^ Orders
+    -> [ABook]                              -- ^ Order books
     -> m ()
 build mGraph orders = do
     forM_ (create orders) (DG.insertEdge mGraph . Tagged)
 
 -- |
 create
-    :: [SomeSellOrder]  -- ^ A bunch of sell orders
+    :: [ABook]  -- ^ A bunch of order books
     -> [SortedOrders]
 create =
-    -- TODO: sort order books instead of orders
-    fmap (SortedOrders . NE.fromList . sortOn soPrice) . groupByMarket
-        . fmap assertPositivePrice
+        map (SortedOrders . NE.fromList . sortOn soPrice . doAssertions)
+            . concat . map (concatListPairs . toOrders) . groupByMarket
   where
+    concatListPairs :: ([[a]], [[a]]) -> [[a]]
+    concatListPairs (listA, listB) = listA ++ listB
+    toOrders :: [ABook] -> ([[SomeSellOrder]], [[SomeSellOrder]])
+    toOrders aBookLst = foldl
+        (\(accumSell, accumBuy) (sellOrders, buyOrders) ->
+            (sellOrders : accumSell, buyOrders : accumBuy)
+        )
+        ([],[])
+        (map (Util.withABook Util.toSellBuyOrders) aBookLst)
+    doAssertions =
+        assertSameBaseQuote . map assertPositivePrice
+    assertSameBaseQuote lst =
+        if all (sameBaseQuoteOrder (head lst)) lst
+            then lst
+            else error $ "SortedOrders with different base/quote: " ++ show lst
+    sameBaseQuoteOrder o1 o2 =
+        soBase o1 == soBase o2
+        && soQuote o1 == soQuote o2
     assertPositivePrice order
         | soPrice order >= 0 = order
         | otherwise = error $ "negative-price order: " ++ show order
-    groupByMarket = groupBy sameSrcDst . sortBy orderSrcDst
-    sameSrcDst oA oB =
-        soBase oA == soBase oB &&
-        soQuote oA == soQuote oB
-    orderSrcDst oA oB =
-        soBase oA `compare` soBase oB <>
-        soQuote oA `compare` soQuote oB
+    groupByMarket :: [ABook] -> [[ABook]]
+    groupByMarket = groupBy sameBaseQuote . sortOn Util.baseQuote
+    sameBaseQuote :: ABook -> ABook -> Bool
+    sameBaseQuote ob1 ob2 = Util.baseQuote ob1 == Util.baseQuote ob2
