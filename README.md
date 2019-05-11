@@ -49,3 +49,7 @@ sell liquidity           16,228,938 USD
 SUM                      34,279,645 USD
 -----------------------------------------------------
 ```
+
+# Input data
+
+Input order books can be generated using the `WriteTestData` executable from [crypto-venues](https://github.com/runeksvendsen/crypto-venues).
