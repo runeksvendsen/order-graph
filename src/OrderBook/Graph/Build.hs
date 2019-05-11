@@ -40,7 +40,7 @@ create
     :: [ABook]  -- ^ A bunch of order books
     -> [SortedOrders]
 create =
-        map (SortedOrders . NE.fromList . sortOn soPrice . doAssertions)
+        catMaybes . map (fmap SortedOrders . NE.nonEmpty . sortOn soPrice . doAssertions)
             . concat . map (concatListPairs . toOrders) . groupByMarket
   where
     concatListPairs :: ([[a]], [[a]]) -> [[a]]
