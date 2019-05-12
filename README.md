@@ -6,10 +6,9 @@
 2. Run the following commands:
 
 ```
-git clone -n https://github.com/runeksvendsen/order-graph.git
+git clone https://github.com/runeksvendsen/order-graph.git
 cd order-graph/
 stack setup
-git checkout 0c157ea2faf7e12c2d3282ec685d56fed51594d6
 ```
 
 3. Install external dependencies
