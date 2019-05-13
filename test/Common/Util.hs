@@ -32,7 +32,7 @@ assertMatchedOrders
 assertMatchedOrders sellOrders buyOrder f = void $ do
     shuffledSellOrders <- Shuffle.shuffleM sellOrders
     matchedOrders <- ST.stToIO $ DG.withGraph $ \mGraph -> do
-        Lib.build mGraph shuffledSellOrders
+        Lib.buildFromOrders mGraph shuffledSellOrders
         (buyGraph, _) <- Lib.runArb mGraph $ Lib.arbitrages buyOrder
         Lib.runMatch buyGraph $ Lib.match buyOrder
     assertAscendingPriceSorted matchedOrders

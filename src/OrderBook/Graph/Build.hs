@@ -10,6 +10,7 @@ module OrderBook.Graph.Build
 , SortedOrders, first, rest, prepend, toList, replaceHead
 , Tagged(..)
 , build
+, buildFromOrders
 )
 where
 
@@ -68,3 +69,33 @@ create =
     groupByMarket = groupBy sameBaseQuote . sortOn Util.baseQuote
     sameBaseQuote :: ABook -> ABook -> Bool
     sameBaseQuote ob1 ob2 = Util.baseQuote ob1 == Util.baseQuote ob2
+
+-- ^ Same as 'build' but take orders (instead of order books) as input.
+-- Only present for backwards compatibility (slower than 'build').
+buildFromOrders
+    :: (PrimMonad m)
+    => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
+    -> [SomeSellOrder]                      -- ^ Orders
+    -> m ()
+buildFromOrders mGraph orders = do
+    forM_ (createFromOrders orders) (DG.insertEdge mGraph . Tagged)
+
+-- |
+createFromOrders
+    :: [SomeSellOrder]  -- ^ A bunch of sell orders
+    -> [SortedOrders]
+createFromOrders =
+    -- TODO: sort order books instead of orders
+    fmap (SortedOrders . NE.fromList . sortOn soPrice) . groupByMarket
+        . fmap assertPositivePrice
+  where
+    assertPositivePrice order
+        | soPrice order >= 0 = order
+        | otherwise = error $ "negative-price order: " ++ show order
+    groupByMarket = groupBy sameSrcDst . sortBy orderSrcDst
+    sameSrcDst oA oB =
+        soBase oA == soBase oB &&
+        soQuote oA == soQuote oB
+    orderSrcDst oA oB =
+        soBase oA `compare` soBase oB <>
+        soQuote oA `compare` soQuote oB
