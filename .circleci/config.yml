@@ -5,9 +5,6 @@ jobs:
       - image: fpco/stack-build:lts-12
     steps:
       - checkout
-      - run:
-          name: DEBUG stack version
-          command: stack --version
       - restore_cache:
           name: Restore cache
           keys:
