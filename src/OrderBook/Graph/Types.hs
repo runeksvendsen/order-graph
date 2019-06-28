@@ -10,8 +10,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 module OrderBook.Graph.Types
-( Edge(..)
-, DG.DirectedEdge(..)
+( DG.DirectedEdge(..)
 , GE.WeightedEdge(..)
 , Currency
 , SomeSellOrder'(..)
@@ -27,19 +26,6 @@ import qualified Data.Graph.Edge                            as GE
 import qualified Data.Text                                  as T
 import           Data.String                                (IsString)
 
-
--- | An edge in a graph.
--- Used to create alternative implementations of
---  e.g. 'Eq' and 'Ord' for types used as graph edges.
-data Edge a = Edge
-    { getEdge :: a }
-    deriving (Read, Generic, Functor)
-
-instance Show a => Show (Edge a) where
-    show = show . getEdge
-
-instance PrettyVal a => PrettyVal (Edge a) where
-    prettyVal = prettyVal . getEdge
 
 -- | Currency code, e.g. "EUR", "BTC", "USD", "ETH"
 newtype Currency = Currency T.Text
@@ -87,14 +73,6 @@ instance PrettyVal (SomeSellOrder' Double)
 instance PrettyVal SomeSellOrder where
     prettyVal sso =
         prettyVal (fmap realToFrac sso :: SomeSellOrder' Double)
-
-instance Eq (Edge SomeSellOrder) where
-    Edge e1 == Edge e2 =
-        GE.weight e1 == GE.weight e2
-
-instance Ord (Edge SomeSellOrder) where
-    Edge e1 <= Edge e2 =
-        GE.weight e1 <= GE.weight e2
 
 instance DG.DirectedEdge (SomeSellOrder' numType) Currency where
     -- We move in the opposite direction of the seller
