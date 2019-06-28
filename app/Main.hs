@@ -229,8 +229,11 @@ benchSingle obFile GraphInfo{..} readBooks action = do
 withBidsAsksOrder
     :: Lib.Currency -- ^ Numeraire
     -> Lib.Currency -- ^ Cryptocurrency
+       -- |
     -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Lib.BuyOrder dst src
+                                                              -- ^ Buy order
                                                            -> Lib.BuyOrder src dst
+                                                              -- ^ Sell order
                                                            -> r
        )
     -> r
@@ -282,8 +285,8 @@ data GraphInfo = GraphInfo
 
 matchOrders
     :: (KnownSymbol src, KnownSymbol dst)
-    => Lib.BuyOrder dst src     -- ^ Sell cryptocurrency for national currency
-    -> Lib.BuyOrder src dst     -- ^ Buy cryptocurrency for national currency
+    => Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
+    -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
     -> [ABook]          -- ^ Input orders
     -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
 matchOrders bidsOrder asksOrder sellOrders =
