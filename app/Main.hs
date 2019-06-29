@@ -117,8 +117,8 @@ mkExecutions options graphInfo inputFile = do
     mkExecution crypto =
         Execution inputFile graphInfo (readOrdersFile options inputFile) (mainRun crypto)
     mainRun crypto orders =
-        withBidsAsksOrder numeraire crypto $ \bidsOrder asksOrder ->
-            matchOrders bidsOrder asksOrder orders
+        withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
+            matchOrders buyOrder sellOrder orders
     numeraire   = Opt.numeraire options
 
 -- |
@@ -134,8 +134,8 @@ data LiquidityInfo = LiquidityInfo
 analyze :: Word -> Execution -> IO LiquidityInfo
 analyze maxSlippage Execution{..} = do
     (buyOrders, sellOrders) <- preRun >>= mainRun
-    let buyLiquidity = quoteSum buyOrders
-        sellLiquidity = quoteSum sellOrders
+    let sellLiquidity = quoteSum buyOrders
+        buyLiquidity = quoteSum sellOrders
     return $ LiquidityInfo
         { liInputFile       = inputFile
         , liBaseQuote       = ordersMarket (buyOrders ++ sellOrders)
@@ -242,8 +242,8 @@ withBidsAsksOrder numeraire crypto f =
         SomeSymbol (Proxy :: Proxy numeraire) ->
             case someSymbolVal (toS crypto) of
                 SomeSymbol (Proxy :: Proxy crypto) ->
-                    f (buyOrder :: Lib.BuyOrder numeraire crypto)
-                      (buyOrder :: Lib.BuyOrder crypto numeraire)
+                    f (buyOrder :: Lib.BuyOrder crypto numeraire)
+                      (buyOrder :: Lib.BuyOrder numeraire crypto)
   where
     buyOrder = Lib.unlimited
 
@@ -289,7 +289,7 @@ matchOrders
     -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
     -> [ABook]          -- ^ Input orders
     -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
-matchOrders bidsOrder asksOrder sellOrders =
+matchOrders buyOrder sellOrder sellOrders =
     ST.stToIO $ DG.withGraph $ \mGraph -> do
         log "Building graph..."
         graphInfo <- buildGraph sellOrders mGraph
@@ -301,16 +301,16 @@ matchOrders bidsOrder asksOrder sellOrders =
         buyGraph <- Lib.runArb mGraph $ do
             log "Finding arbitrages..."
             -- Asks
-            (buyGraph, arbs) <- Lib.arbitrages asksOrder
+            (buyGraph, arbs) <- Lib.arbitrages sellOrder
             -- Finds all arbitrages (regardless of "src" vertex)
             log $ unlines ["Arbitrages:", pp arbs]
             return buyGraph
         -- Match
         Lib.runMatch buyGraph $ do
-            log "Matching sell orders..."
-            asks <- Lib.match asksOrder
-            log "Matching buy orders..."
-            bids <- map Lib.invertSomeSellOrder <$> Lib.match bidsOrder
+            log "Matching sell order..."
+            bids <- map Lib.invertSomeSellOrder <$> Lib.match sellOrder
+            log "Matching buy order..."
+            asks <- Lib.match buyOrder
             return (bids, asks)
 
 writeChartFile
