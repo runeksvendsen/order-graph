@@ -1,4 +1,4 @@
-resolver: lts-13.12
+resolver: lts-14.0
 
 packages:
 - .
@@ -8,7 +8,7 @@ packages:
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/crypto-venues.git
-    commit: 7997eda4a13da28eb30d7ec42f3e0d6bc817d6f0
+    commit: 97e147cdf6794cc43059935a697f76dd59bbcfab
   extra-dep: true
 - location:
     git: https://github.com/runeksvendsen/impure-containers.git
