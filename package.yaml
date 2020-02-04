@@ -33,7 +33,7 @@ dependencies:
   - thrist
   - vector
   - tagged
-  - crypto-venues
+  - aeson
 
 library:
   source-dirs: src
@@ -53,7 +53,6 @@ executables:
     dependencies:
     - base
     - orderbook
-    - crypto-venues
     - order-graph
     - logging
     - unliftio

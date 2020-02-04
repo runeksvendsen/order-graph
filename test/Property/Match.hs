@@ -5,6 +5,7 @@ module Property.Match
 where
 
 import qualified OrderBook.Graph.Internal.Util              as Util
+import qualified Common.Util                                as Util
 import           Common.Util                                ( assertMatchedOrders
                                                             , shouldBeIgnoringVenue
                                                             )

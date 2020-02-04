@@ -17,8 +17,7 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types
 import           OrderBook.Graph.Types.SortedOrders
-import qualified OrderBook.Graph.Internal.Util              as Util
-import           CryptoVenues.Types.ABook                   (ABook(ABook))
+import qualified OrderBook.Graph.Types.Book                 as Book
 
 import qualified Data.Graph.Digraph                         as DG
 import           Data.List                                  (groupBy, sortOn, sortBy)
@@ -31,14 +30,14 @@ type SellOrderGraph s g kind = DG.Digraph s g (Tagged kind SortedOrders) Currenc
 build
     :: (PrimMonad m)
     => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
-    -> [ABook]                              -- ^ Order books
+    -> [Book.OrderBook Rational]            -- ^ Order books
     -> m ()
 build mGraph orders = do
     forM_ (create orders) (DG.insertEdge mGraph . Tagged)
 
 -- |
 create
-    :: [ABook]  -- ^ A bunch of order books
+    :: [Book.OrderBook Rational]  -- ^ A bunch of order books
     -> [SortedOrders]
 create =
         catMaybes . map (fmap SortedOrders . NE.nonEmpty . sortOn soPrice . doAssertions)
@@ -46,13 +45,13 @@ create =
   where
     concatListPairs :: ([[a]], [[a]]) -> [[a]]
     concatListPairs (listA, listB) = listA ++ listB
-    toOrders :: [ABook] -> ([[SomeSellOrder]], [[SomeSellOrder]])
+    toOrders :: [Book.OrderBook Rational] -> ([[SomeSellOrder]], [[SomeSellOrder]])
     toOrders aBookLst = foldl
         (\(accumSell, accumBuy) (sellOrders, buyOrders) ->
             (sellOrders : accumSell, buyOrders : accumBuy)
         )
         ([],[])
-        (map (Util.withABook Util.toSellBuyOrders) aBookLst)
+        (map Book.toSellBuyOrders aBookLst)
     doAssertions =
         assertSameBaseQuote . map assertPositivePrice
     assertSameBaseQuote lst =
@@ -65,10 +64,10 @@ create =
     assertPositivePrice order
         | soPrice order >= 0 = order
         | otherwise = error $ "negative-price order: " ++ show order
-    groupByMarket :: [ABook] -> [[ABook]]
-    groupByMarket = groupBy sameBaseQuote . sortOn Util.baseQuote
-    sameBaseQuote :: ABook -> ABook -> Bool
-    sameBaseQuote ob1 ob2 = Util.baseQuote ob1 == Util.baseQuote ob2
+    groupByMarket :: [Book.OrderBook Rational] -> [[Book.OrderBook Rational]]
+    groupByMarket = groupBy sameBaseQuote . sortOn Book.baseQuote
+    sameBaseQuote :: Book.OrderBook Rational -> Book.OrderBook Rational -> Bool
+    sameBaseQuote ob1 ob2 = Book.baseQuote ob1 == Book.baseQuote ob2
 
 -- ^ Same as 'build' but take orders (instead of order books) as input.
 -- Only present for backwards compatibility (slower than 'build').

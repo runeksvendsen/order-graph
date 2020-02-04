@@ -12,13 +12,12 @@ where
 
 import           Prelude                                    hiding (log)
 import qualified Options                                    as Opt
-import qualified Util
 import           OrderBook.Graph.Internal.Prelude           hiding (log)
 import qualified OrderBook.Graph.Internal.Util              as Util
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
+import           OrderBook.Graph.Types.Book                 (OrderBook)
+import qualified OrderBook.Graph.Types.Book                 as Book
 import qualified OrderBook.Graph                            as Lib
-
-import           CryptoVenues.Types.ABook                   (ABook(ABook))
 
 import qualified Control.Monad.ST                           as ST
 import qualified Data.Graph.Digraph                         as DG
@@ -101,9 +100,9 @@ data Execution = Execution
       -- ^ Input order book file
     , graphInfo     :: GraphInfo
       -- ^ Information about the graph
-    , preRun        :: IO [ABook]
+    , preRun        :: IO [OrderBook Rational]
       -- ^ Produce input data
-    , mainRun       :: [ABook] -> IO ([SomeSellOrder], [SomeSellOrder])
+    , mainRun       :: [OrderBook Rational] -> IO ([SomeSellOrder], [SomeSellOrder])
       -- ^ Process input data
     }
 
@@ -217,8 +216,8 @@ benchmark csvFileM Execution{..} = do
 benchSingle
     :: FilePath                     -- ^ Order book input file name
     -> GraphInfo
-    -> IO [ABook]           -- ^ Read order book from file
-    -> ([ABook] -> IO ())   -- ^ Run algorithm
+    -> IO [OrderBook Rational]           -- ^ Read order book from file
+    -> ([OrderBook Rational] -> IO ())   -- ^ Run algorithm
     -> IO Criterion.Benchmark
 benchSingle obFile GraphInfo{..} readBooks action = do
     let name = obFile ++ " V=" ++ show (length giVertices) ++ " E=" ++ show giEdgeCount
@@ -247,16 +246,16 @@ withBidsAsksOrder numeraire crypto f =
   where
     buyOrder = Lib.unlimited
 
-readOrdersFile :: Opt.Options -> FilePath -> IO [ABook]
+readOrdersFile :: Opt.Options -> FilePath -> IO [OrderBook Rational]
 readOrdersFile options filePath = do
     log $ "Reading order books from " ++ show filePath ++ "..."
     books <- decodeFileOrFail filePath
     -- Log venues
-    log ("Venues:") >> logVenues (nub $ map Util.getBookVenue books)
-    let orders = concatMap Util.fromABook (books :: [ABook])
+    log ("Venues:") >> logVenues (nub $ map Book.bookVenue books)
+    let orders = concatMap Book.fromOrderBook (books :: [OrderBook Rational])
     log $ "Order book count: " ++ show (length books)
     log $ "Order count: " ++ show (length orders)
-    return $ map (Util.trimSlippageOB maxSlippage) books
+    return $ map (Book.trimSlippageOB maxSlippage) books
   where
     maxSlippage = fromIntegral $ Opt.maxSlippage options
     throwError file str = error $ file ++ ": " ++ str
@@ -266,7 +265,7 @@ readOrdersFile options filePath = do
 
 buildGraph
     :: PrimMonad m
-    => [ABook]                              -- ^ Sell orders
+    => [OrderBook Rational]                         -- ^ Sell orders
     -> Lib.SellOrderGraph (PrimState m) g "arb"     -- ^ Empty graph
     -> m GraphInfo
 buildGraph sellOrders graph = do
@@ -287,7 +286,7 @@ matchOrders
     :: (KnownSymbol src, KnownSymbol dst)
     => Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
     -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
-    -> [ABook]          -- ^ Input orders
+    -> [OrderBook Rational]     -- ^ Input orders
     -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
 matchOrders buyOrder sellOrder sellOrders =
     ST.stToIO $ DG.withGraph $ \mGraph -> do

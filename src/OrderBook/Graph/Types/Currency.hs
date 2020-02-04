@@ -10,6 +10,7 @@ import           OrderBook.Graph.Internal.Prelude
 
 import qualified Data.Text                                  as T
 import           Data.String                                (IsString)
+import qualified Data.Aeson                                 as Json
 
 
 -- | Currency code, e.g. "EUR", "BTC", "USD", "ETH"
@@ -27,3 +28,4 @@ instance StringConv Currency T.Text where
     strConv _ (Currency txt) = txt
 instance StringConv T.Text Currency where
     strConv _ = Currency
+instance Json.FromJSON Currency
