@@ -41,8 +41,9 @@ import qualified System.IO                                  as IO
 
 main :: IO ()
 main = Opt.withOptions $ \options ->
+    Opt.withNumberType options $ \(Opt.SomeNumberType (_ :: Proxy numType)) ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
-        sellOrders <- readOrdersFile options inputFile
+        sellOrders :: [OrderBook numType] <- readOrdersFile options inputFile
         graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph sellOrders)
         let executionCryptoList = mkExecutions options graphInfo inputFile
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
@@ -95,18 +96,23 @@ csvHeader = toS . Csv.encode $ Csv.encodeRecord
     , "sum_liquidity"
     )
 
-data Execution = Execution
+data Execution numType = Execution
     { inputFile     :: FilePath
       -- ^ Input order book file
-    , graphInfo     :: GraphInfo
+    , graphInfo     :: GraphInfo numType
       -- ^ Information about the graph
-    , preRun        :: IO [OrderBook Rational]
+    , preRun        :: IO [OrderBook numType]
       -- ^ Produce input data
-    , mainRun       :: [OrderBook Rational] -> IO ([SomeSellOrder], [SomeSellOrder])
+    , mainRun       :: [OrderBook numType] -> IO ([SomeSellOrder], [SomeSellOrder])
       -- ^ Process input data
     }
 
-mkExecutions :: Opt.Options -> GraphInfo -> FilePath -> [(Execution, Lib.Currency)]
+mkExecutions
+    :: (Json.FromJSON numType, Fractional numType, Real numType)
+    => Opt.Options
+    -> GraphInfo numType
+    -> FilePath
+    -> [(Execution numType, Lib.Currency)]
 mkExecutions options graphInfo inputFile = do
     map (\crypto -> (mkExecution crypto, crypto)) allCryptos
   where
@@ -130,7 +136,7 @@ data LiquidityInfo = LiquidityInfo
     , liSellLiquidity   :: Lib.NumType
     }
 
-analyze :: Word -> Execution -> IO LiquidityInfo
+analyze :: Word -> Execution numType -> IO LiquidityInfo
 analyze maxSlippage Execution{..} = do
     (buyOrders, sellOrders) <- preRun >>= mainRun
     let sellLiquidity = quoteSum buyOrders
@@ -192,7 +198,7 @@ csvLiquidityInfo LiquidityInfo{..} = toS . Csv.encode $
     maybeQuote = fst <$> liBaseQuote
     showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
 
-visualize :: Lib.Currency -> FilePath -> Execution -> IO ()
+visualize :: Lib.Currency -> FilePath -> Execution numType -> IO ()
 visualize currency outputDir Execution{..} =
     preRun >>= mainRun >>= writeChartFile outFilePath
   where
@@ -202,8 +208,9 @@ visualize currency outputDir Execution{..} =
 
 -- |
 benchmark
-    :: Maybe FilePath   -- ^ Write results to CSV file?
-    -> Execution
+    :: NFData numType
+    => Maybe FilePath   -- ^ Write results to CSV file?
+    -> Execution numType
     -> IO ()
 benchmark csvFileM Execution{..} = do
     benchmark' <- benchSingle inputFile graphInfo preRun (void . mainRun)
@@ -214,10 +221,11 @@ benchmark csvFileM Execution{..} = do
 
 -- |
 benchSingle
-    :: FilePath                     -- ^ Order book input file name
-    -> GraphInfo
-    -> IO [OrderBook Rational]           -- ^ Read order book from file
-    -> ([OrderBook Rational] -> IO ())   -- ^ Run algorithm
+    :: NFData numType
+    => FilePath                     -- ^ Order book input file name
+    -> GraphInfo numType
+    -> IO [OrderBook numType]           -- ^ Read order book from file
+    -> ([OrderBook numType] -> IO ())   -- ^ Run algorithm
     -> IO Criterion.Benchmark
 benchSingle obFile GraphInfo{..} readBooks action = do
     let name = obFile ++ " V=" ++ show (length giVertices) ++ " E=" ++ show giEdgeCount
@@ -246,28 +254,33 @@ withBidsAsksOrder numeraire crypto f =
   where
     buyOrder = Lib.unlimited
 
-readOrdersFile :: Opt.Options -> FilePath -> IO [OrderBook Rational]
+readOrdersFile
+    :: (Json.FromJSON numType, Fractional numType, Real numType)
+    => Opt.Options
+    -> FilePath
+    -> IO [OrderBook numType]
 readOrdersFile options filePath = do
     log $ "Reading order books from " ++ show filePath ++ "..."
     books <- decodeFileOrFail filePath
     -- Log venues
     log ("Venues:") >> logVenues (nub $ map Book.bookVenue books)
-    let orders = concatMap Book.fromOrderBook (books :: [OrderBook Rational])
+    let orders = concatMap Book.fromOrderBook books
     log $ "Order book count: " ++ show (length books)
     log $ "Order count: " ++ show (length orders)
     return $ map (Book.trimSlippageOB maxSlippage) books
   where
     maxSlippage = fromIntegral $ Opt.maxSlippage options
     throwError file str = error $ file ++ ": " ++ str
+    decodeFileOrFail :: Json.FromJSON numType => FilePath -> IO [OrderBook numType]
     decodeFileOrFail file =
         either (throwError file) return =<< Json.eitherDecodeFileStrict file
     logVenues venues = forM_ venues $ \venue -> log ("\t" ++ toS venue)
 
 buildGraph
-    :: PrimMonad m
-    => [OrderBook Rational]                         -- ^ Sell orders
+    :: (PrimMonad m, Real numType)
+    => [OrderBook numType]                         -- ^ Sell orders
     -> Lib.SellOrderGraph (PrimState m) g "arb"     -- ^ Empty graph
-    -> m GraphInfo
+    -> m (GraphInfo numType)
 buildGraph sellOrders graph = do
     Lib.build graph sellOrders
     currencies <- DG.vertexLabels graph
@@ -277,16 +290,17 @@ buildGraph sellOrders graph = do
         , giEdgeCount   = edgeCount
         }
 
-data GraphInfo = GraphInfo
+-- NB: Phantom 'numType' is number type of input order book
+data GraphInfo numType = GraphInfo
     { giVertices    :: [Lib.Currency]
     , giEdgeCount   :: Word
     }
 
 matchOrders
-    :: (KnownSymbol src, KnownSymbol dst)
+    :: (KnownSymbol src, KnownSymbol dst, Real numType)
     => Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
     -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
-    -> [OrderBook Rational]     -- ^ Input orders
+    -> [OrderBook numType]      -- ^ Input orders
     -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
 matchOrders buyOrder sellOrder sellOrders =
     ST.stToIO $ DG.withGraph $ \mGraph -> do

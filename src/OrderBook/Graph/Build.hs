@@ -28,16 +28,17 @@ type SellOrderGraph s g kind = DG.Digraph s g (Tagged kind SortedOrders) Currenc
 
 -- ^ build a graph where each edge is a list of sorted sell orders
 build
-    :: (PrimMonad m)
+    :: (PrimMonad m, Real numType)
     => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
-    -> [Book.OrderBook Rational]            -- ^ Order books
+    -> [Book.OrderBook numType]            -- ^ Order books
     -> m ()
 build mGraph orders = do
     forM_ (create orders) (DG.insertEdge mGraph . Tagged)
 
 -- |
 create
-    :: [Book.OrderBook Rational]  -- ^ A bunch of order books
+    :: Real numType
+    => [Book.OrderBook numType]  -- ^ A bunch of order books
     -> [SortedOrders]
 create =
         catMaybes . map (fmap SortedOrders . NE.nonEmpty . sortOn soPrice . doAssertions)
@@ -45,7 +46,9 @@ create =
   where
     concatListPairs :: ([[a]], [[a]]) -> [[a]]
     concatListPairs (listA, listB) = listA ++ listB
-    toOrders :: [Book.OrderBook Rational] -> ([[SomeSellOrder]], [[SomeSellOrder]])
+    toOrders :: Real numType
+             => [Book.OrderBook numType]
+             -> ([[SomeSellOrder]], [[SomeSellOrder]])
     toOrders aBookLst = foldl
         (\(accumSell, accumBuy) (sellOrders, buyOrders) ->
             (sellOrders : accumSell, buyOrders : accumBuy)
@@ -64,9 +67,9 @@ create =
     assertPositivePrice order
         | soPrice order >= 0 = order
         | otherwise = error $ "negative-price order: " ++ show order
-    groupByMarket :: [Book.OrderBook Rational] -> [[Book.OrderBook Rational]]
+    groupByMarket :: [Book.OrderBook numType] -> [[Book.OrderBook numType]]
     groupByMarket = groupBy sameBaseQuote . sortOn Book.baseQuote
-    sameBaseQuote :: Book.OrderBook Rational -> Book.OrderBook Rational -> Bool
+    sameBaseQuote :: Book.OrderBook numType -> Book.OrderBook numType -> Bool
     sameBaseQuote ob1 ob2 = Book.baseQuote ob1 == Book.baseQuote ob2
 
 -- ^ Same as 'build' but take orders (instead of order books) as input.

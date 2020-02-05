@@ -1,8 +1,11 @@
+{-# LANGUAGE ExistentialQuantification #-}
 module Options
 ( withOptions
 , Options(..)
 , Crypto(..)
 , Mode(..)
+, SomeNumberType(..)
+, withNumberType
 )
 where
 
@@ -10,8 +13,10 @@ import           OrderBook.Graph.Internal.Prelude           hiding (log)
 import           Options.Applicative
 import qualified Data.List.NonEmpty                         as NE
 import qualified Control.Logging                            as Log
+import           Data.Char                                  (toLower)
 
 import qualified OrderBook.Graph                            as Lib
+import qualified Data.Aeson                                 as Json
 
 
 data Options = Options
@@ -21,13 +26,18 @@ data Options = Options
   , crypto      :: Crypto
   , mode        :: Mode
   , logLevel    :: Log.LogLevel
-  } deriving (Eq, Show)
+  , numberType  :: SomeNumberType
+  }
 
 withOptions :: (Options -> IO ()) -> IO ()
 withOptions f = do
     parsedOptions <- execParser opts
     setLogLevel parsedOptions
     Log.withStderrLogging (f parsedOptions)
+
+withNumberType :: Options -> (SomeNumberType -> IO ()) -> IO ()
+withNumberType opt f =
+    f (numberType opt)
 
 opts :: ParserInfo Options
 opts = info options $
@@ -43,6 +53,7 @@ options = Options
       <*> cryptoOpt
       <*> modeOpt
       <*> verboseOpt
+      <*> fmap toSomeNumberType numberTypeOpt
 
 -- | Represents either a single cryptocurrency or all cryptocurrencies
 data Crypto
@@ -64,6 +75,15 @@ data Mode
     | BenchmarkCsv FilePath
       -- ^ Same as 'Benchmark' but also results to CSV file
       deriving (Eq, Show)
+
+data SomeNumberType
+    =  forall numType.
+       ( Json.FromJSON numType
+       , Real numType
+       , Fractional numType
+       , NFData numType
+       )
+    => SomeNumberType (Proxy numType)
 
 modeOpt :: Parser Mode
 modeOpt = visualizeOpt <|> benchOpt <|> benchCsvOpt <|> analyzeOpt <|> analyzeCsvOpt
@@ -144,3 +164,34 @@ verboseOpt = flag Log.LevelError Log.LevelDebug
   <> short 'v'
   <> help "Print all information"
   )
+
+data NumberType
+    = Rational -- ^ 'Rational' number type
+    | Double   -- ^ 'Double' number type
+      deriving (Eq, Show)
+
+showLowerCase :: NumberType -> String
+showLowerCase = map toLower . show
+
+readLowerCase :: String -> Maybe NumberType
+readLowerCase string
+    | lowerCaseString == "rational" = Just Rational
+    | lowerCaseString == "double" = Just Double
+    | otherwise = Nothing
+  where
+    lowerCaseString = map toLower string
+
+toSomeNumberType
+    :: NumberType
+    -> SomeNumberType
+toSomeNumberType Rational = SomeNumberType (Proxy :: Proxy Rational)
+toSomeNumberType Double = SomeNumberType (Proxy :: Proxy Double)
+
+numberTypeOpt :: Parser NumberType
+numberTypeOpt =
+  option (maybeReader readLowerCase) $
+     long "number-type"
+  <> value Rational
+  <> help "Number type for input JSON order book file(s)"
+  <> showDefaultWith showLowerCase
+  <> metavar "rational/double"

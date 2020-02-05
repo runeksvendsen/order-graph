@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveFunctor #-}
 module OrderBook.Graph.Types.Book
 ( OrderBook
 , bookVenue
@@ -25,12 +26,12 @@ data OrderBook numType = OrderBook
     , venue :: T.Text
     , base  :: Currency
     , quote :: Currency
-    } deriving Generic
+    } deriving (Functor, Generic)
 
 data Order numType = Order
     { qty   :: numType
     , price :: numType
-    } deriving Generic
+    } deriving (Functor, Generic)
 
 instance NFData numType => NFData (OrderBook numType)
 instance NFData numType => NFData (Order numType)
@@ -47,13 +48,15 @@ baseQuote ob = (toS $ base ob, toS $ quote ob)
 -- | Convert all orders in an orderbook (consisting of both sell orders and buy orders)
 --    into a pair of sell orders, where the first item is sell orders and
 toSellBuyOrders
-    :: OrderBook Rational
+    :: Real numType
+    => OrderBook numType
     -> ([SomeSellOrder], [SomeSellOrder])   -- ^ (Sell orders, buy orders)
-toSellBuyOrders OrderBook{..} =
+toSellBuyOrders ob =
     ( map (fromSellOrder venue base quote) (Vec.toList asks)
     , map (fromSellOrder venue quote base . invert) (Vec.toList bids)
     )
   where
+    OrderBook{..} = fmap toRational ob
     -- invert . invert = id
     invert :: Fractional numType => Order numType -> Order numType
     invert o = Order
@@ -77,7 +80,7 @@ fromSellOrder venue base quote o =
         , soVenue = venue
         }
 
-fromOrderBook :: OrderBook Rational -> [SomeSellOrder]
+fromOrderBook :: Real numType => OrderBook numType -> [SomeSellOrder]
 fromOrderBook ob = concat
     [ sellOrders
     , buyOrders
@@ -87,15 +90,16 @@ fromOrderBook ob = concat
 
 -- ^ Same as 'trimSlippageGeneric' but do it for an order book
 trimSlippageOB
-    :: Rational
+    :: (Fractional numType, Ord numType)
+    => Rational
     -- ^ Slippage in percent. E.g. 50%1 = 50%
-    -> OrderBook Rational
-    -> OrderBook Rational
+    -> OrderBook numType
+    -> OrderBook numType
 trimSlippageOB maxSlippage ob =
     let buySide = bids ob
         sellSide = asks ob
         trimObSide =
-            Vec.fromList . trimSlippageGeneric price maxSlippage . Vec.toList
+            Vec.fromList . trimSlippageGeneric price (fromRational maxSlippage) . Vec.toList
     in ob
         { bids = trimObSide buySide
         , asks = trimObSide sellSide
