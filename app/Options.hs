@@ -40,7 +40,7 @@ withNumberType opt f =
     f (numberType opt)
 
 opts :: ParserInfo Options
-opts = info options $
+opts = info (helper <*> options) $
      fullDesc
   <> progDesc "Analyze market depth algorithm"
   <> header "Match buy and sell orders"
