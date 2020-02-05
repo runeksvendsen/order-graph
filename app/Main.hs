@@ -36,7 +36,6 @@ import qualified Control.Logging                            as Log
 import           System.IO.Unsafe                           (unsafePerformIO)
 import qualified UnliftIO.Async                             as Async
 import qualified Data.Csv.Incremental                       as Csv
-import qualified System.IO                                  as IO
 
 
 main :: IO ()
@@ -183,8 +182,6 @@ logLiquidityInfo LiquidityInfo{..} = unlines $
     logLine title message =
             printf "%-25s%s" title message
 
--- csvLiquidityInfo :: LiquidityInfo -> Csv.Builder
-
 csvLiquidityInfo LiquidityInfo{..} = toS . Csv.encode $
     Csv.encodeRecord
         ( liInputFile
@@ -195,7 +192,6 @@ csvLiquidityInfo LiquidityInfo{..} = toS . Csv.encode $
         , round $ liBuyLiquidity + liSellLiquidity :: Integer
         )
   where
-    maybeQuote = fst <$> liBaseQuote
     showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
 
 visualize :: Lib.Currency -> FilePath -> Execution numType -> IO ()
