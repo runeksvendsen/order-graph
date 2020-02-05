@@ -29,4 +29,5 @@ extra-deps:
 - containers-0.5.11.0@sha256:28ad7337057442f75bc689315ab4ec7bdf5e6b2c39668f306672cecd82c02798
 - json-schema-0.7.4.2@sha256:6f1c54247006f9d55a9d656a9e83af4b06cf6b49cebdfa79aec092f21181955f
 - safe-money-0.7@sha256:8f31ac1ef9d76975af42771b2fc6b4433fddd3f751ec7737ae323ef4c8e5ac67
+- optparse-applicative-0.15.1.0@sha256:a0b9924d88a17c36cd8e6839d7dd2138419dd8f08cbb4f9af18f3c367b0c69a3,4673
 - generic-aeson-0.2.0.10
