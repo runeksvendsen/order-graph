@@ -21,7 +21,7 @@ import qualified Data.Aeson                                 as Json
 
 data Options = Options
   { inputFiles  :: NE.NonEmpty FilePath
-  , maxSlippage :: Word
+  , maxSlippage :: Double
   , numeraire   :: Lib.Currency
   , crypto      :: Crypto
   , mode        :: Mode
@@ -125,7 +125,7 @@ inputFilesOpt = fmap NE.fromList . some $ argument str
   ( metavar "FILE..."
   <> help "JSON order book file" )
 
-maxSlippageOpt :: Parser Word
+maxSlippageOpt :: Parser Double
 maxSlippageOpt = option auto
   ( long "max-slippage"
   <> short 's'

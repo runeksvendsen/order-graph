@@ -131,12 +131,12 @@ data LiquidityInfo = LiquidityInfo
     { liInputFile       :: FilePath
     , liBaseQuote       :: Maybe (Lib.Currency, Lib.Currency)
       -- ^ (base, quote) currency
-    , liMaxSlippage     :: Word
+    , liMaxSlippage     :: Double
     , liBuyLiquidity    :: Lib.NumType
     , liSellLiquidity   :: Lib.NumType
     }
 
-analyze :: Word -> Execution numType -> IO LiquidityInfo
+analyze :: Double -> Execution numType -> IO LiquidityInfo
 analyze maxSlippage Execution{..} = do
     (buyOrders, sellOrders) <- preRun >>= mainRun
     let sellLiquidity = quoteSum buyOrders
@@ -269,7 +269,7 @@ readOrdersFile options filePath = do
     log $ "Order count: " ++ show (length orders)
     return $ map (Book.trimSlippageOB maxSlippage) books
   where
-    maxSlippage = fromIntegral $ Opt.maxSlippage options
+    maxSlippage = toRational $ Opt.maxSlippage options
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail :: Json.FromJSON numType => FilePath -> IO [OrderBook numType]
     decodeFileOrFail file =
