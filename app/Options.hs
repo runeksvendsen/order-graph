@@ -42,8 +42,7 @@ withNumberType opt f =
 opts :: ParserInfo Options
 opts = info (helper <*> options) $
      fullDesc
-  <> progDesc "Analyze market depth algorithm"
-  <> header "Match buy and sell orders"
+  <> header "Analyze cryptocurrency market depth"
 
 options :: Parser Options
 options = Options
