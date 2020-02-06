@@ -9,7 +9,7 @@ module Options
 )
 where
 
-import           OrderBook.Graph.Internal.Prelude           hiding (log)
+import           OrderBook.Graph.Internal.Prelude           hiding (log, Mod)
 import           Options.Applicative
 import qualified Data.List.NonEmpty                         as NE
 import qualified Control.Logging                            as Log
@@ -20,13 +20,13 @@ import qualified Data.Aeson                                 as Json
 
 
 data Options = Options
-  { inputFiles  :: NE.NonEmpty FilePath
+  { mode        :: Mode
   , maxSlippage :: Double
-  , numeraire   :: Lib.Currency
   , crypto      :: Crypto
-  , mode        :: Mode
+  , numeraire   :: Lib.Currency
   , logLevel    :: Log.LogLevel
   , numberType  :: SomeNumberType
+  , inputFiles  :: NE.NonEmpty FilePath
   }
 
 withOptions :: (Options -> IO ()) -> IO ()
@@ -47,13 +47,13 @@ opts = info (helper <*> options) $
 
 options :: Parser Options
 options = Options
-      <$> inputFilesOpt
+      <$> modeOpt
       <*> maxSlippageOpt
-      <*> numeraireOpt
       <*> cryptoOpt
-      <*> modeOpt
+      <*> numeraireOpt
       <*> verboseOpt
       <*> fmap toSomeNumberType numberTypeOpt
+      <*> inputFilesOpt
 
 -- | Represents either a single cryptocurrency or all cryptocurrencies
 data Crypto
@@ -73,7 +73,7 @@ data Mode
     | Benchmark
       -- ^ Run benchmark of order matching algorithm
     | BenchmarkCsv FilePath
-      -- ^ Same as 'Benchmark' but also results to CSV file
+      -- ^ Same as 'Benchmark' but also write results to CSV file
       deriving (Eq, Show)
 
 data SomeNumberType
@@ -86,44 +86,53 @@ data SomeNumberType
     => SomeNumberType (Proxy numType)
 
 modeOpt :: Parser Mode
-modeOpt = visualizeOpt <|> benchOpt <|> benchCsvOpt <|> analyzeOpt <|> analyzeCsvOpt
+modeOpt = hsubparser $
+    analyzeCommand <> analyzeCsvCommand <> visualizeCommand <> benchCommand <> benchCsvCommand
 
 setLogLevel :: Options -> IO ()
 setLogLevel = Log.setLogLevel . logLevel
 
-visualizeOpt :: Parser Mode
-visualizeOpt = Visualize <$> strOption
-  (  long "visualize"
-  <> short 'w'
-  <> metavar "OUTDIR"
-  <> help "Target directory for matched orders orderbook files" )
+visualizeCommand :: Mod CommandFields Mode
+visualizeCommand =
+    command "visualize" $
+        info visualizeOptions (progDesc "Write matched orders to orderbook file for visualization in a depth chart")
+  where
+    visualizeOptions :: Parser Mode
+    visualizeOptions = Visualize <$> arg
+    arg = strArgument $
+           metavar "OUTDIR"
+        <> help "Target directory for matched orders orderbook files"
 
-benchOpt :: Parser Mode
-benchOpt = flag' Benchmark
-  (  long "bench"
-  <> help "Benchmark" )
+benchCommand :: Mod CommandFields Mode
+benchCommand =
+    command "bench" $
+        info (pure Benchmark) (progDesc "Benchmark the order matching algorithm")
 
-benchCsvOpt :: Parser Mode
-benchCsvOpt = BenchmarkCsv <$> strOption
-  (  long "bench-csv"
-  <> metavar "CSVFILE"
-  <> help "Benchmark and also write results to CSV file" )
+benchCsvCommand :: Mod CommandFields Mode
+benchCsvCommand =
+    command "bench-csv" $
+        info options' (progDesc "Benchmark and also write results to CSV file")
+  where
+    options' :: Parser Mode
+    options' = BenchmarkCsv <$> arg
+    arg = strArgument $
+           metavar "CSVFILE"
+        <> help "Target file for benchmark results (CSV format)"
 
-analyzeOpt :: Parser Mode
-analyzeOpt = flag' Analyze
-  (  long "analyze"
-  <> help "Print information about the liquidity of the cryptocurrency" )
+analyzeCommand :: Mod CommandFields Mode
+analyzeCommand =
+    command "analyze" $
+        info (pure Analyze) (progDesc "Print information about cryptocurrency liquidity")
 
-analyzeCsvOpt :: Parser Mode
-analyzeCsvOpt = flag' AnalyzeCsv
-  (  long "analyze-csv"
-  <> help "Write information about cryptocurrency liquidity to CSV file" )
-
+analyzeCsvCommand :: Mod CommandFields Mode
+analyzeCsvCommand =
+    command "analyze-csv" $
+        info (pure AnalyzeCsv) (progDesc "Analyze and print liquidity information in CSV format")
 
 inputFilesOpt :: Parser (NE.NonEmpty FilePath)
 inputFilesOpt = fmap NE.fromList . some $ argument str
   ( metavar "FILE..."
-  <> help "JSON order book file" )
+  <> help "JSON order book file(s)" )
 
 maxSlippageOpt :: Parser Double
 maxSlippageOpt = option auto
