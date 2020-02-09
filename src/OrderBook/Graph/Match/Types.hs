@@ -78,5 +78,5 @@ orderFilled (BuyOrder' qtyM _ slipM) (MatchResult' (latest:_) (Just first) mrQty
     checkProp propM f = maybe False f propM
     qtyFilled = checkProp qtyM $ \qty -> mrQty >= qty
     slippageReached = checkProp slipM $ \maxSlippage ->
-        let slippagePct = (soPrice latest - soPrice first) / soPrice first * 100
+        let slippagePct = abs $ (soPrice latest - soPrice first) / soPrice first * 100
         in slippagePct > maxSlippage

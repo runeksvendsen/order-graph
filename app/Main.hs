@@ -1,7 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
--- {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeApplications #-}
@@ -21,9 +21,13 @@ import qualified OrderBook.Graph                            as Lib
 
 import qualified Control.Monad.ST                           as ST
 import qualified Data.Graph.Digraph                         as DG
-import           Data.List                                  (sortBy, nub, (\\))
+import           Data.List                                  (sortBy, nub, (\\), sortOn)
 import           Data.Ord                                   (comparing)
 
+import qualified Data.List.NonEmpty                         as NE
+import qualified Data.Text                                  as T
+import qualified Data.Text.Format                           as F
+import qualified Data.Text.Lazy.Builder                     as T
 import qualified Data.Aeson                                 as Json
 import           Data.Aeson                                 ((.=))
 import           System.FilePath                            ((</>))
@@ -61,7 +65,17 @@ main = Opt.withOptions $ \options ->
                         benchmark (Just csvOut) execution
                         return Nothing
         forM_ (catMaybes logResult) putStr
-
+  where
+    csvLiquidityInfo LiquidityInfo{..} = toS . Csv.encode $
+        Csv.encodeRecord
+            ( liInputFile
+            , showBaseQuote liBaseQuote
+            , liMaxSlippage
+            , round liBuyLiquidity                     :: Integer
+            , round liSellLiquidity                    :: Integer
+            , round $ liBuyLiquidity + liSellLiquidity :: Integer
+            )
+    showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
 -- Parallelize everything, unless it's related to measuring speed/performance
 forAll :: Opt.Mode
           -- ^ Mode
@@ -125,6 +139,12 @@ mkExecutions options graphInfo inputFile = do
             matchOrders buyOrder sellOrder orders
     numeraire   = Opt.numeraire options
 
+data PriceRange numType =
+    PriceRange
+        { lowestPrice :: numType
+        , highestPrice :: numType
+        }
+
 -- |
 data LiquidityInfo = LiquidityInfo
     { liInputFile       :: FilePath
@@ -133,6 +153,10 @@ data LiquidityInfo = LiquidityInfo
     , liMaxSlippage     :: Double
     , liBuyLiquidity    :: Lib.NumType
     , liSellLiquidity   :: Lib.NumType
+    , liBuyPriceRange   :: Maybe (PriceRange Lib.NumType)
+    , liSellPriceRange  :: Maybe (PriceRange Lib.NumType)
+    , liBuyPaths        :: [(Lib.NumType, PriceRange Lib.NumType, T.Text)]  -- ^ (quantity, price_range, path_description)
+    , liSellPaths       :: [(Lib.NumType, PriceRange Lib.NumType, T.Text)]  -- ^ (quantity, price_range, path_description)
     }
 
 analyze :: Double -> Execution numType -> IO LiquidityInfo
@@ -140,24 +164,47 @@ analyze maxSlippage Execution{..} = do
     (buyOrders, sellOrders) <- preRun >>= mainRun
     let sellLiquidity = quoteSum buyOrders
         buyLiquidity = quoteSum sellOrders
+        sellPaths = take 15 $ sortByQuantity $ map quoteSumVenue (groupByVenue buyOrders)
+        buyPaths = take 15 $ sortByQuantity $ map quoteSumVenue (groupByVenue sellOrders)
+        priceRangeBuyM = maybeFirstLastPrice $ sortBy (comparing soPrice) sellOrders
+        priceRangeSellM = maybeFirstLastPrice $ sortBy (comparing soPrice) buyOrders
     return $ LiquidityInfo
         { liInputFile       = inputFile
         , liBaseQuote       = ordersMarket (buyOrders ++ sellOrders)
         , liMaxSlippage     = maxSlippage
         , liBuyLiquidity    = buyLiquidity
         , liSellLiquidity   = sellLiquidity
+        , liBuyPriceRange   = priceRangeBuyM
+        , liSellPriceRange  = priceRangeSellM
+        , liBuyPaths        = buyPaths
+        , liSellPaths       = sellPaths
         }
   where
+    maybeFirstLastPrice lst = do
+        first <- headMay lst
+        last <- lastMay lst
+        return $ PriceRange (soPrice first) (soPrice last)
+    quoteSumVenue orders =
+        (quoteSum $ NE.toList orders, priceRange orders, soVenue $ NE.head orders)
+    groupByVenue = NE.groupBy (\a b -> soVenue a == soVenue b) . sortOn soVenue
+    sortByQuantity = sortBy (flip $ comparing $ \(quoteSum, _, _) -> quoteSum)
     ordersMarket orderList = orderMarket <$> headMay orderList
     orderMarket order = (Lib.soBase order, Lib.soQuote order)
     quoteSum orderList = sum $ map quoteQuantity orderList
     quoteQuantity order = Lib.soQty order * Lib.soPrice order
+    priceRange
+        :: NE.NonEmpty SomeSellOrder
+        -> PriceRange Lib.NumType
+    priceRange soList =
+        let priceList = NE.map soPrice soList
+        in PriceRange (minimum priceList) (maximum priceList)
 
 logLiquidityInfo :: LiquidityInfo -> String
 logLiquidityInfo LiquidityInfo{..} = unlines $
-    [ logLine "Order book file" liInputFile
+    [ lineSeparator
+    , logInputFile
     , logLine "Market (base/quote)" $ showBaseQuote liBaseQuote
-    , logLine "Maximum slippage" (show liMaxSlippage ++ "%")
+    , logMaxSlippage
     ] ++ case liBaseQuote of
         Nothing -> []
         Just (_, quoteCurrency) ->
@@ -166,33 +213,58 @@ logLiquidityInfo LiquidityInfo{..} = unlines $
             , logLiquidity "SUM" (liBuyLiquidity + liSellLiquidity) quoteCurrency
             ]
       ++
-    [ "-----------------------------------------------------"
-    ,  ""
+    catMaybes
+    [ fmap (logLine "Buy price (low/high)" . showBestWorstPrice) liBuyPriceRange
+    , fmap (logLine "Sell price (low/high)" . showBestWorstPrice) liSellPriceRange
     ]
+    ++
+    [ lineSeparator
+    ,  ""
+    , "Buy paths:"
+    ]
+    ++
+    map pathSumRange liBuyPaths
+    ++
+    [ "", "Sell paths:" ]
+    ++
+    map pathSumRange liSellPaths
+    ++
+    [ lineSeparator ]
   where
+    showFloatSamePrecision num  = printf (printf "%%.%df" $ digitsAfterPeriod num) num
+    digitsAfterPeriod num =
+        let beforeRemoved = dropWhile (/= '.') $ printf "%f" num
+        in if null beforeRemoved then 0 else length beforeRemoved - 1
+    showBestWorstPrice (PriceRange best worst) = printf "%s / %s" (showPrice best) (showPrice worst)
+    pathSumRange (quoteAmount, priceRange, venue) =
+        unlines
+            [ logLine ("Volume (quote)") (showAmount quoteAmount)
+            , logLine "Price (low/high)" (showPriceRange priceRange)
+            , toS venue
+            ]
+    showPriceRange :: Real a => PriceRange a -> String
+    showPriceRange (PriceRange low high) = printf "%s/%s" (showPrice low) (showPrice high)
     showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
-    thousandSeparator numStr = reverse $ foldr (\(index, char) accum -> if index /= 0 && index `mod` 3 == 0 then ',' : char : accum else char : accum) [] (zip [0..] (reverse numStr))
+    thousandSeparator numStr =
+        let addDelimiter (index, char) accum =
+                if index /= 0 && index `mod` (3 :: Int) == 0
+                    then ',' : char : accum
+                    else char : accum
+        in reverse $ foldr addDelimiter [] (zip [0..] (reverse numStr))
     showAmount :: Lib.NumType -> String
     showAmount = thousandSeparator . show @Integer . floor
+    showPrice :: Real price => price -> String
+    showPrice = toS . T.toLazyText . F.shortest
     logLiquidity :: String -> Lib.NumType -> Lib.Currency -> String
     logLiquidity liquidityText amount quoteCurrency =
         logLine liquidityText
                 (showAmount amount ++ " " ++ toS quoteCurrency)
+    lineSeparator = "-----------------------------------------------------"
+    logInputFile = logLine "Order book file" liInputFile
+    logMaxSlippage = logLine "Maximum slippage (%)" (showFloatSamePrecision liMaxSlippage)
     logLine :: String -> String -> String
     logLine title message =
             printf "%-25s%s" title message
-
-csvLiquidityInfo LiquidityInfo{..} = toS . Csv.encode $
-    Csv.encodeRecord
-        ( liInputFile
-        , showBaseQuote liBaseQuote
-        , liMaxSlippage
-        , round liBuyLiquidity                     :: Integer
-        , round liSellLiquidity                    :: Integer
-        , round $ liBuyLiquidity + liSellLiquidity :: Integer
-        )
-  where
-    showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
 
 visualize :: Lib.Currency -> FilePath -> Execution numType -> IO ()
 visualize currency outputDir Execution{..} =
