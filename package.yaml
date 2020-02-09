@@ -45,9 +45,6 @@ executables:
     main: Main.hs
     source-dirs: app
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
     - -fno-ignore-asserts
     - -Wall
     dependencies:
@@ -65,6 +62,7 @@ executables:
     - optparse-applicative
     - filepath
     - cassava
+    - text-format
 
 tests:
   order-graph-test:
