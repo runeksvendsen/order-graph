@@ -71,9 +71,8 @@ queryUpdateGraph bo queryGraph =
         case buyPathM of
             Nothing -> return mr
             Just (Query.BuyPath orderPath) -> do
-                let reverseOrderPath = NE.reverse orderPath
-                let (newEdges, matchedOrder) = subtractMatchedQty reverseOrderPath
-                forM_ (NE.zip reverseOrderPath newEdges) (uncurry updateGraphEdge)
+                let (newEdges, matchedOrder) = subtractMatchedQty orderPath
+                forM_ (NE.zip orderPath newEdges) (uncurry updateGraphEdge)
                 go (addOrder mr matchedOrder)
 
 updateGraphEdge
