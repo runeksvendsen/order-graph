@@ -203,7 +203,7 @@ logLiquidityInfo :: LiquidityInfo -> String
 logLiquidityInfo LiquidityInfo{..} = unlines $
     [ lineSeparator
     , logInputFile
-    , logLine "Market (base/quote)" $ showBaseQuote liBaseQuote
+    , logLine "Cryptocurrency" $ showCrypto liBaseQuote
     , logMaxSlippage
     ] ++ case liBaseQuote of
         Nothing -> []
@@ -244,7 +244,7 @@ logLiquidityInfo LiquidityInfo{..} = unlines $
             ]
     showPriceRange :: Real a => PriceRange a -> String
     showPriceRange PriceRange{..} = printf "%s / %s" (showPrice lowestPrice) (showPrice highestPrice)
-    showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
+    showCrypto = maybe "<no orders matched>" (\(base, _) -> show base)
     thousandSeparator numStr =
         let addDelimiter (index, char) accum =
                 if index /= 0 && index `mod` (3 :: Int) == 0
