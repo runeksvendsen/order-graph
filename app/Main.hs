@@ -76,6 +76,7 @@ main = Opt.withOptions $ \options ->
             , round $ liBuyLiquidity + liSellLiquidity :: Integer
             )
     showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
+
 -- Parallelize everything, unless it's related to measuring speed/performance
 forAll :: Opt.Mode
           -- ^ Mode
