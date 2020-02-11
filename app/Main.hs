@@ -215,8 +215,8 @@ logLiquidityInfo LiquidityInfo{..} = unlines $
             ]
       ++
     catMaybes
-    [ fmap (logLine "Buy price (low/high)" . showBestWorstPrice) liBuyPriceRange
-    , fmap (logLine "Sell price (low/high)" . showBestWorstPrice) liSellPriceRange
+    [ fmap (logLine "Buy price (low/high)" . showPriceRange) liBuyPriceRange
+    , fmap (logLine "Sell price (low/high)" . showPriceRange) liSellPriceRange
     ]
     ++
     when (not $ null liBuyPaths)
@@ -237,15 +237,14 @@ logLiquidityInfo LiquidityInfo{..} = unlines $
     digitsAfterPeriod num =
         let beforeRemoved = dropWhile (/= '.') $ printf "%f" num
         in if null beforeRemoved then 0 else length beforeRemoved - 1
-    showBestWorstPrice (PriceRange best worst) = printf "%s / %s" (showPrice best) (showPrice worst)
     pathSumRange (quoteAmount, priceRange, venue) =
         unlines
             [ logLine ("Volume (quote)") (showAmount quoteAmount)
             , logLine "Price (low/high)" (showPriceRange priceRange)
-            , toS venue
+            , logLine "Path" (toS venue)
             ]
     showPriceRange :: Real a => PriceRange a -> String
-    showPriceRange (PriceRange low high) = printf "%s/%s" (showPrice low) (showPrice high)
+    showPriceRange PriceRange{..} = printf "%s / %s" (showPrice lowestPrice) (showPrice highestPrice)
     showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
     thousandSeparator numStr =
         let addDelimiter (index, char) accum =
