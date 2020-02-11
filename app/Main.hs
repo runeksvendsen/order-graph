@@ -12,6 +12,7 @@ where
 
 import           Prelude                                    hiding (log)
 import qualified Options                                    as Opt
+import qualified Format
 import           OrderBook.Graph.Internal.Prelude           hiding (log)
 import qualified OrderBook.Graph.Internal.Util              as Util
 import           OrderBook.Graph.Types                      (SomeSellOrder, SomeSellOrder'(..))
@@ -26,8 +27,6 @@ import           Data.Ord                                   (comparing)
 
 import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Text                                  as T
-import qualified Data.Text.Format                           as F
-import qualified Data.Text.Lazy.Builder                     as T
 import qualified Data.Aeson                                 as Json
 import           Data.Aeson                                 ((.=))
 import           System.FilePath                            ((</>))
@@ -255,7 +254,7 @@ logLiquidityInfo LiquidityInfo{..} = unlines $
     showAmount :: Lib.NumType -> String
     showAmount = thousandSeparator . show @Integer . floor
     showPrice :: Real price => price -> String
-    showPrice = toS . T.toLazyText . F.shortest
+    showPrice = Format.formatFloatFloor 8
     logLiquidity :: String -> Lib.NumType -> Lib.Currency -> String
     logLiquidity liquidityText amount quoteCurrency =
         logLine liquidityText
