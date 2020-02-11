@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph.Types.Book
 ( OrderBook
 , bookVenue
@@ -15,8 +16,12 @@ import           OrderBook.Graph.Types.Currency             (Currency)
 import           OrderBook.Graph.Types.SomeSellOrder
 import           OrderBook.Graph.Internal.Util              (trimSlippageGeneric)
 
+import           Data.List                                  (sortBy, sortOn)
+import           Data.Ord                                   (comparing)
 import qualified Data.Vector                                as Vec
 import qualified Data.Aeson                                 as Json
+import qualified Data.Aeson.Types                           as Json
+import           Data.Aeson                                 ((.:))
 import qualified Data.Text                                  as T
 
 
@@ -36,7 +41,33 @@ data Order numType = Order
 instance NFData numType => NFData (OrderBook numType)
 instance NFData numType => NFData (Order numType)
 
-instance Json.FromJSON numType => Json.FromJSON (OrderBook numType)
+-- | Parse 'OrderBook' from JSON and simultaneously sort orders by price.
+--   Buy orders: descending, sell orders: ascending.
+instance (Json.FromJSON numType, Ord numType) => Json.FromJSON (OrderBook numType) where
+    parseJSON json = do
+        book <- jsonParseBookRaw json
+        return $ book
+            { bids = withList (sortOnDescending price) (bids book)
+            , asks = withList (sortOnAscending price) (asks book)
+            }
+      where
+        withList f = Vec.fromList . f . Vec.toList
+        sortOnDescending f = sortBy (flip $ comparing f)
+        sortOnAscending f = sortOn f
+
+-- | Parse 'OrderBook' from JSON without sorting orders by price.
+jsonParseBookRaw
+    :: Json.FromJSON numType
+    => Json.Value
+    -> Json.Parser (OrderBook numType)
+jsonParseBookRaw =
+    Json.withObject "OrderBook" $ \v -> OrderBook
+        <$> v .: "bids"
+        <*> v .: "asks"
+        <*> v .: "venue"
+        <*> v .: "base"
+        <*> v .: "quote"
+
 instance Json.FromJSON numType => Json.FromJSON (Order numType)
 
 bookVenue :: OrderBook numType -> T.Text

@@ -340,7 +340,7 @@ readOrdersFile options filePath = do
   where
     maxSlippage = toRational $ Opt.maxSlippage options
     throwError file str = error $ file ++ ": " ++ str
-    decodeFileOrFail :: Json.FromJSON numType => FilePath -> IO [OrderBook numType]
+    decodeFileOrFail :: (Json.FromJSON numType, Ord numType) => FilePath -> IO [OrderBook numType]
     decodeFileOrFail file =
         either (throwError file) return =<< Json.eitherDecodeFileStrict file
     logVenues venues = forM_ venues $ \venue -> log ("\t" ++ toS venue)
