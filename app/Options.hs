@@ -14,6 +14,7 @@ import           Options.Applicative
 import qualified Data.List.NonEmpty                         as NE
 import qualified Control.Logging                            as Log
 import           Data.Char                                  (toLower)
+import           Text.Read                                  (readMaybe)
 
 import qualified OrderBook.Graph                            as Lib
 import qualified Data.Aeson                                 as Json
@@ -24,6 +25,7 @@ data Options = Options
   , maxSlippage :: Double
   , crypto      :: Crypto
   , numeraire   :: Lib.Currency
+  , maxNumPaths :: Int
   , logLevel    :: Log.LogLevel
   , numberType  :: SomeNumberType
   , inputFiles  :: NE.NonEmpty FilePath
@@ -50,6 +52,7 @@ options = Options
       <*> maxSlippageOpt
       <*> cryptoOpt
       <*> numeraireOpt
+      <*> maxNumPathsOpt
       <*> verboseOpt
       <*> fmap toSomeNumberType numberTypeOpt
       <*> inputFilesOpt
@@ -203,3 +206,29 @@ numberTypeOpt =
   <> help "Number type for input JSON order book file(s)"
   <> showDefaultWith showLowerCase
   <> metavar "rational/double"
+
+showMaxNumPaths :: Int -> String
+showMaxNumPaths word
+  | word == maxBound = "all"
+  | otherwise = show word
+
+readMaxNumPaths :: String -> Maybe Int
+readMaxNumPaths string
+    | lowerCaseString == "all" = Just maxBound
+    | otherwise = do
+        word <- readMaybe string :: Maybe Word
+        let maxInt = maxBound :: Int
+        return $ if word > fromIntegral maxInt
+            then maxInt
+            else fromIntegral word
+  where
+    lowerCaseString = map toLower string
+
+maxNumPathsOpt :: Parser Int
+maxNumPathsOpt =
+  option (maybeReader readMaxNumPaths) $
+     long "max-num-paths"
+  <> value 10
+  <> help "Print at most this many buy and sell paths"
+  <> showDefaultWith showMaxNumPaths
+  <> metavar "[0..]/all"

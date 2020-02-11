@@ -52,9 +52,9 @@ main = Opt.withOptions $ \options ->
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of
                     Opt.Analyze ->
-                        (Just . logLiquidityInfo) <$> analyze (Opt.maxSlippage options) execution
+                        (Just . logLiquidityInfo) <$> analyze (Opt.maxSlippage options) (Opt.maxNumPaths options) execution
                     Opt.AnalyzeCsv ->
-                        (Just . csvLiquidityInfo) <$> analyze (Opt.maxSlippage options) execution
+                        (Just . csvLiquidityInfo) <$> analyze (Opt.maxSlippage options) (Opt.maxNumPaths options) execution
                     Opt.Visualize outputDir -> do
                         visualize crypto outputDir execution
                         return Nothing
@@ -160,13 +160,13 @@ data LiquidityInfo = LiquidityInfo
     , liSellPaths       :: [(Lib.NumType, PriceRange Lib.NumType, T.Text)]  -- ^ (quantity, price_range, path_description)
     }
 
-analyze :: Double -> Execution numType -> IO LiquidityInfo
-analyze maxSlippage Execution{..} = do
+analyze :: Double -> Int -> Execution numType -> IO LiquidityInfo
+analyze maxSlippage maxNumPaths Execution{..} = do
     (buyOrders, sellOrders) <- preRun >>= mainRun
     let sellLiquidity = quoteSum buyOrders
         buyLiquidity = quoteSum sellOrders
-        sellPaths = take 15 $ sortByQuantity $ map quoteSumVenue (groupByVenue buyOrders)
-        buyPaths = take 15 $ sortByQuantity $ map quoteSumVenue (groupByVenue sellOrders)
+        sellPaths = take maxNumPaths $ sortByQuantity $ map quoteSumVenue (groupByVenue buyOrders)
+        buyPaths = take maxNumPaths $ sortByQuantity $ map quoteSumVenue (groupByVenue sellOrders)
         priceRangeBuyM = maybeFirstLastPrice $ sortBy (comparing soPrice) sellOrders
         priceRangeSellM = maybeFirstLastPrice $ sortBy (comparing soPrice) buyOrders
     return $ LiquidityInfo
@@ -219,19 +219,20 @@ logLiquidityInfo LiquidityInfo{..} = unlines $
     , fmap (logLine "Sell price (low/high)" . showBestWorstPrice) liSellPriceRange
     ]
     ++
-    [ lineSeparator
-    ,  ""
-    , "Buy paths:"
-    ]
+    when (not $ null liBuyPaths)
+        ([ lineSeparator
+        ,  ""
+        , "Buy paths:"
+        ] ++ map pathSumRange liBuyPaths)
     ++
-    map pathSumRange liBuyPaths
-    ++
-    [ "", "Sell paths:" ]
-    ++
-    map pathSumRange liSellPaths
+    when (not $ null liSellPaths)
+        ([ "", "Sell paths:" ]
+        ++
+        map pathSumRange liSellPaths)
     ++
     [ lineSeparator ]
   where
+    when bool m = if bool then m else mempty
     showFloatSamePrecision num  = printf (printf "%%.%df" $ digitsAfterPeriod num) num
     digitsAfterPeriod num =
         let beforeRemoved = dropWhile (/= '.') $ printf "%f" num
