@@ -51,9 +51,9 @@ main = Opt.withOptions $ \options ->
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of
                     Opt.Analyze ->
-                        (Just . logLiquidityInfo) <$> analyze (Opt.maxSlippage options) (Opt.maxNumPaths options) execution
+                        (Just . showExecutionResult) <$> analyze crypto options execution
                     Opt.AnalyzeCsv ->
-                        (Just . csvLiquidityInfo) <$> analyze (Opt.maxSlippage options) (Opt.maxNumPaths options) execution
+                        (Just . csvExecutionResult) <$> analyze crypto options execution
                     Opt.Visualize outputDir -> do
                         visualize crypto outputDir execution
                         return Nothing
@@ -65,16 +65,24 @@ main = Opt.withOptions $ \options ->
                         return Nothing
         forM_ (catMaybes logResult) putStr
   where
-    csvLiquidityInfo LiquidityInfo{..} = toS . Csv.encode $
+    csvExecutionResult er = toS . Csv.encode $
+        let liquidity sideM = fromMaybe 0 $ liLiquidity <$> (liLiquidityInfo er >>= sideM)
+        in csvOutput er (liquidity liBuyLiquidity) (liquidity liSellLiquidity)
+    csvOutput
+        :: ExecutionResult
+        -> Lib.NumType
+        -> Lib.NumType
+           -- (file path, base/quote, max slippage, buy liquidity, sell liquidity, sum liquidity)
+        -> Csv.Builder (FilePath, String, Double, Integer, Integer, Integer)
+    csvOutput ExecutionResult{..} buyLiquidity sellLiquidity =
         Csv.encodeRecord
             ( liInputFile
-            , showBaseQuote liBaseQuote
+            , show liCrypto ++ "/" ++ show liNumeraire
             , liMaxSlippage
-            , round liBuyLiquidity                     :: Integer
-            , round liSellLiquidity                    :: Integer
-            , round $ liBuyLiquidity + liSellLiquidity :: Integer
+            , round buyLiquidity                   :: Integer
+            , round sellLiquidity                  :: Integer
+            , round $ buyLiquidity + sellLiquidity :: Integer
             )
-    showBaseQuote = maybe "<no orders>" (\(base, quote) -> show base ++ "/" ++ show quote)
 
 -- Parallelize everything, unless it's related to measuring speed/performance
 forAll :: Opt.Mode
@@ -145,51 +153,76 @@ data PriceRange numType =
         , highestPrice :: numType
         }
 
--- |
-data LiquidityInfo = LiquidityInfo
+-- | Result for an entire execution
+data ExecutionResult = ExecutionResult
     { liInputFile       :: FilePath
-    , liBaseQuote       :: Maybe (Lib.Currency, Lib.Currency)
-      -- ^ (base, quote) currency
     , liMaxSlippage     :: Double
-    , liBuyLiquidity    :: Lib.NumType
-    , liSellLiquidity   :: Lib.NumType
-    , liBuyPriceRange   :: Maybe (PriceRange Lib.NumType)
-    , liSellPriceRange  :: Maybe (PriceRange Lib.NumType)
-    , liBuyPaths        :: [(Lib.NumType, PriceRange Lib.NumType, T.Text)]  -- ^ (quantity, price_range, path_description)
-    , liSellPaths       :: [(Lib.NumType, PriceRange Lib.NumType, T.Text)]  -- ^ (quantity, price_range, path_description)
+    , liCrypto          :: Lib.Currency     -- ^ Target cryptocurrency
+    , liNumeraire       :: Lib.Currency     -- ^ Numeraire
+    , liLiquidityInfo   :: Maybe LiquidityInfo
     }
 
-analyze :: Double -> Int -> Execution numType -> IO LiquidityInfo
-analyze maxSlippage maxNumPaths Execution{..} = do
+-- | Liquidity info in both buy and sell direction
+data LiquidityInfo = LiquidityInfo
+    { liBaseQuote       :: (Lib.Currency, Lib.Currency)
+    , liBuyLiquidity    :: Maybe SideLiquidity
+    , liSellLiquidity   :: Maybe SideLiquidity
+    }
+
+-- | Liquidity info in a single direction (either buy or sell)
+data SideLiquidity = SideLiquidity
+    { liLiquidity    :: Lib.NumType
+    , liPriceRange   :: PriceRange Lib.NumType
+    , liPaths        :: [(Lib.NumType, PriceRange Lib.NumType, T.Text)]  -- ^ (quantity, price_range, path_description)
+    }
+
+analyze :: Lib.Currency -> Opt.Options -> Execution numType -> IO ExecutionResult
+analyze cryptocurrency Opt.Options{..} Execution{..} = do
     (buyOrders, sellOrders) <- preRun >>= mainRun
-    let sellLiquidity = quoteSum buyOrders
-        buyLiquidity = quoteSum sellOrders
-        sellPaths = take maxNumPaths $ sortByQuantity $ map quoteSumVenue (groupByVenue buyOrders)
-        buyPaths = take maxNumPaths $ sortByQuantity $ map quoteSumVenue (groupByVenue sellOrders)
-        priceRangeBuyM = maybeFirstLastPrice $ sortBy (comparing soPrice) sellOrders
-        priceRangeSellM = maybeFirstLastPrice $ sortBy (comparing soPrice) buyOrders
-    return $ LiquidityInfo
+    return $ ExecutionResult
         { liInputFile       = inputFile
-        , liBaseQuote       = ordersMarket (buyOrders ++ sellOrders)
         , liMaxSlippage     = maxSlippage
-        , liBuyLiquidity    = buyLiquidity
-        , liSellLiquidity   = sellLiquidity
-        , liBuyPriceRange   = priceRangeBuyM
-        , liSellPriceRange  = priceRangeSellM
-        , liBuyPaths        = buyPaths
-        , liSellPaths       = sellPaths
+        , liCrypto          = cryptocurrency
+        , liNumeraire       = numeraire
+        , liLiquidityInfo   = toLiquidityInfo maxNumPaths (buyOrders, sellOrders)
+        }
+
+toLiquidityInfo
+    :: Int
+    -> ([SomeSellOrder' Lib.NumType], [SomeSellOrder' Lib.NumType])
+    -> Maybe LiquidityInfo
+toLiquidityInfo _ ([], []) = Nothing
+toLiquidityInfo maxNumPaths (buyOrders, sellOrders) = Just $
+    LiquidityInfo
+        { liBaseQuote       = ordersMarket allOrders
+        , liBuyLiquidity    = toSideLiquidity maxNumPaths sellOrders
+        , liSellLiquidity   = toSideLiquidity maxNumPaths buyOrders
         }
   where
-    maybeFirstLastPrice lst = do
-        first <- headMay lst
-        last <- lastMay lst
-        return $ PriceRange (soPrice first) (soPrice last)
+    allOrders = NE.fromList $ buyOrders ++ sellOrders
+    ordersMarket nonEmptyOrders = orderMarket (NE.head nonEmptyOrders)
+    orderMarket order = (Lib.soBase order, Lib.soQuote order)
+
+toSideLiquidity
+    :: Int
+    -> [SomeSellOrder' Lib.NumType]
+    -> Maybe SideLiquidity
+toSideLiquidity _ [] = Nothing
+toSideLiquidity maxNumPaths nonEmptyOrders = Just $
+    let paths = take maxNumPaths $ sortByQuantity $ map quoteSumVenue (groupByVenue nonEmptyOrders)
+    in SideLiquidity
+        { liLiquidity    = quoteSum nonEmptyOrders
+        , liPriceRange   = firstLastPrice $ NE.fromList nonEmptyOrders
+        , liPaths        = paths
+        }
+  where
+    firstLastPrice lst =
+        let priceSorted = NE.sortBy (comparing soPrice) lst
+        in PriceRange (soPrice $ NE.head priceSorted) (soPrice $ NE.last priceSorted)
     quoteSumVenue orders =
         (quoteSum $ NE.toList orders, priceRange orders, soVenue $ NE.head orders)
     groupByVenue = NE.groupBy (\a b -> soVenue a == soVenue b) . sortOn soVenue
     sortByQuantity = sortBy (flip $ comparing $ \(quoteSum, _, _) -> quoteSum)
-    ordersMarket orderList = orderMarket <$> headMay orderList
-    orderMarket order = (Lib.soBase order, Lib.soQuote order)
     quoteSum orderList = sum $ map quoteQuantity orderList
     quoteQuantity order = Lib.soQty order * Lib.soPrice order
     priceRange
@@ -199,43 +232,49 @@ analyze maxSlippage maxNumPaths Execution{..} = do
         let priceList = NE.map soPrice soList
         in PriceRange (minimum priceList) (maximum priceList)
 
-logLiquidityInfo :: LiquidityInfo -> String
-logLiquidityInfo LiquidityInfo{..}
-    | Nothing <- liBaseQuote = unlines $
+showExecutionResult :: ExecutionResult -> String
+showExecutionResult ExecutionResult{..}
+    | Nothing <- liLiquidityInfo = unlines $
         [ lineSeparator
         , logInputFile
         , "NO ORDERS MATCHED"
         , lineSeparator
         ]
-    | Just (baseCurrency, quoteCurrency) <- liBaseQuote = unlines $
+    | Just LiquidityInfo{..} <- liLiquidityInfo
+    , (baseCurrency, quoteCurrency) <- liBaseQuote = unlines $
         [ lineSeparator
         , logInputFile
         , logLine "Cryptocurrency" (toS baseCurrency)
         , logMaxSlippage
-        , logLine "buy liquidity" $ showAmount quoteCurrency liBuyLiquidity
-        , logLine "sell liquidity" $ showAmount quoteCurrency liSellLiquidity
-        , logLine "SUM" $ showAmount quoteCurrency (liBuyLiquidity + liSellLiquidity)
+        , logLine "buy liquidity" $ showAmount quoteCurrency (liquidity liBuyLiquidity)
+        , logLine "sell liquidity" $ showAmount quoteCurrency (liquidity liSellLiquidity)
+        , logLine "SUM" $ showAmount quoteCurrency (liquidity liBuyLiquidity + liquidity liSellLiquidity)
         ]
         ++
         catMaybes
-            [ fmap (logLine "Buy price (low/high)" . showPriceRange) liBuyPriceRange
-            , fmap (logLine "Sell price (low/high)" . showPriceRange) liSellPriceRange
+            [ fmap (logLine "Buy price (low/high)" . showPriceRange) (liPriceRange <$> liBuyLiquidity)
+            , fmap (logLine "Sell price (low/high)" . showPriceRange) (liPriceRange <$> liSellLiquidity)
             ]
         ++
-        when (not $ null liBuyPaths)
-            ([ lineSeparator
-            ,  ""
-            , "Buy paths:"
-            ] ++ map (pathSumRange quoteCurrency) liBuyPaths)
+        maybe []
+            (\paths ->
+                [ lineSeparator
+                ,  ""
+                , "Buy paths:"
+                ] ++ map (pathSumRange quoteCurrency) paths)
+            (liPaths <$> liBuyLiquidity)
         ++
-        when (not $ null liSellPaths)
-            ([ "", "Sell paths:" ]
-            ++
-            map (pathSumRange quoteCurrency) liSellPaths)
+        maybe []
+            (\paths ->
+                [ lineSeparator
+                ,  ""
+                , "Sell paths:"
+                ] ++ map (pathSumRange quoteCurrency) paths)
+            (liPaths <$> liSellLiquidity)
         ++
         [ lineSeparator ]
   where
-    when bool m = if bool then m else mempty
+    liquidity = fromMaybe 0 . fmap liLiquidity
     showFloatSamePrecision num  = printf (printf "%%.%df" $ digitsAfterPeriod num) num
     digitsAfterPeriod num =
         let beforeRemoved = dropWhile (/= '.') $ printf "%f" num
