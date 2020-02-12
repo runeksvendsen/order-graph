@@ -171,9 +171,9 @@ data LiquidityInfo = LiquidityInfo
 
 -- | Liquidity info in a single direction (either buy or sell)
 data SideLiquidity = SideLiquidity
-    { liLiquidity    :: Lib.NumType
+    { liLiquidity    :: Lib.NumType             -- ^ Non-zero liquidity
     , liPriceRange   :: PriceRange Lib.NumType
-    , liPaths        :: [(Lib.NumType, PriceRange Lib.NumType, T.Text)]  -- ^ (quantity, price_range, path_description)
+    , liPaths        :: NonEmpty (Lib.NumType, PriceRange Lib.NumType, T.Text)  -- ^ (quantity, price_range, path_description)
     }
 
 analyze :: Lib.Currency -> Opt.Options -> Execution numType -> IO ExecutionResult
@@ -208,12 +208,14 @@ toSideLiquidity
     -> [SomeSellOrder' Lib.NumType]
     -> Maybe SideLiquidity
 toSideLiquidity _ [] = Nothing
+toSideLiquidity maxNumPaths _
+    | maxNumPaths <= 0 = Nothing
 toSideLiquidity maxNumPaths nonEmptyOrders = Just $
     let paths = take maxNumPaths $ sortByQuantity $ map quoteSumVenue (groupByVenue nonEmptyOrders)
     in SideLiquidity
         { liLiquidity    = quoteSum nonEmptyOrders
         , liPriceRange   = firstLastPrice $ NE.fromList nonEmptyOrders
-        , liPaths        = paths
+        , liPaths        = NE.fromList paths    -- Will not fail since "maxNumPaths > 0"
         }
   where
     firstLastPrice lst =
@@ -256,24 +258,20 @@ showExecutionResult ExecutionResult{..}
             , fmap (logLine "Sell price (low/high)" . showPriceRange) (liPriceRange <$> liSellLiquidity)
             ]
         ++
-        maybe []
-            (\paths ->
-                [ lineSeparator
-                ,  ""
-                , "Buy paths:"
-                ] ++ map (pathSumRange quoteCurrency) paths)
-            (liPaths <$> liBuyLiquidity)
-        ++
-        maybe []
-            (\paths ->
-                [ lineSeparator
-                ,  ""
-                , "Sell paths:"
-                ] ++ map (pathSumRange quoteCurrency) paths)
-            (liPaths <$> liSellLiquidity)
+        [ lineSeparator
+        , "Buy paths:"
+        , ""
+        , maybe "" (showPaths quoteCurrency) (liPaths <$> liBuyLiquidity)
+        , lineSeparator
+        , "Sell paths:"
+        , ""
+        , maybe "" (showPaths quoteCurrency) (liPaths <$> liSellLiquidity)
+        ]
         ++
         [ lineSeparator ]
   where
+    showPaths quoteCurrency paths =
+        unlines . NE.toList $ NE.map (pathSumRange quoteCurrency) paths
     liquidity = fromMaybe 0 . fmap liLiquidity
     showFloatSamePrecision num  = printf (printf "%%.%df" $ digitsAfterPeriod num) num
     digitsAfterPeriod num =
