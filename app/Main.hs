@@ -200,65 +200,66 @@ analyze maxSlippage maxNumPaths Execution{..} = do
         in PriceRange (minimum priceList) (maximum priceList)
 
 logLiquidityInfo :: LiquidityInfo -> String
-logLiquidityInfo LiquidityInfo{..} = unlines $
-    [ lineSeparator
-    , logInputFile
-    , logLine "Cryptocurrency" $ showCrypto liBaseQuote
-    , logMaxSlippage
-    ] ++ case liBaseQuote of
-        Nothing -> []
-        Just (_, quoteCurrency) ->
-            [ logLiquidity "buy liquidity" liBuyLiquidity quoteCurrency
-            , logLiquidity "sell liquidity" liSellLiquidity quoteCurrency
-            , logLiquidity "SUM" (liBuyLiquidity + liSellLiquidity) quoteCurrency
-            ]
-      ++
-    catMaybes
-    [ fmap (logLine "Buy price (low/high)" . showPriceRange) liBuyPriceRange
-    , fmap (logLine "Sell price (low/high)" . showPriceRange) liSellPriceRange
-    ]
-    ++
-    when (not $ null liBuyPaths)
-        ([ lineSeparator
-        ,  ""
-        , "Buy paths:"
-        ] ++ map pathSumRange liBuyPaths)
-    ++
-    when (not $ null liSellPaths)
-        ([ "", "Sell paths:" ]
+logLiquidityInfo LiquidityInfo{..}
+    | Nothing <- liBaseQuote = unlines $
+        [ lineSeparator
+        , logInputFile
+        , "NO ORDERS MATCHED"
+        , lineSeparator
+        ]
+    | Just (baseCurrency, quoteCurrency) <- liBaseQuote = unlines $
+        [ lineSeparator
+        , logInputFile
+        , logLine "Cryptocurrency" (toS baseCurrency)
+        , logMaxSlippage
+        , logLine "buy liquidity" $ showAmount quoteCurrency liBuyLiquidity
+        , logLine "sell liquidity" $ showAmount quoteCurrency liSellLiquidity
+        , logLine "SUM" $ showAmount quoteCurrency (liBuyLiquidity + liSellLiquidity)
+        ]
         ++
-        map pathSumRange liSellPaths)
-    ++
-    [ lineSeparator ]
+        catMaybes
+            [ fmap (logLine "Buy price (low/high)" . showPriceRange) liBuyPriceRange
+            , fmap (logLine "Sell price (low/high)" . showPriceRange) liSellPriceRange
+            ]
+        ++
+        when (not $ null liBuyPaths)
+            ([ lineSeparator
+            ,  ""
+            , "Buy paths:"
+            ] ++ map (pathSumRange quoteCurrency) liBuyPaths)
+        ++
+        when (not $ null liSellPaths)
+            ([ "", "Sell paths:" ]
+            ++
+            map (pathSumRange quoteCurrency) liSellPaths)
+        ++
+        [ lineSeparator ]
   where
     when bool m = if bool then m else mempty
     showFloatSamePrecision num  = printf (printf "%%.%df" $ digitsAfterPeriod num) num
     digitsAfterPeriod num =
         let beforeRemoved = dropWhile (/= '.') $ printf "%f" num
         in if null beforeRemoved then 0 else length beforeRemoved - 1
-    pathSumRange (quoteAmount, priceRange, venue) =
+    pathSumRange quoteCurrency (quoteAmount, priceRange, venue) =
         unlines
-            [ logLine ("Volume (quote)") (showAmount quoteAmount)
+            [ logLine ("Volume (quote)") (showAmount quoteCurrency quoteAmount)
             , logLine "Price (low/high)" (showPriceRange priceRange)
             , logLine "Path" (toS venue)
             ]
     showPriceRange :: Real a => PriceRange a -> String
     showPriceRange PriceRange{..} = printf "%s / %s" (showPrice lowestPrice) (showPrice highestPrice)
-    showCrypto = maybe "<no orders matched>" (\(base, _) -> show base)
     thousandSeparator numStr =
         let addDelimiter (index, char) accum =
                 if index /= 0 && index `mod` (3 :: Int) == 0
                     then ',' : char : accum
                     else char : accum
         in reverse $ foldr addDelimiter [] (zip [0..] (reverse numStr))
-    showAmount :: Lib.NumType -> String
-    showAmount = thousandSeparator . show @Integer . floor
+    showInteger :: Lib.NumType -> String
+    showInteger = thousandSeparator . show @Integer . floor
+    showAmount :: Lib.Currency -> Lib.NumType -> String
+    showAmount currency = (++ " " ++ toS currency) . showInteger
     showPrice :: Real price => price -> String
     showPrice = Format.formatFloatFloor 8
-    logLiquidity :: String -> Lib.NumType -> Lib.Currency -> String
-    logLiquidity liquidityText amount quoteCurrency =
-        logLine liquidityText
-                (showAmount amount ++ " " ++ toS quoteCurrency)
     lineSeparator = "-----------------------------------------------------"
     logInputFile = logLine "Order book file" liInputFile
     logMaxSlippage = logLine "Maximum slippage (%)" (showFloatSamePrecision liMaxSlippage)
