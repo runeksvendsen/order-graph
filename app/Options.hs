@@ -59,7 +59,7 @@ options = Options
 
 -- | Represents either a single cryptocurrency or all cryptocurrencies
 data Crypto
-  = Single Lib.Currency
+  = OneOrMore (NE.NonEmpty Lib.Currency)
   | AllCryptos
     deriving (Eq, Show)
 
@@ -153,14 +153,20 @@ numeraireOpt = toS . uppercase <$> strOption
   <> help "Sell/buy crypto for this national currency (e.g. EUR, USD, GBP)" )
 
 cryptoOpt :: Parser Crypto
-cryptoOpt = cryptoOptSingle <|> cryptoOptAll
+cryptoOpt = cryptoOptOneOrMore <|> cryptoOptAll
 
-cryptoOptSingle :: Parser Crypto
-cryptoOptSingle = Single . toS . uppercase <$> strOption
-  ( long "crypto"
-  <> short 'c'
-  <> metavar "CRYPTOCURRENCY"
-  <> help "Sell/buy this cryptocurrency (e.g. BTC, ETH)" )
+cryptoOptOneOrMore :: Parser Crypto
+cryptoOptOneOrMore = cryptoOption $
+       long "crypto"
+    <> short 'c'
+    <> metavar "CRYPTOCURRENCY"
+    <> help "Sell/buy this cryptocurrency (e.g. BTC, ETH)"
+  where
+    cryptoOption :: Mod OptionFields String -> Parser Crypto
+    cryptoOption a = OneOrMore . NE.fromList <$> some (currencyOption a)
+
+currencyOption :: Mod OptionFields String -> Parser Lib.Currency
+currencyOption a = toS . uppercase <$> strOption a
 
 cryptoOptAll :: Parser Crypto
 cryptoOptAll = flag' AllCryptos

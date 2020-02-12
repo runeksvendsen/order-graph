@@ -130,7 +130,7 @@ mkExecutions options graphInfo inputFile = do
     map (\crypto -> (mkExecution crypto, crypto)) allCryptos
   where
     allCryptos = case Opt.crypto options of
-            Opt.Single crypto -> [crypto]
+            Opt.OneOrMore cryptos -> NE.toList cryptos
             Opt.AllCryptos    -> giVertices graphInfo \\ [numeraire]
     mkExecution crypto =
         Execution inputFile graphInfo (readOrdersFile options inputFile) (mainRun crypto)
