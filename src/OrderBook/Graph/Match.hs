@@ -64,7 +64,7 @@ queryUpdateGraph
     -> Query.AnyGraphM s g kind (Maybe Query.BuyPath)
     -> Query.AnyGraphM s g kind MatchResult
 queryUpdateGraph bo queryGraph =
-    go empty
+    {-# SCC queryUpdateGraph #-} go empty
   where
     go mr = do
         buyPathM <- if not (orderFilled bo mr) then queryGraph else return Nothing
