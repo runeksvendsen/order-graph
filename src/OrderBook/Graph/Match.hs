@@ -122,14 +122,17 @@ subtractMatchedQty sortedOrders =
             newOrderQtys = Exchange.asList (Exchange.rawQty . Exchange.oQty) newOrders
         in
             ( NE.zipWith setQty (NE.fromList newOrderQtys) someSellOrders
-            , Exchange.toSomeSellOrder maxOrder venues
+            , Exchange.toSomeSellOrder maxOrder (T.concat cryptoPath)
             )
   where
+    -- The path moved through from the buyer's perspective.
+    -- In the above example the buyer moves from LOL to BTC (quote to base).
+    -- The seller moves in the opposite direction: from BTC to LOL (base to quote).
+    cryptoPath =
+        let (first NE.:| rest) = NE.reverse someSellOrders
+            arrowToBase so = " --" <> soVenue so <> "--> " <> toS (soBase so)
+        in toS (soQuote first) : map arrowToBase (first : rest)
     someSellOrders = fmap B.first sortedOrders
-    -- The venues moved through, separated by ","
-    venues = T.concat . NE.toList . NE.intersperse " <-> " $ NE.map venueWithMarket someSellOrders
-    -- venue + market name. Example: "bitstamp(BTC/USD)"
-    venueWithMarket so = soVenue so <> "(" <> toS (soBase so) <> "/" <> toS (soQuote so) <> ")"
 
 -- | Helper function
 setQty
