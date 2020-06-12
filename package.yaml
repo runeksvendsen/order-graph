@@ -1,7 +1,5 @@
 name:                order-graph
 version:             0.1.0.0
-#synopsis:
-#description:
 homepage:            https://github.com/runeksvendsen/order-graph#readme
 license:             BSD3
 author:              Rune K. Svendsen
@@ -17,41 +15,37 @@ default-extensions:
 
 dependencies:
   - base >= 4.7 && < 5
-  - protolude
-  - transformers
-  - orderbook
-  - bellman-ford
-  - unordered-containers
-  - impure-containers
-  - text
-  - primitive
-  - safe-money
-  - heap
-  - hashable
-  - deepseq
-  - pretty-show
-  - thrist
-  - vector
-  - tagged
-  - aeson
+
+ghc-options:
+  - -O2
+  - -fno-ignore-asserts
+  - -Wall
 
 library:
   source-dirs: src
-  ghc-options:
-  - -Wall
+  dependencies:
+    - protolude
+    - primitive
+    - deepseq
+    - hashable
+    - pretty-show
+    - text
+    - aeson
+    - bellman-ford
+    - vector
+    - thrist
+    - tagged
+    - text
 
 executables:
   order-graph-exe:
     main: Main.hs
     source-dirs: app
-    ghc-options:
-    - -O2
-    - -fno-ignore-asserts
-    - -Wall
     dependencies:
-    - base
+    - protolude
     - orderbook
     - order-graph
+    - bellman-ford
     - logging
     - unliftio
     - unordered-containers
@@ -64,14 +58,12 @@ executables:
     - filepath
     - cassava
     - text-format
+    - text
 
 tests:
   order-graph-test:
     main:                Spec.hs
     source-dirs:         test
-    ghc-options:
-    - -fno-ignore-asserts
-    - -Wall
     dependencies:
     - order-graph
     - vector
@@ -86,3 +78,7 @@ tests:
     - smallcheck
     - hspec-smallcheck
     - random-shuffle
+    - text
+    - safe-money
+    - orderbook
+    - bellman-ford
