@@ -111,9 +111,11 @@ replaceSubtractedOrder sortedOrders newOrder =
 --      ]
 --   at least one of the orders will end up with zero quantity.
 subtractMatchedQty
-    :: NonEmpty B.SortedOrders   -- ^ Order path/sequence
-    -> ( NonEmpty SomeSellOrder  -- ^ New orders (old orders with the matched order subtracted)
-       , SomeSellOrder           -- ^ Matched order
+    :: NonEmpty B.SortedOrders -- ^ Order path/sequence
+    -- | fst: New orders (old orders with the matched order subtracted)
+    --   snd: Matched order
+    -> ( NonEmpty SomeSellOrder
+       , SomeSellOrder
        )
 subtractMatchedQty sortedOrders =
     Exchange.withSomeSellOrders someSellOrders $ \orders ->
