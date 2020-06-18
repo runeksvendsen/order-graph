@@ -14,7 +14,7 @@ module OrderBook.Graph.Query
 , SomeSellOrder
 , buyPath
 , arbitrage
-, BuyPath(..)
+, ShortestPath(..)
 , BuyGraphM
 , ArbGraphM
 , AnyGraphM
@@ -32,7 +32,7 @@ type AnyGraphM s g kind = BF.BF s g (B.Tagged kind B.SortedOrders) Currency
 type ArbGraphM s g = BF.BF s g (B.Tagged "arb" B.SortedOrders) Currency
 type BuyGraphM s g = BF.BF s g (B.Tagged "buy" B.SortedOrders) Currency
 
-data BuyPath = BuyPath
+data ShortestPath = ShortestPath
     { bpOrders  :: NonEmpty B.SortedOrders
     } deriving (Eq, Generic)
 
@@ -40,17 +40,17 @@ data BuyPath = BuyPath
 buyPath
     :: Currency                     -- ^ Start vertex/currency
     -> Currency                     -- ^ End vertex/currency
-    -> BuyGraphM s g (Maybe BuyPath)         -- ^ Lowest-price path ('Nothing' if no path exists)
+    -> BuyGraphM s g (Maybe ShortestPath)         -- ^ Lowest-price path ('Nothing' if no path exists)
 buyPath start end = do
     BF.bellmanFord start
     pathM <- BF.pathTo end
-    return $ BuyPath . NE.fromList <$> fmap B.unTagged <$> pathM
+    return $ ShortestPath . NE.fromList <$> fmap B.unTagged <$> pathM
 
 -- | find an arbitrage opportunity
 arbitrage
     :: Currency                     -- ^ Start vertex/currency
-    -> ArbGraphM s g (Maybe BuyPath)         -- ^ Arbitrage path ('Nothing' if no arbitrage exists)
+    -> ArbGraphM s g (Maybe ShortestPath)         -- ^ Arbitrage path ('Nothing' if no arbitrage exists)
 arbitrage start = do
     BF.bellmanFord start
     pathM <- BF.negativeCycle
-    return $ BuyPath <$> fmap B.unTagged <$> pathM
+    return $ ShortestPath <$> fmap B.unTagged <$> pathM

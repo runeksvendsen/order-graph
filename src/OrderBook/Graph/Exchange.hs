@@ -13,7 +13,7 @@ module OrderBook.Graph.Exchange
 ( -- * Types
   Qty, rawQty
 , Price, rawPrice
-, Order, oQty, oPrice
+, Order, Order', oQty, oPrice
   -- * Utility functions
 , maxOrder
 , minusQty
@@ -26,9 +26,12 @@ where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types                  (SomeSellOrder'(..), SomeSellOrder)
+import           OrderBook.Graph.Query                  (ShortestPath(..))
+import qualified OrderBook.Graph.Build                  as B
 import qualified Control.Category                       as Cat
 import           Data.Thrist
 import qualified Data.Text                              as T
+import qualified Data.List.NonEmpty                     as NE
 
 
 -- ^ Some quantity of "thing"
@@ -146,30 +149,37 @@ withSomeSellOrder sso f =
                     let order = Order' (Qty' $ soQty sso) (Price' $ soPrice sso)
                     in f (order :: Order src dst)
 
--- | Join a list of 'SomeSellOrder' to produce a 'Thrist' parameterized over
---    the source and destination currency.
---   The sequence of input sell orders must be of the following form:
---      [ Order "BTC" "USD"
---      , Order "USD" "EUR"
---      , Order "EUR" "ETH"
---      , Order "ETH" "LOL"
---      ]
---    ie. for any two adjacent sell orders the left order's "base"/"src" must be
---    equal to the right order's "quote"/"dst".
+-- |
 withSomeSellOrders
-    :: NonEmpty SomeSellOrder
+    :: ShortestPath
     -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Thrist Order src dst -> r)
     -> r
-withSomeSellOrders sellOrders f =
-    case uncons sellOrders of
-        (sso1, Nothing) ->
-            withSomeSellOrder sso1 $ \order -> f (order `Cons` Nil)
-        (sso1, Just ssoTail) ->
-            withSomeSellOrder sso1 $ \(order :: Order src dst1) ->
-                withSomeSellOrders ssoTail $ \(thrist :: Thrist Order src2 dst) ->
-                    case sameSymbol (Proxy :: Proxy dst1) (Proxy :: Proxy src2) of
-                        Nothing -> error $ "Order path hole: " ++ pp (sso1, ssoTail)
-                        Just Refl  -> f (order `Cons` thrist)
+withSomeSellOrders (ShortestPath sortedOrders) f' =
+    go (NE.reverse $ fmap B.first sortedOrders) f'
+  where
+    -- Join a list of 'SomeSellOrder' to produce a 'Thrist' parameterized over
+    --    the source and destination currency.
+    --   The sequence of input sell orders must be of the following form:
+    --      [ Order "BTC" "USD"
+    --      , Order "USD" "EUR"
+    --      , Order "EUR" "ETH"
+    --      , Order "ETH" "LOL"
+    --      ]
+    --    ie. for any two adjacent sell orders the left order's "base"/"src" must be
+    --    equal to the right order's "quote"/"dst".
+    go :: NonEmpty SomeSellOrder
+       -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Thrist Order src dst -> r)
+       -> r
+    go sellOrders' f =
+        case uncons sellOrders' of
+            (sso1, Nothing) ->
+                withSomeSellOrder sso1 $ \order -> f (order `Cons` Nil)
+            (sso1, Just ssoTail) ->
+                withSomeSellOrder sso1 $ \(order :: Order src dst1) ->
+                    go ssoTail $ \(thrist :: Thrist Order src2 dst) ->
+                        case sameSymbol (Proxy :: Proxy dst1) (Proxy :: Proxy src2) of
+                            Nothing -> error $ "Order path hole: " ++ pp (sso1, ssoTail)
+                            Just Refl  -> f (order `Cons` thrist)
 
 asList
     :: (forall src dst. Order src dst -> r)

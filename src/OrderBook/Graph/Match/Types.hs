@@ -11,7 +11,7 @@ module OrderBook.Graph.Match.Types
 where
 
 import           OrderBook.Graph.Internal.Prelude
-import           OrderBook.Graph.Build                      (SomeSellOrder'(..))
+import           OrderBook.Graph.Types.Path                 (pPrice, pQty, BuyPath)
 
 
 -- |
@@ -38,8 +38,8 @@ unlimited = BuyOrder'
 
 type MatchResult = MatchResult' Rational
 data MatchResult' numTyp = MatchResult'
-    { mrOrders      :: [SomeSellOrder' numTyp]
-    , mrFirstOrder  :: Maybe (SomeSellOrder' numTyp)
+    { mrOrders      :: [BuyPath numTyp]
+    , mrFirstOrder  :: Maybe (BuyPath numTyp)
     , mrQuantity    :: numTyp
     } deriving (Eq, Show)
 
@@ -53,12 +53,12 @@ empty = MatchResult'
 addOrder
     :: (Real numTyp, Show numTyp)
     => MatchResult' numTyp
-    -> SomeSellOrder' numTyp
+    -> BuyPath numTyp
     -> MatchResult' numTyp
 addOrder (MatchResult' [] Nothing _) order =
-    MatchResult' [order] (Just order) (soQty order)
+    MatchResult' [order] (Just order) (pQty order)
 addOrder (MatchResult' orders firstOrder@Just{} qty) order =
-    MatchResult' (order : orders) firstOrder (qty + soQty order)
+    MatchResult' (order : orders) firstOrder (qty + pQty order)
 addOrder mr@(MatchResult' _ Nothing _) _ =
     error $ "invalid MatchResult' " ++ show mr
 
@@ -78,5 +78,5 @@ orderFilled (BuyOrder' qtyM _ slipM) (MatchResult' (latest:_) (Just first) mrQty
     checkProp propM f = maybe False f propM
     qtyFilled = checkProp qtyM $ \qty -> mrQty >= qty
     slippageReached = checkProp slipM $ \maxSlippage ->
-        let slippagePct = abs $ (soPrice latest - soPrice first) / soPrice first * 100
+        let slippagePct = abs $ (pPrice latest - pPrice first) / pPrice first * 100
         in slippagePct > maxSlippage
