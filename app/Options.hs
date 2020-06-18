@@ -6,6 +6,7 @@ module Options
 , Mode(..)
 , SomeNumberType(..)
 , withNumberType
+, logger
 )
 where
 
@@ -181,6 +182,13 @@ verboseOpt = flag Log.LevelError Log.LevelDebug
   <> short 'v'
   <> help "Print all information"
   )
+
+logger :: Monad m => Options -> String -> m ()
+logger opt =
+    logFun (logLevel opt)
+  where
+  logFun Log.LevelDebug = (`trace` return ())
+  logFun _ = const $ return ()
 
 data NumberType
     = Rational -- ^ 'Rational' number type

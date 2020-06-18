@@ -55,7 +55,7 @@ main = Opt.withOptions $ \options ->
                     Opt.AnalyzeCsv ->
                         (Just . csvExecutionResult) <$> analyze crypto options execution
                     Opt.Visualize outputDir -> do
-                        visualize crypto outputDir execution
+                        visualize options crypto outputDir execution
                         return Nothing
                     Opt.Benchmark -> do
                         benchmark Nothing execution
@@ -144,7 +144,7 @@ mkExecutions options graphInfo inputFile = do
         Execution inputFile graphInfo (readOrdersFile options inputFile) (mainRun crypto)
     mainRun crypto orders =
         withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
-            matchOrders buyOrder sellOrder orders
+            matchOrders options buyOrder sellOrder orders
     numeraire   = Opt.numeraire options
 
 data PriceRange numType =
@@ -304,9 +304,9 @@ showExecutionResult ExecutionResult{..}
     logLine title message =
             printf "%-25s%s" title message
 
-visualize :: Lib.Currency -> FilePath -> Execution numType -> IO ()
-visualize currency outputDir Execution{..} =
-    preRun >>= mainRun >>= writeChartFile outFilePath
+visualize :: Opt.Options -> Lib.Currency -> FilePath -> Execution numType -> IO ()
+visualize options currency outputDir Execution{..} =
+    preRun >>= mainRun >>= writeChartFile options outFilePath
   where
     mkOutFileName path = FP.takeBaseName path <> "-" <> toS currency <> FP.takeExtension path
     outFilePath = outputDir </> mkOutFileName inputFile
@@ -373,6 +373,7 @@ readOrdersFile options filePath = do
     log $ "Order count: " ++ show (length orders)
     return $ map (Book.trimSlippageOB maxSlippage) books
   where
+    log = Opt.logger options
     maxSlippage = toRational $ Opt.maxSlippage options
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail :: (Json.FromJSON numType, Ord numType) => FilePath -> IO [OrderBook numType]
@@ -402,11 +403,14 @@ data GraphInfo numType = GraphInfo
 
 matchOrders
     :: (KnownSymbol src, KnownSymbol dst, Real numType)
-    => Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
+    => Opt.Options
+    -> Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
     -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
     -> [OrderBook numType]      -- ^ Input orders
     -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
-matchOrders buyOrder sellOrder sellOrders =
+matchOrders options buyOrder sellOrder sellOrders =
+    let log :: Monad m => String -> m ()
+        log = Opt.logger options in
     ST.stToIO $ DG.withGraph $ \mGraph -> do
         log "Building graph..."
         graphInfo <- buildGraph sellOrders mGraph
@@ -431,10 +435,11 @@ matchOrders buyOrder sellOrder sellOrders =
             return (bids, asks)
 
 writeChartFile
-    :: FilePath
+    :: Opt.Options
+    -> FilePath
     -> ([SomeSellOrder], [SomeSellOrder])
     -> IO ()
-writeChartFile obPath (bids, asks) = do
+writeChartFile options obPath (bids, asks) = do
     log "Writing order book.."
     let trimmedAsks = trimOrders $ sortBy (comparing soPrice)        asks
         trimmedBids = trimOrders $ sortBy (flip $ comparing soPrice) bids
@@ -443,6 +448,7 @@ writeChartFile obPath (bids, asks) = do
   where
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
     trimOrders = Util.compress 500 . Util.merge
+    log = Opt.logger options
 
 -- | Write JSON order book
 mkJsonOb
@@ -460,6 +466,3 @@ mkJsonOb bids asks =
         ( show (realToFrac $ soPrice sso :: Double)
         , realToFrac $ soQty sso :: Double
         )
-
-log :: Monad m => String -> m ()
-log = return . unsafePerformIO . Log.loggingLogger Log.LevelInfo (toS "")
