@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE RankNTypes #-}
+
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -19,6 +19,7 @@ import           OrderBook.Graph.Types                      (SomeSellOrder, Some
 import           OrderBook.Graph.Types.Book                 (OrderBook)
 import qualified OrderBook.Graph.Types.Book                 as Book
 import qualified OrderBook.Graph                            as Lib
+import qualified OrderBook.Graph.Match.Types                as Lib
 
 import qualified Control.Monad.ST                           as ST
 import qualified Data.Graph.Digraph                         as DG
@@ -143,7 +144,7 @@ mkExecutions options graphInfo inputFile = do
     mkExecution crypto =
         Execution inputFile graphInfo (readOrdersFile options inputFile) (mainRun crypto)
     mainRun crypto orders =
-        withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
+        Lib.withBidsAsksOrderUnlimited numeraire crypto $ \buyOrder sellOrder ->
             matchOrders buyOrder sellOrder orders
     numeraire   = Opt.numeraire options
 
@@ -337,26 +338,6 @@ benchSingle obFile GraphInfo{..} readBooks action = do
     let name = obFile ++ " V=" ++ show (length giVertices) ++ " E=" ++ show giEdgeCount
     return $ Criterion.bench name $
         Criterion.perBatchEnv (const readBooks) action
-
--- |
-withBidsAsksOrder
-    :: Lib.Currency -- ^ Numeraire
-    -> Lib.Currency -- ^ Cryptocurrency
-       -- | arg1: buy order, arg2: sell order
-    -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Lib.BuyOrder dst src
-                                                           -> Lib.BuyOrder src dst
-                                                           -> r
-       )
-    -> r
-withBidsAsksOrder numeraire crypto f =
-    case someSymbolVal (toS numeraire) of
-        SomeSymbol (Proxy :: Proxy numeraire) ->
-            case someSymbolVal (toS crypto) of
-                SomeSymbol (Proxy :: Proxy crypto) ->
-                    f (buyOrder :: Lib.BuyOrder crypto numeraire)
-                      (buyOrder :: Lib.BuyOrder numeraire crypto)
-  where
-    buyOrder = Lib.unlimited
 
 readOrdersFile
     :: (Json.FromJSON numType, Fractional numType, Real numType)

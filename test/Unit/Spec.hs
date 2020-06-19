@@ -92,6 +92,54 @@ simpleGraph =
         , soVenue = "test"
         }
 
+buySellDirection :: Test
+buySellDirection =
+    TestCase $ assertMatchedOrders sellOrders buyOrder
+        (`shouldBeIgnoringVenue` expectedOrders)
+  where
+    buyOrder :: Lib.BuyOrder "C" "A"
+    buyOrder = Lib.unlimited
+    expectedOrders =
+        [ aToCOrder 1 1         -- fromAtoB_1 -> fromBtoC_1
+        , fromAtoC_3
+        , aToCOrder 4 (1/2)     -- fromAtoB_2 -> fromBtoC_2
+        , fromAtoC_5
+        ]
+    sellOrders =
+        [ fromAtoB_1
+        , fromAtoB_2
+        , fromBtoC_1
+        , fromBtoC_2
+        , fromAtoC_3
+        , fromAtoC_5
+        ]
+    fromAtoB_1 = aToBOrder 1 1
+    fromAtoB_2 = aToBOrder 2 1
+    fromBtoC_1 = bToCOrder 1 1
+    fromBtoC_2 = bToCOrder 2 1
+    fromAtoC_3 = aToCOrder 3 (1/3)
+    fromAtoC_5 = aToCOrder 5 (1/5)
+    aToBOrder price qty = Lib.SomeSellOrder'
+        { soPrice = price
+        , soQty   = qty
+        , soBase  = "B"
+        , soQuote = "A"
+        , soVenue = "test"
+        }
+    bToCOrder price qty = Lib.SomeSellOrder'
+        { soPrice = price
+        , soQty   = qty
+        , soBase  = "C"
+        , soQuote = "B"
+        , soVenue = "test"
+        }
+    aToCOrder price qty = Lib.SomeSellOrder'
+        { soPrice = price
+        , soQty   = qty
+        , soBase  = "C"
+        , soQuote = "A"
+        , soVenue = "test"
+        }
 
 merge2 :: Test
 merge2 =

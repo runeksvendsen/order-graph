@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module OrderBook.Graph.Match.Types
 ( BuyOrder
 , BuyOrder'(..)
@@ -7,11 +9,13 @@ module OrderBook.Graph.Match.Types
 , empty
 , addOrder
 , orderFilled
+, withBidsAsksOrderUnlimited
 )
 where
 
 import           OrderBook.Graph.Internal.Prelude
-import           OrderBook.Graph.Types.Path                 (pPrice, pQty, BuyPath)
+import           OrderBook.Graph.Types.Path                 (bpPrice, bpQty, BuyPath)
+import           OrderBook.Graph.Types.Currency             (Currency)
 
 
 -- |
@@ -56,9 +60,9 @@ addOrder
     -> BuyPath numTyp
     -> MatchResult' numTyp
 addOrder (MatchResult' [] Nothing _) order =
-    MatchResult' [order] (Just order) (pQty order)
+    MatchResult' [order] (Just order) (bpQty order)
 addOrder (MatchResult' orders firstOrder@Just{} qty) order =
-    MatchResult' (order : orders) firstOrder (qty + pQty order)
+    MatchResult' (order : orders) firstOrder (qty + bpQty order)
 addOrder mr@(MatchResult' _ Nothing _) _ =
     error $ "invalid MatchResult' " ++ show mr
 
@@ -78,5 +82,25 @@ orderFilled (BuyOrder' qtyM _ slipM) (MatchResult' (latest:_) (Just first) mrQty
     checkProp propM f = maybe False f propM
     qtyFilled = checkProp qtyM $ \qty -> mrQty >= qty
     slippageReached = checkProp slipM $ \maxSlippage ->
-        let slippagePct = abs $ (pPrice latest - pPrice first) / pPrice first * 100
+        let slippagePct = abs $ (bpPrice latest - bpPrice first) / bpPrice first * 100
         in slippagePct > maxSlippage
+
+-- |
+withBidsAsksOrderUnlimited
+    :: Currency -- ^ Numeraire
+    -> Currency -- ^ Cryptocurrency
+       -- | arg1: buy order, arg2: sell order
+    -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => BuyOrder dst src
+                                                           -> BuyOrder src dst
+                                                           -> r
+       )
+    -> r
+withBidsAsksOrderUnlimited numeraire crypto f =
+    case someSymbolVal (toS numeraire) of
+        SomeSymbol (Proxy :: Proxy numeraire) ->
+            case someSymbolVal (toS crypto) of
+                SomeSymbol (Proxy :: Proxy crypto) ->
+                    f (buyOrder :: BuyOrder crypto numeraire)
+                      (buyOrder :: BuyOrder numeraire crypto)
+  where
+    buyOrder = unlimited

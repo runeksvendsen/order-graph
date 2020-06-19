@@ -15,6 +15,7 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Internal.Util              (merge)
 import qualified OrderBook.Graph                            as Lib
+import qualified OrderBook.Graph.Types.Path                 as Lib
 import qualified Data.Graph.Digraph                         as DG
 import           Test.Hspec.Expectations.Pretty
 
@@ -90,7 +91,8 @@ assertMatchedOrders sellOrders buyOrder f = void $ do
     matchedOrders <- ST.stToIO $ DG.withGraph $ \mGraph -> do
         Lib.buildFromOrders mGraph shuffledSellOrders
         (buyGraph, _) <- Lib.runArb mGraph $ Lib.arbitrages buyOrder
-        Lib.runMatch buyGraph $ Lib.match buyOrder
+        buyPaths <- Lib.runMatch buyGraph $ Lib.match buyOrder
+        return $ map Lib.toSellOrder buyPaths
     assertAscendingPriceSorted matchedOrders
     f (merge matchedOrders)
 

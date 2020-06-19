@@ -152,10 +152,11 @@ withSomeSellOrder sso f =
 -- |
 withSomeSellOrders
     :: ShortestPath
-    -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Thrist Order src dst -> r)
+    -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => NonEmpty B.SortedOrders -> Thrist Order src dst -> r)
     -> r
 withSomeSellOrders (ShortestPath sortedOrders) f' =
-    go (NE.reverse $ fmap B.first sortedOrders) f'
+    let revSortedOrders = NE.reverse sortedOrders in
+    go (fmap B.first revSortedOrders) (f' revSortedOrders)
   where
     -- Join a list of 'SomeSellOrder' to produce a 'Thrist' parameterized over
     --    the source and destination currency.

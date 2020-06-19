@@ -42,7 +42,7 @@ create
     -> [SortedOrders]
 create =
         catMaybes . map (fmap SortedOrders . NE.nonEmpty . sortOn soPrice . doAssertions)
-            . concat . map (concatListPairs . toOrders) . groupByMarket
+            . concat . map (concatListPairs . toOrders) . groupByMarketVenue
   where
     concatListPairs :: ([[a]], [[a]]) -> [[a]]
     concatListPairs (listA, listB) = listA ++ listB
@@ -56,21 +56,23 @@ create =
         ([],[])
         (map Book.toSellBuyOrders aBookLst)
     doAssertions =
-        assertSameBaseQuote . map assertPositivePrice
-    assertSameBaseQuote lst =
-        if all (sameBaseQuoteOrder (head lst)) lst
+        assertSameBaseQuoteVenue . map assertPositivePrice
+    assertSameBaseQuoteVenue lst =
+        if all (sameBaseQuoteVenueOrder (head lst)) lst
             then lst
             else error $ "SortedOrders with different base/quote: " ++ show lst
-    sameBaseQuoteOrder o1 o2 =
+    sameBaseQuoteVenueOrder o1 o2 =
         soBase o1 == soBase o2
         && soQuote o1 == soQuote o2
+        && soVenue o1 == soVenue o2
     assertPositivePrice order
         | soPrice order >= 0 = order
         | otherwise = error $ "negative-price order: " ++ show order
-    groupByMarket :: [Book.OrderBook numType] -> [[Book.OrderBook numType]]
-    groupByMarket = groupBy sameBaseQuote . sortOn Book.baseQuote
-    sameBaseQuote :: Book.OrderBook numType -> Book.OrderBook numType -> Bool
-    sameBaseQuote ob1 ob2 = Book.baseQuote ob1 == Book.baseQuote ob2
+    baseQuoteVenue ob = (Book.baseQuote ob, Book.bookVenue ob)
+    groupByMarketVenue :: [Book.OrderBook numType] -> [[Book.OrderBook numType]]
+    groupByMarketVenue = groupBy sameBaseQuoteVenue . sortOn baseQuoteVenue
+    sameBaseQuoteVenue :: Book.OrderBook numType -> Book.OrderBook numType -> Bool
+    sameBaseQuoteVenue ob1 ob2 = baseQuoteVenue ob1 == baseQuoteVenue ob2
 
 -- ^ Same as 'build' but take orders (instead of order books) as input.
 -- Only present for backwards compatibility (slower than 'build').

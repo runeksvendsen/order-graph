@@ -11,12 +11,13 @@ module OrderBook.Graph.Match
 , BuyOrder
 , BuyOrder'(..)
 , unlimited
+, module Path
 )
 where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Match.Types
-import           OrderBook.Graph.Types.Path
+import           OrderBook.Graph.Types.Path                 as Path
 import           OrderBook.Graph.Build                      ( SomeSellOrder
                                                             , SomeSellOrder'(..)
                                                             )
@@ -27,7 +28,6 @@ import qualified OrderBook.Graph.Exchange                   as Exchange
 import qualified Data.Graph.Digraph                         as DG
 import qualified Data.Graph.BellmanFord                     as BF
 import qualified Data.List.NonEmpty                         as NE
-import qualified Data.Text                                  as T
 import           Unsafe.Coerce                              (unsafeCoerce)
 
 
@@ -117,19 +117,16 @@ subtractMatchedQty
     -> ( NonEmpty (B.SortedOrders, SomeSellOrder)
        , BuyPathR
        )
-subtractMatchedQty sp@(Query.ShortestPath sortedOrders) =
-    Exchange.withSomeSellOrders sp $ \orders ->
+subtractMatchedQty sp =
+    Exchange.withSomeSellOrders sp $ \revSortedOrders orders ->
         let maxOrder = Exchange.maxOrder orders
             newOrders = Exchange.minusQty orders (Exchange.oQty maxOrder)
             newOrderQtys = Exchange.asList (Exchange.rawQty . Exchange.oQty) newOrders
-            newEdges = NE.zipWith setQty (NE.fromList newOrderQtys) someSellOrdersReverse
+            newEdges = NE.zipWith setQty (NE.fromList newOrderQtys) (fmap B.first revSortedOrders)
         in
-            ( NE.zip reverseSortedOrders newEdges
-            , toPath maxOrder sp
+            ( NE.zip revSortedOrders newEdges
+            , toPath maxOrder revSortedOrders
             )
-  where
-    reverseSortedOrders = NE.reverse sortedOrders
-    someSellOrdersReverse = fmap B.first reverseSortedOrders
 
 -- | Helper function
 setQty
