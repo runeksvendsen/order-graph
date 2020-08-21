@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE RecordWildCards #-}
-
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -19,7 +19,6 @@ import           OrderBook.Graph.Types                      (SomeSellOrder, Some
 import           OrderBook.Graph.Types.Book                 (OrderBook)
 import qualified OrderBook.Graph.Types.Book                 as Book
 import qualified OrderBook.Graph                            as Lib
-import qualified OrderBook.Graph.Match.Types                as Lib
 
 import qualified Control.Monad.ST                           as ST
 import qualified Data.Graph.Digraph                         as DG
@@ -56,7 +55,7 @@ main = Opt.withOptions $ \options ->
                     Opt.AnalyzeCsv ->
                         (Just . csvExecutionResult) <$> analyze crypto options execution
                     Opt.Visualize outputDir -> do
-                        visualize crypto outputDir execution
+                        visualize options crypto outputDir execution
                         return Nothing
                     Opt.Benchmark -> do
                         benchmark Nothing execution
@@ -144,8 +143,8 @@ mkExecutions options graphInfo inputFile = do
     mkExecution crypto =
         Execution inputFile graphInfo (readOrdersFile options inputFile) (mainRun crypto)
     mainRun crypto orders =
-        Lib.withBidsAsksOrderUnlimited numeraire crypto $ \buyOrder sellOrder ->
-            matchOrders buyOrder sellOrder orders
+        withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
+            matchOrders (Opt.logger options) buyOrder sellOrder orders
     numeraire   = Opt.numeraire options
 
 data PriceRange numType =
@@ -305,9 +304,9 @@ showExecutionResult ExecutionResult{..}
     logLine title message =
             printf "%-25s%s" title message
 
-visualize :: Lib.Currency -> FilePath -> Execution numType -> IO ()
-visualize currency outputDir Execution{..} =
-    preRun >>= mainRun >>= writeChartFile outFilePath
+visualize :: Opt.Options -> Lib.Currency -> FilePath -> Execution numType -> IO ()
+visualize options currency outputDir Execution{..} =
+    preRun >>= mainRun >>= writeChartFile options outFilePath
   where
     mkOutFileName path = FP.takeBaseName path <> "-" <> toS currency <> FP.takeExtension path
     outFilePath = outputDir </> mkOutFileName inputFile
@@ -339,6 +338,26 @@ benchSingle obFile GraphInfo{..} readBooks action = do
     return $ Criterion.bench name $
         Criterion.perBatchEnv (const readBooks) action
 
+-- |
+withBidsAsksOrder
+    :: Lib.Currency -- ^ Numeraire
+    -> Lib.Currency -- ^ Cryptocurrency
+       -- | arg1: buy order, arg2: sell order
+    -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => Lib.BuyOrder dst src
+                                                           -> Lib.BuyOrder src dst
+                                                           -> r
+       )
+    -> r
+withBidsAsksOrder numeraire crypto f =
+    case someSymbolVal (toS numeraire) of
+        SomeSymbol (Proxy :: Proxy numeraire) ->
+            case someSymbolVal (toS crypto) of
+                SomeSymbol (Proxy :: Proxy crypto) ->
+                    f (buyOrder :: Lib.BuyOrder crypto numeraire)
+                      (buyOrder :: Lib.BuyOrder numeraire crypto)
+  where
+    buyOrder = Lib.unlimited
+
 readOrdersFile
     :: (Json.FromJSON numType, Fractional numType, Real numType)
     => Opt.Options
@@ -354,6 +373,7 @@ readOrdersFile options filePath = do
     log $ "Order count: " ++ show (length orders)
     return $ map (Book.trimSlippageOB maxSlippage) books
   where
+    log = Opt.logger options
     maxSlippage = toRational $ Opt.maxSlippage options
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail :: (Json.FromJSON numType, Ord numType) => FilePath -> IO [OrderBook numType]
@@ -361,33 +381,14 @@ readOrdersFile options filePath = do
         either (throwError file) return =<< Json.eitherDecodeFileStrict file
     logVenues venues = forM_ venues $ \venue -> log ("\t" ++ toS venue)
 
-buildGraph
-    :: (PrimMonad m, Real numType)
-    => [OrderBook numType]                         -- ^ Sell orders
-    -> Lib.SellOrderGraph (PrimState m) g "arb"     -- ^ Empty graph
-    -> m (GraphInfo numType)
-buildGraph sellOrders graph = do
-    Lib.build graph sellOrders
-    currencies <- DG.vertexLabels graph
-    edgeCount <- DG.edgeCount graph
-    return $ GraphInfo
-        { giVertices    = currencies
-        , giEdgeCount   = edgeCount
-        }
-
--- NB: Phantom 'numType' is number type of input order book
-data GraphInfo numType = GraphInfo
-    { giVertices    :: [Lib.Currency]
-    , giEdgeCount   :: Word
-    }
-
 matchOrders
     :: (KnownSymbol src, KnownSymbol dst, Real numType)
-    => Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
+    => (forall m. Monad m => String -> m ())
+    -> Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
     -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
     -> [OrderBook numType]      -- ^ Input orders
     -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
-matchOrders buyOrder sellOrder sellOrders =
+matchOrders log buyOrder sellOrder sellOrders =
     ST.stToIO $ DG.withGraph $ \mGraph -> do
         log "Building graph..."
         graphInfo <- buildGraph sellOrders mGraph
@@ -406,16 +407,17 @@ matchOrders buyOrder sellOrder sellOrders =
         -- Match
         Lib.runMatch buyGraph $ do
             log "Matching sell order..."
-            bids <- map Lib.invertSomeSellOrder <$> Lib.match sellOrder
+            bids <- Lib.match sellOrder -- map Lib.invertSomeSellOrder <$> Lib.match sellOrder
             log "Matching buy order..."
             asks <- Lib.match buyOrder
-            return (bids, asks)
+            return undefined --(bids, asks)
 
 writeChartFile
-    :: FilePath
+    :: Opt.Options
+    -> FilePath
     -> ([SomeSellOrder], [SomeSellOrder])
     -> IO ()
-writeChartFile obPath (bids, asks) = do
+writeChartFile options obPath (bids, asks) = do
     log "Writing order book.."
     let trimmedAsks = trimOrders $ sortBy (comparing soPrice)        asks
         trimmedBids = trimOrders $ sortBy (flip $ comparing soPrice) bids
@@ -424,6 +426,7 @@ writeChartFile obPath (bids, asks) = do
   where
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
     trimOrders = Util.compress 500 . Util.merge
+    log = Opt.logger options
 
 -- | Write JSON order book
 mkJsonOb
@@ -441,6 +444,3 @@ mkJsonOb bids asks =
         ( show (realToFrac $ soPrice sso :: Double)
         , realToFrac $ soQty sso :: Double
         )
-
-log :: Monad m => String -> m ()
-log = return . unsafePerformIO . Log.loggingLogger Log.LevelInfo (toS "")

@@ -11,6 +11,8 @@ module OrderBook.Graph.Build
 , Tagged(..)
 , build
 , buildFromOrders
+, GraphInfo(..)
+, graphInfo
 )
 where
 
@@ -103,3 +105,21 @@ createFromOrders =
     orderSrcDst oA oB =
         soBase oA `compare` soBase oB <>
         soQuote oA `compare` soQuote oB
+
+graphInfo
+    :: (PrimMonad m, Real numType)
+    => SellOrderGraph (PrimState m) g "arb"
+    -> m (GraphInfo numType)
+graphInfo graph = do
+    currencies <- DG.vertexLabels graph
+    edgeCount <- DG.edgeCount graph
+    return $ GraphInfo
+        { giVertices    = currencies
+        , giEdgeCount   = edgeCount
+        }
+
+-- NB: Phantom 'numType' is number type of input order book
+data GraphInfo numType = GraphInfo
+    { giVertices    :: [Currency]
+    , giEdgeCount   :: Word
+    }

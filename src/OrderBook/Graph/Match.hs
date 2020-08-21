@@ -18,7 +18,7 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Match.Types
 import           OrderBook.Graph.Types.Path                 as Path
-import           OrderBook.Graph.Build                      ( SomeSellOrder
+import           OrderBook.Graph.Build                      (OrderBook,  SomeSellOrder
                                                             , SomeSellOrder'(..)
                                                             )
 import qualified OrderBook.Graph.Build                      as B
