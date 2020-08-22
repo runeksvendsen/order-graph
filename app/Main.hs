@@ -141,6 +141,7 @@ mkExecutions options graphInfo inputFile = do
             Opt.OneOrMore cryptos -> NE.toList cryptos
             Opt.AllCryptos    -> giVertices graphInfo \\ [numeraire]
     mkExecution crypto =
+        -- TODO: do not read order book file once per execution
         Execution inputFile graphInfo (readOrdersFile options inputFile) (mainRun crypto)
     mainRun crypto orders =
         withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
@@ -371,6 +372,7 @@ readOrdersFile options filePath = do
     let orders = concatMap Book.fromOrderBook books
     log $ "Order book count: " ++ show (length books)
     log $ "Order count: " ++ show (length orders)
+    -- TODO: print warning in case of input orderbook depth < 'maxSlippage'
     return $ map (Book.trimSlippageOB maxSlippage) books
   where
     log = Opt.logger options
