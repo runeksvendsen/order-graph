@@ -45,9 +45,9 @@ main :: IO ()
 main = Opt.withOptions $ \options ->
     Opt.withNumberType options $ \(Opt.SomeNumberType (_ :: Proxy numType)) ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
-        sellOrders :: [OrderBook numType] <- readOrdersFile options inputFile
-        graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph sellOrders)
-        let executionCryptoList = mkExecutions options graphInfo inputFile
+        orderBooks :: [OrderBook numType] <- readOrdersFile options inputFile
+        graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph orderBooks)
+        let executionCryptoList = mkExecutions options graphInfo inputFile orderBooks
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of
                     Opt.Analyze ->
@@ -122,8 +122,8 @@ data Execution numType = Execution
       -- ^ Input order book file
     , graphInfo     :: GraphInfo numType
       -- ^ Information about the graph
-    , preRun        :: IO [OrderBook numType]
-      -- ^ Produce input data
+    , inputData     :: [OrderBook numType]
+      -- ^ Order books read from 'inputFile'
     , mainRun       :: [OrderBook numType] -> IO ([SomeSellOrder], [SomeSellOrder])
       -- ^ Process input data
     }
@@ -133,16 +133,16 @@ mkExecutions
     => Opt.Options
     -> GraphInfo numType
     -> FilePath
+    -> [OrderBook numType]
     -> [(Execution numType, Lib.Currency)]
-mkExecutions options graphInfo inputFile = do
+mkExecutions options graphInfo inputFile orderBooks = do
     map (\crypto -> (mkExecution crypto, crypto)) allCryptos
   where
     allCryptos = case Opt.crypto options of
             Opt.OneOrMore cryptos -> NE.toList cryptos
             Opt.AllCryptos    -> giVertices graphInfo \\ [numeraire]
     mkExecution crypto =
-        -- TODO: do not read order book file once per execution
-        Execution inputFile graphInfo (readOrdersFile options inputFile) (mainRun crypto)
+        Execution inputFile graphInfo orderBooks (mainRun crypto)
     mainRun crypto orders =
         withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
             matchOrders options buyOrder sellOrder orders
@@ -179,7 +179,7 @@ data SideLiquidity = SideLiquidity
 
 analyze :: Lib.Currency -> Opt.Options -> Execution numType -> IO ExecutionResult
 analyze cryptocurrency Opt.Options{..} Execution{..} = do
-    (buyOrders, sellOrders) <- preRun >>= mainRun
+    (buyOrders, sellOrders) <- mainRun inputData
     return $ ExecutionResult
         { liInputFile       = inputFile
         , liMaxSlippage     = maxSlippage
@@ -307,7 +307,7 @@ showExecutionResult ExecutionResult{..}
 
 visualize :: Opt.Options -> Lib.Currency -> FilePath -> Execution numType -> IO ()
 visualize options currency outputDir Execution{..} =
-    preRun >>= mainRun >>= writeChartFile options outFilePath
+    mainRun inputData >>= writeChartFile options outFilePath
   where
     mkOutFileName path = FP.takeBaseName path <> "-" <> toS currency <> FP.takeExtension path
     outFilePath = outputDir </> mkOutFileName inputFile
@@ -320,7 +320,7 @@ benchmark
     -> Execution numType
     -> IO ()
 benchmark csvFileM Execution{..} = do
-    benchmark' <- benchSingle inputFile graphInfo preRun (void . mainRun)
+    benchmark' <- benchSingle inputFile graphInfo inputData (void . mainRun)
     Criterion.runMode mode [benchmark']
   where
     mode = Criterion.Run config Criterion.Prefix [""]
@@ -331,13 +331,13 @@ benchSingle
     :: NFData numType
     => FilePath                     -- ^ Order book input file name
     -> GraphInfo numType
-    -> IO [OrderBook numType]           -- ^ Read order book from file
+    -> [OrderBook numType]
     -> ([OrderBook numType] -> IO ())   -- ^ Run algorithm
     -> IO Criterion.Benchmark
-benchSingle obFile GraphInfo{..} readBooks action = do
+benchSingle obFile GraphInfo{..} orderBooks action = do
     let name = obFile ++ " V=" ++ show (length giVertices) ++ " E=" ++ show giEdgeCount
     return $ Criterion.bench name $
-        Criterion.perBatchEnv (const readBooks) action
+        Criterion.perBatchEnv (const $ return orderBooks) action
 
 -- |
 withBidsAsksOrder
