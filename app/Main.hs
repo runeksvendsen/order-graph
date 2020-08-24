@@ -238,18 +238,16 @@ toSideLiquidity maxNumPaths nonEmptyOrders = Just $
 showExecutionResult :: ExecutionResult -> String
 showExecutionResult ExecutionResult{..}
     | Nothing <- liLiquidityInfo = unlines $
-        [ lineSeparator
-        , logInputFile
-        , "NO ORDERS MATCHED"
+        logHeader
+        ++
+        [ "NO ORDERS MATCHED"
         , lineSeparator
         ]
     | Just LiquidityInfo{..} <- liLiquidityInfo
-    , (baseCurrency, quoteCurrency) <- liBaseQuote = unlines $
-        [ lineSeparator
-        , logInputFile
-        , logLine "Cryptocurrency" (toS baseCurrency)
-        , logMaxSlippage
-        , logLine "buy liquidity" $ showAmount quoteCurrency (liquidity liBuyLiquidity)
+    , (_, quoteCurrency) <- liBaseQuote = unlines $
+        logHeader
+        ++
+        [ logLine "buy liquidity" $ showAmount quoteCurrency (liquidity liBuyLiquidity)
         , logLine "sell liquidity" $ showAmount quoteCurrency (liquidity liSellLiquidity)
         , logLine "SUM" $ showAmount quoteCurrency (liquidity liBuyLiquidity + liquidity liSellLiquidity)
         ]
@@ -299,6 +297,7 @@ showExecutionResult ExecutionResult{..}
     showPrice :: Real price => price -> String
     showPrice = Format.formatFloatFloor 8
     lineSeparator = "-----------------------------------------------------"
+    logHeader = [ lineSeparator, logInputFile, logLine "Cryptocurrency" (toS liCrypto), logMaxSlippage ]
     logInputFile = logLine "Order book file" liInputFile
     logMaxSlippage = logLine "Maximum slippage (%)" (showFloatSamePrecision liMaxSlippage)
     logLine :: String -> String -> String
