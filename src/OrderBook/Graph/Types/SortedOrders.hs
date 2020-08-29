@@ -62,6 +62,7 @@ replaceHead (SortedOrders ne) =
 instance DirectedEdge (Tag.Tagged a SortedOrders) Currency where
     fromNode = fromNode . NE.head . getOrders . Tag.unTagged
     toNode = toNode . NE.head . getOrders . Tag.unTagged
+    multiKey = multiKey . NE.head . getOrders . Tag.unTagged
 
 instance WeightedEdge (Tag.Tagged a SortedOrders) Currency Double where
     weight = log . fromRational . weight . NE.head . getOrders . Tag.unTagged

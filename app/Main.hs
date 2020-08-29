@@ -46,7 +46,7 @@ main = Opt.withOptions $ \options ->
     Opt.withNumberType options $ \(Opt.SomeNumberType (_ :: Proxy numType)) ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
         orderBooks :: [OrderBook numType] <- readOrdersFile options inputFile
-        graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph orderBooks)
+        (graphInfo, _)  <- ST.stToIO $ buildGraph orderBooks
         let executionCryptoList = mkExecutions options graphInfo inputFile orderBooks
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of
@@ -383,18 +383,18 @@ readOrdersFile options filePath = do
     logVenues venues = forM_ venues $ \venue -> log ("\t" ++ toS venue)
 
 buildGraph
-    :: (PrimMonad m, Real numType)
+    :: (Real numType)
     => [OrderBook numType]                         -- ^ Sell orders
-    -> Lib.SellOrderGraph (PrimState m) g "arb"     -- ^ Empty graph
-    -> m (GraphInfo numType)
-buildGraph sellOrders graph = do
-    Lib.build graph sellOrders
+    -> ST s (GraphInfo numType2, Lib.SellOrderGraph s g "arb")
+buildGraph sellOrders = do
+    graph <- Lib.build sellOrders
     currencies <- DG.vertexLabels graph
     edgeCount <- DG.edgeCount graph
-    return $ GraphInfo
-        { giVertices    = currencies
-        , giEdgeCount   = edgeCount
-        }
+    let gi = GraphInfo
+                { giVertices    = currencies
+                , giEdgeCount   = edgeCount
+                }
+    return (gi, graph)
 
 -- NB: Phantom 'numType' is number type of input order book
 data GraphInfo numType = GraphInfo
@@ -412,9 +412,9 @@ matchOrders
 matchOrders options buyOrder sellOrder sellOrders =
     let log :: Monad m => String -> m ()
         log = Opt.logger options in
-    ST.stToIO $ DG.withGraph $ \mGraph -> do
+    ST.stToIO $ do
         log "Building graph..."
-        graphInfo <- buildGraph sellOrders mGraph
+        (graphInfo, mGraph) <- buildGraph sellOrders
         let vertexCount = length (giVertices graphInfo)
             edgeCount = giEdgeCount graphInfo
         log $ "Vertex count: " ++ show vertexCount

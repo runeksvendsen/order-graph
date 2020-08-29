@@ -85,8 +85,8 @@ updateGraphEdge orderList newTopOrder = do
     graph <- BF.getGraph -- HACK: Just to make things work for now (before we improve the algorithm)
     -- TODO: use BellmanFord "remove/updateEdge"
     case newOrderListM of
-        Nothing           -> DG.removeEdge graph (B.Tagged orderList)
-        Just newOrderList -> DG.insertEdge graph (B.Tagged newOrderList)
+        Nothing           -> lift $ DG.removeEdge graph (B.Tagged orderList)
+        Just newOrderList -> lift $ DG.updateEdge graph (B.Tagged newOrderList)
 
 replaceSubtractedOrder
     :: B.SortedOrders       -- List of sorted orders, with old order at the head

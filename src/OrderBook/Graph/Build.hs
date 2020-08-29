@@ -24,16 +24,16 @@ import           Data.List                                  (groupBy, sortOn, so
 import qualified Data.List.NonEmpty                         as NE
 
 
-type SellOrderGraph s g kind = DG.Digraph s g (Tagged kind SortedOrders) Currency
+type SellOrderGraph s g kind = DG.Digraph s Currency DG.Text (Tagged kind SortedOrders)
 
 -- ^ build a graph where each edge is a list of sorted sell orders
 build
-    :: (PrimMonad m, Real numType)
-    => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
-    -> [Book.OrderBook numType]            -- ^ Order books
-    -> m ()
-build mGraph orders = do
-    forM_ (create orders) (DG.insertEdge mGraph . Tagged)
+    :: (Real numType)
+    => [Book.OrderBook numType]            -- ^ Order books
+    -> ST s (SellOrderGraph s g "arb")
+build orders =
+    let edges = map Tagged (create orders)
+    in DG.fromEdges edges
 
 -- |
 create
@@ -42,7 +42,7 @@ create
     -> [SortedOrders]
 create =
         catMaybes . map (fmap SortedOrders . NE.nonEmpty . sortOn soPrice . doAssertions)
-            . concat . map (concatListPairs . toOrders) . groupByMarket
+            . concatListPairs . toOrders
   where
     concatListPairs :: ([[a]], [[a]]) -> [[a]]
     concatListPairs (listA, listB) = listA ++ listB
@@ -67,20 +67,15 @@ create =
     assertPositivePrice order
         | soPrice order >= 0 = order
         | otherwise = error $ "negative-price order: " ++ show order
-    groupByMarket :: [Book.OrderBook numType] -> [[Book.OrderBook numType]]
-    groupByMarket = groupBy sameBaseQuote . sortOn Book.baseQuote
-    sameBaseQuote :: Book.OrderBook numType -> Book.OrderBook numType -> Bool
-    sameBaseQuote ob1 ob2 = Book.baseQuote ob1 == Book.baseQuote ob2
 
 -- ^ Same as 'build' but take orders (instead of order books) as input.
 -- Only present for backwards compatibility (slower than 'build').
 buildFromOrders
-    :: (PrimMonad m)
-    => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
-    -> [SomeSellOrder]                      -- ^ Orders
-    -> m ()
-buildFromOrders mGraph orders = do
-    forM_ (createFromOrders orders) (DG.insertEdge mGraph . Tagged)
+    :: [SomeSellOrder]                      -- ^ Orders
+    -> ST s (SellOrderGraph s g "arb")
+buildFromOrders orders =
+    let edges = map Tagged (createFromOrders orders)
+    in DG.fromEdges edges
 
 -- |
 createFromOrders

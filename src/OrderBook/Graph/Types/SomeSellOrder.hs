@@ -62,6 +62,7 @@ instance DG.DirectedEdge (SomeSellOrder' numType) Currency where
     -- We move in the opposite direction of the seller
     fromNode = soQuote
     toNode = soBase
+    multiKey = soVenue
 
 instance GE.WeightedEdge (SomeSellOrder' numType) Currency numType where
     weight = soPrice
