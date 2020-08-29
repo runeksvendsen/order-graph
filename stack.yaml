@@ -6,7 +6,7 @@ extra-deps:
   - git: https://github.com/runeksvendsen/impure-containers.git
     commit: 0f00dc9a617d5312b6fe5e9ddb9c2b4b9d0afdaf
   - git: https://github.com/runeksvendsen/bellman-ford.git
-    commit: 88ded12de3e7e93e745fba95e3800abff34fb8ab
+    commit: 4c0c92f2d5f9df71160fd7f71d895d924c1784c9
   - git: https://github.com/runeksvendsen/mono-traversable.git
     commit: d1c7e00240482b57ed61e9342cb227d44a02c70a
     subdirs:

@@ -41,6 +41,16 @@ executables:
   order-graph-exe:
     main: Main.hs
     source-dirs: app
+    ghc-options:
+    - -threaded
+    # - -with-rtsopts=-g1 # disable parallel GC (degrades performance)
+    # - -with-rtsopts=-qa # use as many threads as there are CPU cores
+    # - -eventlog
+    - -fspecialise-aggressively
+    - -flate-specialise
+    - -fexpose-all-unfoldings
+    - -rtsopts=all
+    # - -with-rtsopts=-qm # disable automatic scheduling of threads across available CPU cores
     dependencies:
     - protolude
     - orderbook
@@ -59,6 +69,7 @@ executables:
     - cassava
     - text-format
     - text
+    - parallel
 
 tests:
   order-graph-test:

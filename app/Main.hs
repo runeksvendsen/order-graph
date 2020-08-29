@@ -37,8 +37,9 @@ import qualified Criterion.Main.Options                     as Criterion
 import qualified Criterion.Types                            as Criterion
 import qualified Control.Logging                            as Log
 import           System.IO.Unsafe                           (unsafePerformIO)
-import qualified UnliftIO.Async                             as Async
+import qualified Control.Parallel.Strategies                as Par
 import qualified Data.Csv.Incremental                       as Csv
+import qualified Control.Monad.ST.Unsafe                    as Unsafe
 
 
 main :: IO ()
@@ -48,21 +49,12 @@ main = Opt.withOptions $ \options ->
         orderBooks :: [OrderBook numType] <- readOrdersFile options inputFile
         graphInfo  <- ST.stToIO $ DG.withGraph (buildGraph orderBooks)
         let executionCryptoList = mkExecutions options graphInfo inputFile orderBooks
-        logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
-            case Opt.mode options of
-                    Opt.Analyze ->
-                        (Just . showExecutionResult) <$> analyze crypto options execution
-                    Opt.AnalyzeCsv ->
-                        (Just . csvExecutionResult) <$> analyze crypto options execution
-                    Opt.Visualize outputDir -> do
-                        visualize options crypto outputDir execution
-                        return Nothing
-                    Opt.Benchmark -> do
-                        benchmark Nothing execution
-                        return Nothing
-                    Opt.BenchmarkCsv csvOut -> do
-                        benchmark (Just csvOut) execution
-                        return Nothing
+        let logResult = forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) ->
+                case Opt.mode options of
+                        Opt.Analyze ->
+                            Just . showExecutionResult $ analyze crypto options execution
+                        Opt.AnalyzeCsv ->
+                            Just . csvExecutionResult $ analyze crypto options execution
         forM_ (catMaybes logResult) putStr
   where
     csvExecutionResult er = toS . Csv.encode $
@@ -89,20 +81,23 @@ forAll :: Opt.Mode
           -- ^ Mode
        -> [a]
           -- ^ Input list
-       -> (a -> IO (Maybe String))
+       -> (a -> Maybe String)
           -- ^ Do for all list items; return output
-       -> IO [Maybe String]
+       -> [Maybe String]
           -- ^ All outputs
-forAll  Opt.AnalyzeCsv   =
-            let addCsvHeader = fmap (fmap (Just csvHeader :))
-            in addCsvHeader . concurrent
-forAll  Opt.Analyze         = concurrent
-forAll (Opt.Visualize _)    = concurrent
-forAll  Opt.Benchmark       = sequential
-forAll (Opt.BenchmarkCsv _) = sequential
+-- forAll  Opt.AnalyzeCsv   =
+--             let addCsvHeader = fmap (fmap (Just csvHeader :))
+--             in addCsvHeader . concurrent
+forAll  Opt.Analyze input runner         = Par.parMap Par.rdeepseq runner input
+-- forAll (Opt.Visualize _)    = concurrent
+-- forAll  Opt.Benchmark       = sequential
+-- forAll (Opt.BenchmarkCsv _) = sequential
 
 concurrent :: [a] -> (a -> IO b) -> IO [b]
-concurrent = flip Async.pooledMapConcurrently
+concurrent = flip undefined -- Async.pooledMapConcurrently
+
+concurrent' :: NFData a => [a] -> [a]
+concurrent' = (`Par.using` Par.parList Par.rdeepseq)
 
 sequential :: [a] -> (a -> IO b) -> IO [b]
 sequential = flip mapM
@@ -124,7 +119,7 @@ data Execution numType = Execution
       -- ^ Information about the graph
     , inputData     :: [OrderBook numType]
       -- ^ Order books read from 'inputFile'
-    , mainRun       :: [OrderBook numType] -> IO ([SomeSellOrder], [SomeSellOrder])
+    , mainRun       :: [OrderBook numType] -> ([SomeSellOrder], [SomeSellOrder])
       -- ^ Process input data
     }
 
@@ -144,7 +139,7 @@ mkExecutions options graphInfo inputFile orderBooks = do
     mkExecution crypto =
         Execution inputFile graphInfo orderBooks (mainRun crypto)
     mainRun crypto orders =
-        withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
+        withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder -> ST.runST $
             matchOrders options buyOrder sellOrder orders
     numeraire   = Opt.numeraire options
 
@@ -177,10 +172,10 @@ data SideLiquidity = SideLiquidity
     , liPaths        :: NonEmpty (Lib.NumType, PriceRange Lib.NumType, T.Text)  -- ^ (quantity, price_range, path_description)
     }
 
-analyze :: Lib.Currency -> Opt.Options -> Execution numType -> IO ExecutionResult
-analyze cryptocurrency Opt.Options{..} Execution{..} = do
-    (buyOrders, sellOrders) <- mainRun inputData
-    return $ ExecutionResult
+analyze :: Lib.Currency -> Opt.Options -> Execution numType -> ExecutionResult
+analyze cryptocurrency Opt.Options{..} Execution{..} =
+    let (buyOrders, sellOrders) = mainRun inputData
+    in ExecutionResult
         { liInputFile       = inputFile
         , liMaxSlippage     = maxSlippage
         , liCrypto          = cryptocurrency
@@ -238,18 +233,16 @@ toSideLiquidity maxNumPaths nonEmptyOrders = Just $
 showExecutionResult :: ExecutionResult -> String
 showExecutionResult ExecutionResult{..}
     | Nothing <- liLiquidityInfo = unlines $
-        [ lineSeparator
-        , logInputFile
-        , "NO ORDERS MATCHED"
+        logHeader
+        ++
+        [ "NO ORDERS MATCHED"
         , lineSeparator
         ]
     | Just LiquidityInfo{..} <- liLiquidityInfo
-    , (baseCurrency, quoteCurrency) <- liBaseQuote = unlines $
-        [ lineSeparator
-        , logInputFile
-        , logLine "Cryptocurrency" (toS baseCurrency)
-        , logMaxSlippage
-        , logLine "buy liquidity" $ showAmount quoteCurrency (liquidity liBuyLiquidity)
+    , (_, quoteCurrency) <- liBaseQuote = unlines $
+        logHeader
+        ++
+        [ logLine "buy liquidity" $ showAmount quoteCurrency (liquidity liBuyLiquidity)
         , logLine "sell liquidity" $ showAmount quoteCurrency (liquidity liSellLiquidity)
         , logLine "SUM" $ showAmount quoteCurrency (liquidity liBuyLiquidity + liquidity liSellLiquidity)
         ]
@@ -299,6 +292,7 @@ showExecutionResult ExecutionResult{..}
     showPrice :: Real price => price -> String
     showPrice = Format.formatFloatFloor 8
     lineSeparator = "-----------------------------------------------------"
+    logHeader = [ lineSeparator, logInputFile, logLine "Cryptocurrency" (toS liCrypto), logMaxSlippage ]
     logInputFile = logLine "Order book file" liInputFile
     logMaxSlippage = logLine "Maximum slippage (%)" (showFloatSamePrecision liMaxSlippage)
     logLine :: String -> String -> String
@@ -307,7 +301,7 @@ showExecutionResult ExecutionResult{..}
 
 visualize :: Opt.Options -> Lib.Currency -> FilePath -> Execution numType -> IO ()
 visualize options currency outputDir Execution{..} =
-    mainRun inputData >>= writeChartFile options outFilePath
+    return (mainRun inputData) >>= writeChartFile options outFilePath
   where
     mkOutFileName path = FP.takeBaseName path <> "-" <> toS currency <> FP.takeExtension path
     outFilePath = outputDir </> mkOutFileName inputFile
@@ -320,7 +314,7 @@ benchmark
     -> Execution numType
     -> IO ()
 benchmark csvFileM Execution{..} = do
-    benchmark' <- benchSingle inputFile graphInfo inputData (void . mainRun)
+    benchmark' <- benchSingle inputFile graphInfo inputData (void . return . mainRun)
     Criterion.runMode mode [benchmark']
   where
     mode = Criterion.Run config Criterion.Prefix [""]
@@ -409,11 +403,22 @@ matchOrders
     -> Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
     -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
     -> [OrderBook numType]      -- ^ Input orders
-    -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
+    -> ST s ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
 matchOrders options buyOrder sellOrder sellOrders =
+    withBuyGraph options buyOrder sellOrder sellOrders (matchBuyGraph options buyOrder sellOrder)
+
+withBuyGraph
+    :: (KnownSymbol src, KnownSymbol dst, Real numType)
+    => Opt.Options
+    -> Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
+    -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
+    -> [OrderBook numType]      -- ^ Input orders
+    -> (forall g. Lib.SellOrderGraph s g "buy" -> ST s ([SomeSellOrder], [SomeSellOrder]))
+    -> ST s ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
+withBuyGraph options buyOrder sellOrder sellOrders f =
     let log :: Monad m => String -> m ()
         log = Opt.logger options in
-    ST.stToIO $ DG.withGraph $ \mGraph -> do
+    DG.withGraph $ \mGraph -> do
         log "Building graph..."
         graphInfo <- buildGraph sellOrders mGraph
         let vertexCount = length (giVertices graphInfo)
@@ -424,17 +429,31 @@ matchOrders options buyOrder sellOrder sellOrders =
         buyGraph <- Lib.runArb mGraph $ do
             log "Finding arbitrages..."
             -- Asks
-            (buyGraph, arbs) <- Lib.arbitrages sellOrder
+            (_, arbs1) <- Lib.arbitrages sellOrder
+            (buyGraph, arbs2) <- Lib.arbitrages buyOrder
+            let arbs = arbs1 ++ arbs2
             -- Finds all arbitrages (regardless of "src" vertex)
             log $ unlines ["Arbitrages:", pp arbs]
             return buyGraph
         -- Match
-        Lib.runMatch buyGraph $ do
-            log "Matching sell order..."
-            bids <- map Lib.invertSomeSellOrder <$> Lib.match sellOrder
-            log "Matching buy order..."
-            asks <- Lib.match buyOrder
-            return (bids, asks)
+        f buyGraph
+
+matchBuyGraph
+    :: (KnownSymbol src, KnownSymbol dst)
+    => Opt.Options
+    -> Lib.BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
+    -> Lib.BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
+    -> Lib.SellOrderGraph s g "buy"
+    -> ST s ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
+matchBuyGraph options buyOrder sellOrder buyGraph =
+    let log :: Monad m => String -> m ()
+        log = Opt.logger options in
+    Lib.runMatch buyGraph $ do
+        log "Matching sell order..."
+        bids <- map Lib.invertSomeSellOrder <$> Lib.match sellOrder
+        log "Matching buy order..."
+        asks <- Lib.match buyOrder
+        return (bids, asks)
 
 writeChartFile
     :: Opt.Options
