@@ -423,7 +423,9 @@ matchOrders options buyOrder sellOrder sellOrders =
         buyGraph <- Lib.runArb mGraph $ do
             log "Finding arbitrages..."
             -- Asks
-            (buyGraph, arbs) <- Lib.arbitrages sellOrder
+            (_, arbsSell) <- Lib.arbitrages sellOrder
+            (buyGraph, arbsBuy) <- Lib.arbitrages buyOrder
+            let arbs = arbsSell ++ arbsBuy
             -- Finds all arbitrages (regardless of "src" vertex)
             log $ unlines ["Arbitrages:", pp arbs]
             return buyGraph
