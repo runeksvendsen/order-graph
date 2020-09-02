@@ -21,7 +21,6 @@ import OrderBook.Graph.Run
 import qualified OrderBook.Graph.Types.Book as Book
 import qualified Data.Graph.Digraph as DG
 
-import Data.Text (Text)
 import Data.List (nub)
 import qualified Control.Monad.ST as ST
 import qualified Data.Aeson as Json
