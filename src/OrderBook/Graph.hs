@@ -73,18 +73,15 @@ readOrdersFile log maxSlippage filePath = do
     logVenues venues = forM_ venues $ \venue -> log ("\t" ++ toS venue)
 
 buildGraph
-    :: (PrimMonad m, Real numType)
+    :: (Real numType)
     => [OrderBook numType]                         -- ^ Sell orders
-    -> SellOrderGraph (PrimState m) g "arb"     -- ^ Empty graph
-    -> m (GraphInfo numType)
-buildGraph sellOrders graph = do
-    build graph sellOrders
+    -> ST s (GraphInfo numType, SellOrderGraph s "arb")
+buildGraph sellOrders = do
+    graph <- build sellOrders
     currencies <- DG.vertexLabels graph
     edgeCount <- DG.edgeCount graph
-    return $ GraphInfo
-        { giVertices    = currencies
-        , giEdgeCount   = edgeCount
-        }
+    let gi = GraphInfo { giVertices = currencies, giEdgeCount = edgeCount }
+    return (gi, graph)
 
 -- NB: Phantom 'numType' is number type of input order book
 data GraphInfo numType = GraphInfo
@@ -100,9 +97,9 @@ matchOrders
     -> [OrderBook numType]      -- ^ Input orders
     -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
 matchOrders log buyOrder sellOrder sellOrders =
-    ST.stToIO $ DG.withGraph $ \mGraph -> do
+    ST.stToIO $ do
         log "Building graph..."
-        graphInfo <- buildGraph sellOrders mGraph
+        (graphInfo, mGraph) <- buildGraph sellOrders
         let vertexCount = length (giVertices graphInfo)
             edgeCount = giEdgeCount graphInfo
         log $ "Vertex count: " ++ show vertexCount
