@@ -6,15 +6,42 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module OrderBook.Graph.Types.SortedOrders
 ( SortedOrders(..), first, rest, prepend, toList, replaceHead
+, CompactOrderList(..), toSortedOrders, fromSortedOrders
 , Tag.Tagged(..)
 )
 where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types
+import qualified Data.Graph.Digraph                         as DG
+
 import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Tagged                                as Tag
 
+
+newtype CompactOrderList = CompactOrderList { getCompactOrders :: NE.NonEmpty CompactOrder }
+    deriving (Eq, Show, Generic)
+
+instance DG.HasWeight CompactOrderList Double where
+    weight = DG.weight . NE.head . getCompactOrders
+
+toSortedOrders :: DG.IdxEdge Currency CompactOrderList -> DG.IdxEdge Currency SortedOrders
+toSortedOrders idxEdge =
+    let quote = fromNode idxEdge
+        base = toNode idxEdge
+        compactOrders = fmap getCompactOrders idxEdge
+        mkOrder co = SomeSellOrder'
+            { soPrice = coPrice co
+            , soQty   = coQty co
+            , soBase  = base
+            , soQuote = quote
+            , soVenue = coVenue co
+            }
+    in fmap (SortedOrders . NE.map mkOrder) compactOrders
+
+fromSortedOrders :: DG.IdxEdge Currency SortedOrders -> DG.IdxEdge Currency CompactOrderList
+fromSortedOrders idxSo =
+    fmap (CompactOrderList . NE.map toCompactOrder . getOrders) idxSo
 
 -- | A list of sell orders sorted (ascending) by price
 newtype SortedOrders = SortedOrders { getOrders :: NE.NonEmpty SomeSellOrder }
@@ -59,9 +86,7 @@ replaceHead
 replaceHead (SortedOrders ne) =
     fmap SortedOrders . replaceHeadNE ne
 
-instance DirectedEdge (Tag.Tagged a SortedOrders) Currency where
+instance DirectedEdge (Tag.Tagged a SortedOrders) Currency (Tag.Tagged a CompactOrderList) where
     fromNode = fromNode . NE.head . getOrders . Tag.unTagged
     toNode = toNode . NE.head . getOrders . Tag.unTagged
-
-instance WeightedEdge (Tag.Tagged a SortedOrders) Currency Double where
-    weight = log . fromRational . weight . NE.head . getOrders . Tag.unTagged
+    metaData = Tag.Tagged . CompactOrderList . NE.map toCompactOrder . getOrders . Tag.unTagged

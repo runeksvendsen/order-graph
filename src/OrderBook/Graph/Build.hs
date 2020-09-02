@@ -8,6 +8,7 @@ module OrderBook.Graph.Build
 ( module OrderBook.Graph.Types
 , SellOrderGraph
 , SortedOrders, first, rest, prepend, toList, replaceHead
+, CompactOrderList
 , Tagged(..)
 , build
 , buildFromOrders
@@ -24,16 +25,16 @@ import           Data.List                                  (groupBy, sortOn, so
 import qualified Data.List.NonEmpty                         as NE
 
 
-type SellOrderGraph s g kind = DG.Digraph s g (Tagged kind SortedOrders) Currency
+type SellOrderGraph s kind = DG.Digraph s Currency (Tagged kind CompactOrderList)
 
 -- ^ build a graph where each edge is a list of sorted sell orders
 build
-    :: (PrimMonad m, Real numType)
-    => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
-    -> [Book.OrderBook numType]            -- ^ Order books
-    -> m ()
-build mGraph orders = do
-    forM_ (create orders) (DG.insertEdge mGraph . Tagged)
+    :: (Real numType)
+    => [Book.OrderBook numType]            -- ^ Order books
+    -> ST s (SellOrderGraph s "arb")
+build orders =
+    let edges = map Tagged (create orders)
+    in DG.fromEdges edges
 
 -- |
 create
@@ -75,12 +76,11 @@ create =
 -- ^ Same as 'build' but take orders (instead of order books) as input.
 -- Only present for backwards compatibility (slower than 'build').
 buildFromOrders
-    :: (PrimMonad m)
-    => SellOrderGraph (PrimState m) g "arb" -- ^ Empty graph
-    -> [SomeSellOrder]                      -- ^ Orders
-    -> m ()
-buildFromOrders mGraph orders = do
-    forM_ (createFromOrders orders) (DG.insertEdge mGraph . Tagged)
+    :: [SomeSellOrder]                      -- ^ Orders
+    -> ST s (SellOrderGraph s "arb")
+buildFromOrders orders =
+    let edges = map Tagged (createFromOrders orders)
+    in DG.fromEdges edges
 
 -- |
 createFromOrders

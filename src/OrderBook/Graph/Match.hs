@@ -16,9 +16,10 @@ where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Match.Types
-import           OrderBook.Graph.Build                      ( SomeSellOrder
+import           OrderBook.Graph.Build                      (Currency,  SomeSellOrder
                                                             , SomeSellOrder'(..)
                                                             )
+import           OrderBook.Graph.Types.SortedOrders         (toSortedOrders, fromSortedOrders)
 import qualified OrderBook.Graph.Build                      as B
 import qualified OrderBook.Graph.Query                      as Query
 import qualified OrderBook.Graph.Exchange                   as Exchange
@@ -31,10 +32,10 @@ import           Unsafe.Coerce                              (unsafeCoerce)
 
 
 match
-    :: forall s g base quote.
+    :: forall s base quote.
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
-    -> Query.BuyGraphM s g [SomeSellOrder]
+    -> Query.BuyGraphM s [SomeSellOrder]
 match bo =
     reverse . mrOrders <$> queryUpdateGraph bo (Query.buyPath src dst)
   where
@@ -44,11 +45,11 @@ match bo =
 -- | NB: 'BuyOrder' is only used to specify 'src' currency.
 --   No other information from the 'BuyOrder' is used.
 arbitrages
-    :: forall s g base quote.
+    :: forall s base quote.
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
-    -> Query.ArbGraphM s g (B.SellOrderGraph s g "buy", [SomeSellOrder])
-arbitrages bo = do
+    -> Query.ArbGraphM s (B.SellOrderGraph s "buy", [SomeSellOrder])
+arbitrages _ = do
     mr <- queryUpdateGraph unlimitedBuyOrder (Query.arbitrage src)
     g <- BF.getGraph
     return (unsafeCoerce g, reverse $ mrOrders mr)
@@ -58,11 +59,11 @@ arbitrages bo = do
     unlimitedBuyOrder = unlimited
 
 queryUpdateGraph
-    :: forall s g base quote kind.
+    :: forall s base quote kind.
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
-    -> Query.AnyGraphM s g kind (Maybe Query.BuyPath)
-    -> Query.AnyGraphM s g kind MatchResult
+    -> Query.AnyGraphM s kind (Maybe Query.BuyPath)
+    -> Query.AnyGraphM s kind MatchResult
 queryUpdateGraph bo queryGraph =
     {-# SCC queryUpdateGraph #-} go empty
   where
@@ -71,22 +72,22 @@ queryUpdateGraph bo queryGraph =
         case buyPathM of
             Nothing -> return mr
             Just (Query.BuyPath orderPath) -> do
-                let reverseOrderPath = NE.reverse orderPath
-                let (newEdges, matchedOrder) = subtractMatchedQty reverseOrderPath
+                let reverseOrderPath = fmap toSortedOrders (NE.reverse orderPath)
+                let (newEdges, matchedOrder) = subtractMatchedQty (NE.map DG.eMeta reverseOrderPath)
                 forM_ (NE.zip reverseOrderPath newEdges) (uncurry updateGraphEdge)
                 go (addOrder mr matchedOrder)
 
 updateGraphEdge
-    :: B.SortedOrders
+    :: DG.IdxEdge Currency B.SortedOrders
     -> SomeSellOrder                -- ^ Updated top order
-    -> Query.AnyGraphM s g kind ()
-updateGraphEdge orderList newTopOrder = do
-    let newOrderListM = replaceSubtractedOrder orderList newTopOrder
+    -> Query.AnyGraphM s kind ()
+updateGraphEdge orderListEdge newTopOrder = do
+    let newOrderListM orderList = replaceSubtractedOrder orderList newTopOrder
     graph <- BF.getGraph -- HACK: Just to make things work for now (before we improve the algorithm)
     -- TODO: use BellmanFord "remove/updateEdge"
-    case newOrderListM of
-        Nothing           -> DG.removeEdge graph (B.Tagged orderList)
-        Just newOrderList -> DG.insertEdge graph (B.Tagged newOrderList)
+    case newOrderListM (DG.eMeta orderListEdge) >>= \so -> Just (fmap (const so) orderListEdge) of
+        Nothing           -> lift $ DG.removeEdge graph (B.Tagged <$> fromSortedOrders orderListEdge)
+        Just newOrderList -> lift $ DG.updateEdge graph (B.Tagged <$> fromSortedOrders newOrderList)
 
 replaceSubtractedOrder
     :: B.SortedOrders       -- List of sorted orders, with old order at the head
