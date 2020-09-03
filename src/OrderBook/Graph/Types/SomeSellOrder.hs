@@ -11,10 +11,12 @@
 {-# LANGUAGE FunctionalDependencies #-}
 module OrderBook.Graph.Types.SomeSellOrder
 ( DG.DirectedEdge(..)
-, GE.WeightedEdge(..)
 , Currency
 , SomeSellOrder'(..)
 , SomeSellOrder
+, CompactOrder'(..)
+, CompactOrder
+, toCompactOrder
 , NumType
 )
 where
@@ -23,7 +25,6 @@ import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types.Currency
 
 import qualified Data.Graph.Digraph                         as DG
-import qualified Data.Graph.Edge                            as GE
 import qualified Data.Text                                  as T
 
 
@@ -58,10 +59,25 @@ instance PrettyVal SomeSellOrder where
     prettyVal sso =
         prettyVal (fmap realToFrac sso :: SomeSellOrder' Double)
 
-instance DG.DirectedEdge (SomeSellOrder' numType) Currency where
+instance DG.DirectedEdge (SomeSellOrder' numType) Currency (CompactOrder' numType) where
     -- We move in the opposite direction of the seller
     fromNode = soQuote
     toNode = soBase
+    metaData o = CompactOrder' (soPrice o) (soQty o) (soVenue o)
 
-instance GE.WeightedEdge (SomeSellOrder' numType) Currency numType where
-    weight = soPrice
+-- | An order without "base" and "quote".
+-- Useful in a context where "base" and "quote" are implied,
+--  e.g. as edges in a graph where a vertex signifies base/quote.
+data CompactOrder' numType = CompactOrder'
+    { coPrice :: numType
+    , coQty   :: numType
+    , coVenue :: T.Text
+    } deriving (Eq, Show, Read, Ord, Functor, Generic)
+
+type CompactOrder = CompactOrder' NumType
+
+instance DG.HasWeight CompactOrder Double where
+    weight = log . fromRational . coPrice
+
+toCompactOrder :: SomeSellOrder' numType -> CompactOrder' numType
+toCompactOrder o = CompactOrder' (soPrice o) (soQty o) (soVenue o)

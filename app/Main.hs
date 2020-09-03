@@ -20,7 +20,6 @@ import           OrderBook.Graph.Types.Book                 (OrderBook)
 import qualified OrderBook.Graph                            as Lib
 
 import qualified Control.Monad.ST                           as ST
-import qualified Data.Graph.Digraph                         as DG
 import           Data.List                                  (sortBy, (\\), sortOn)
 import           Data.Ord                                   (comparing)
 
@@ -44,7 +43,7 @@ main = Opt.withOptions $ \options ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
         orderBooks :: [OrderBook numType] <- Lib.readOrdersFile
             (Opt.logger options) (toRational $ Opt.maxSlippage options) inputFile
-        graphInfo  <- ST.stToIO $ DG.withGraph (Lib.buildGraph orderBooks)
+        (graphInfo, _)  <- ST.stToIO $ Lib.buildGraph orderBooks
         let executionCryptoList = mkExecutions options graphInfo inputFile orderBooks
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of
