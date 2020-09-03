@@ -3,8 +3,6 @@ resolver: lts-14.0
 extra-deps:
   - git: https://github.com/runeksvendsen/orderbook.git
     commit: 1cfe64aeb59ddebcfb0b8353f82457d16766fa36
-  - git: https://github.com/runeksvendsen/impure-containers.git
-    commit: 0f00dc9a617d5312b6fe5e9ddb9c2b4b9d0afdaf
   - git: https://github.com/runeksvendsen/bellman-ford.git
     commit: 8e72e83a1cc29ba99ab171676d1c50a77d507ca1
   - git: https://github.com/runeksvendsen/mono-traversable.git
