@@ -42,26 +42,18 @@ match bo =
     src = fromString $ symbolVal (Proxy :: Proxy quote)
     dst = fromString $ symbolVal (Proxy :: Proxy base)
 
--- | NB: 'BuyOrder' is only used to specify 'src' currency.
---   No other information from the 'BuyOrder' is used.
+-- | Find all arbitrages that are reachable from the specified 'Currency'.
 arbitrages
-    :: forall s base quote.
-       (KnownSymbol base, KnownSymbol quote)
-    => BuyOrder base quote
+    :: Currency -- ^ Start here
+    -- ^ Returns the arbitrages plus a graph from which these arbitrages have been removed
     -> Query.ArbGraphM s (B.SellOrderGraph s "buy", [SomeSellOrder])
-arbitrages _ = do
-    mr <- queryUpdateGraph unlimitedBuyOrder (Query.arbitrage src)
+arbitrages src = do
+    mr <- queryUpdateGraph unlimited (Query.arbitrage src)
     g <- BF.getGraph
     return (unsafeCoerce g, reverse $ mrOrders mr)
-  where
-    src = fromString $ symbolVal (Proxy :: Proxy quote)
-    unlimitedBuyOrder :: BuyOrder base quote
-    unlimitedBuyOrder = unlimited
 
 queryUpdateGraph
-    :: forall s base quote kind.
-       (KnownSymbol base, KnownSymbol quote)
-    => BuyOrder base quote
+    :: BuyOrder base quote
     -> Query.AnyGraphM s kind (Maybe Query.BuyPath)
     -> Query.AnyGraphM s kind MatchResult
 queryUpdateGraph bo queryGraph =

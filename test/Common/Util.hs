@@ -74,7 +74,8 @@ fromSellOrder venue OB.Order{..} = SomeSellOrder'
 
 -- |
 assertMatchedOrders
-    :: ( KnownSymbol base
+    :: forall base quote.
+       ( KnownSymbol base
        , KnownSymbol quote
        )
     => [Lib.SomeSellOrder]          -- ^ Input sell orders
@@ -85,10 +86,13 @@ assertMatchedOrders sellOrders buyOrder f = void $ do
     shuffledSellOrders <- Shuffle.shuffleM sellOrders
     matchedOrders <- ST.stToIO $ do
         mGraph <- Lib.buildFromOrders shuffledSellOrders
-        (buyGraph, _) <- Lib.runArb mGraph $ Lib.arbitrages buyOrder
+        (buyGraph, _) <- Lib.runArb mGraph $ Lib.arbitrages base >> Lib.arbitrages quote
         Lib.runMatch buyGraph $ Lib.match buyOrder
     assertAscendingPriceSorted matchedOrders
     f (merge matchedOrders)
+  where
+    quote = fromString $ symbolVal (Proxy :: Proxy quote)
+    base = fromString $ symbolVal (Proxy :: Proxy base)
 
 assertAscendingPriceSorted
     :: [Lib.SomeSellOrder]

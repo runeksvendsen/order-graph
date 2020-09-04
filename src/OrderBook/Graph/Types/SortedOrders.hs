@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -20,7 +21,7 @@ import qualified Data.Tagged                                as Tag
 
 
 newtype CompactOrderList = CompactOrderList { getCompactOrders :: NE.NonEmpty CompactOrder }
-    deriving (Eq, Show, Generic)
+    deriving (Eq, Show, Generic, NFData)
 
 instance DG.HasWeight CompactOrderList Double where
     weight = DG.weight . NE.head . getCompactOrders

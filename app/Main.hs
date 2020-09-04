@@ -43,8 +43,8 @@ main = Opt.withOptions $ \options ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
         orderBooks :: [OrderBook numType] <- Lib.readOrdersFile
             (Opt.logger options) (toRational $ Opt.maxSlippage options) inputFile
-        (graphInfo, _)  <- ST.stToIO $ Lib.buildGraph orderBooks
-        let executionCryptoList = mkExecutions options graphInfo inputFile orderBooks
+        (graphInfo, graph) <- ST.stToIO $ Lib.buildBuyGraph (Opt.logger options) orderBooks
+        let executionCryptoList = mkExecutions options graphInfo inputFile graph
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of
                     Opt.Analyze ->
@@ -119,9 +119,9 @@ data Execution numType = Execution
       -- ^ Input order book file
     , graphInfo     :: Lib.GraphInfo numType
       -- ^ Information about the graph
-    , inputData     :: [OrderBook numType]
-      -- ^ Order books read from 'inputFile'
-    , mainRun       :: [OrderBook numType] -> IO ([SomeSellOrder], [SomeSellOrder])
+    , inputData     :: Lib.IBuyGraph
+      -- ^ Graph without arbitrages. Built from order books read from 'inputFile'.
+    , mainRun       :: Lib.IBuyGraph -> IO ([SomeSellOrder], [SomeSellOrder])
       -- ^ Process input data
     }
 
@@ -130,17 +130,17 @@ mkExecutions
     => Opt.Options
     -> Lib.GraphInfo numType
     -> FilePath
-    -> [OrderBook numType]
+    -> Lib.IBuyGraph
     -> [(Execution numType, Lib.Currency)]
-mkExecutions options graphInfo inputFile orderBooks = do
+mkExecutions options graphInfo inputFile graph = do
     map (\crypto -> (mkExecution crypto, crypto)) allCryptos
   where
     allCryptos = case Opt.crypto options of
             Opt.OneOrMore cryptos -> NE.toList cryptos
             Opt.AllCryptos    -> Lib.giVertices graphInfo \\ [numeraire]
     mkExecution crypto =
-        Execution inputFile graphInfo orderBooks (mainRun crypto)
-    mainRun crypto orders =
+        Execution inputFile graphInfo graph (mainRun crypto)
+    mainRun crypto orders = ST.stToIO $
         Lib.withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
             Lib.matchOrders (Opt.logger options) buyOrder sellOrder orders
     numeraire   = Opt.numeraire options
@@ -327,13 +327,13 @@ benchSingle
     :: NFData numType
     => FilePath                     -- ^ Order book input file name
     -> Lib.GraphInfo numType
-    -> [OrderBook numType]
-    -> ([OrderBook numType] -> IO ())   -- ^ Run algorithm
+    -> Lib.IBuyGraph
+    -> (Lib.IBuyGraph -> IO ())   -- ^ Run algorithm
     -> IO Criterion.Benchmark
-benchSingle obFile Lib.GraphInfo{..} orderBooks action = do
+benchSingle obFile Lib.GraphInfo{..} graph action = do
     let name = obFile ++ " V=" ++ show (length giVertices) ++ " E=" ++ show giEdgeCount
     return $ Criterion.bench name $
-        Criterion.perBatchEnv (const $ return orderBooks) action
+        Criterion.perBatchEnv (const $ return graph) action
 
 writeChartFile
     :: Opt.Options

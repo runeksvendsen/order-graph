@@ -3,8 +3,9 @@
 module OrderBook.Graph
 ( withBidsAsksOrder
 , readOrdersFile
-, buildGraph
+, buildBuyGraph
 , GraphInfo(..)
+, IBuyGraph
 , matchOrders
   -- * Re-exports
 , module Export
@@ -14,19 +15,18 @@ where
 import Prelude hiding (log)
 import OrderBook.Graph.Internal.Prelude hiding (log)
 
-import OrderBook.Graph.Build (SellOrderGraph)
+import OrderBook.Graph.Build (CompactOrderList, Tagged)
 import OrderBook.Graph.Exchange (invertSomeSellOrder)
 import qualified OrderBook.Graph.Types.Book as Book
 import qualified Data.Graph.Digraph as DG
 
 import Data.Text (Text)
 import Data.List (nub)
-import qualified Control.Monad.ST as ST
 import qualified Data.Aeson as Json
 
 -- Exports
 import OrderBook.Graph.Types as Export
-import OrderBook.Graph.Build as Export (build, buildFromOrders)
+import OrderBook.Graph.Build as Export (build, buildFromOrders, SellOrderGraph)
 import OrderBook.Graph.Match as Export (unlimited, BuyOrder, match, arbitrages)
 import OrderBook.Graph.Run as Export (runArb, runMatch)
 
@@ -77,13 +77,17 @@ readOrdersFile log maxSlippage filePath = do
 
 buildGraph
     :: (Real numType)
-    => [OrderBook numType]                         -- ^ Sell orders
+    => (forall m. Monad m => String -> m ())
+    -> [OrderBook numType]                         -- ^ Sell orders
     -> ST s (GraphInfo numType, SellOrderGraph s "arb")
-buildGraph sellOrders = do
+buildGraph log sellOrders = do
+    log "Building graph..."
     graph <- build sellOrders
     currencies <- DG.vertexLabels graph
     edgeCount <- DG.edgeCount graph
     let gi = GraphInfo { giVertices = currencies, giEdgeCount = edgeCount }
+    log $ "Vertex count: " ++ show (length currencies)
+    log $ "Edge count:   " ++ show edgeCount
     return (gi, graph)
 
 -- NB: Phantom 'numType' is number type of input order book
@@ -92,35 +96,46 @@ data GraphInfo numType = GraphInfo
     , giEdgeCount   :: Word
     }
 
+-- | Find and remove all arbitrages from the input graph.
+findArbitrages
+    :: (forall m. Monad m => String -> m ())
+    -> GraphInfo numType
+    -> SellOrderGraph s "arb"
+    -> ST s (SellOrderGraph s "buy")
+findArbitrages log gi graph = do
+    runArb graph $ do
+        log "Finding arbitrages..."
+        let findArbs (_, arbsAccum) src = do
+                (buyGraph, arbs) <- arbitrages src
+                return (buyGraph, arbs : arbsAccum)
+        (buyGraph, arbs) <- foldM findArbs (error "Empty graph", []) (giVertices gi)
+        log $ unlines ["Arbitrages:", pp $ concat arbs]
+        return buyGraph
+
+type IBuyGraph = (DG.IDigraph Currency (Tagged "buy" CompactOrderList))
+
+buildBuyGraph
+    :: Real numType
+    => (forall m. Monad m => String -> m ())
+    -> [OrderBook numType]
+    -> ST s (GraphInfo numType, IBuyGraph)
+buildBuyGraph log sellOrders = do
+    (gi, mGraph) <- buildGraph log sellOrders
+    buyGraph <- DG.freeze =<< findArbitrages log gi mGraph
+    return (gi, buyGraph)
+
 matchOrders
-    :: (KnownSymbol src, KnownSymbol dst, Real numType)
+    :: (KnownSymbol src, KnownSymbol dst)
     => (forall m. Monad m => String -> m ())
     -> BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
     -> BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
-    -> [OrderBook numType]      -- ^ Input orders
-    -> IO ([SomeSellOrder], [SomeSellOrder])    -- ^ (bids, asks)
-matchOrders log buyOrder sellOrder sellOrders =
-    ST.stToIO $ do
-        log "Building graph..."
-        (graphInfo, mGraph) <- buildGraph sellOrders
-        let vertexCount = length (giVertices graphInfo)
-            edgeCount = giEdgeCount graphInfo
-        log $ "Vertex count: " ++ show vertexCount
-        log $ "Edge count:   " ++ show edgeCount
-        -- Arbitrages
-        buyGraph <- runArb mGraph $ do
-            log "Finding arbitrages..."
-            -- Asks
-            (_, arbsSell) <- arbitrages sellOrder
-            (buyGraph, arbsBuy) <- arbitrages buyOrder
-            let arbs = arbsSell ++ arbsBuy
-            -- Finds all arbitrages (regardless of "src" vertex)
-            log $ unlines ["Arbitrages:", pp arbs]
-            return buyGraph
-        -- Match
-        runMatch buyGraph $ do
-            log "Matching sell order..."
-            bids <- map invertSomeSellOrder <$> match sellOrder
-            log "Matching buy order..."
-            asks <- match buyOrder
-            return (bids, asks)
+    -> IBuyGraph
+    -> ST s ([SomeSellOrder], [SomeSellOrder])
+matchOrders log buyOrder sellOrder buyGraph = do
+    buyGraph' <- DG.thaw buyGraph
+    runMatch buyGraph' $ do
+        log "Matching sell order..."
+        bids <- map invertSomeSellOrder <$> match sellOrder
+        log "Matching buy order..."
+        asks <- match buyOrder
+        return (bids, asks)
