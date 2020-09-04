@@ -25,6 +25,9 @@ newtype CompactOrderList = CompactOrderList { getCompactOrders :: NE.NonEmpty Co
 instance DG.HasWeight CompactOrderList Double where
     weight = DG.weight . NE.head . getCompactOrders
 
+instance DG.HasWeight (Tag.Tagged kind CompactOrderList) Double where
+    weight = DG.weight . Tag.unTagged
+
 toSortedOrders :: DG.IdxEdge Currency CompactOrderList -> DG.IdxEdge Currency SortedOrders
 toSortedOrders idxEdge =
     let quote = fromNode idxEdge

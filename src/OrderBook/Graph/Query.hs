@@ -36,9 +36,6 @@ type AnyGraphM s kind = BF.BF s Currency (B.Tagged kind CompactOrderList)
 type ArbGraphM s = BF.BF s Currency (B.Tagged "arb" CompactOrderList)
 type BuyGraphM s = BF.BF s Currency (B.Tagged "buy" CompactOrderList)
 
-instance DG.HasWeight (Tagged kind CompactOrderList) Double where
-    weight = DG.weight . B.unTagged
-
 newtype BuyPath = BuyPath
     { bpOrders  :: NonEmpty (DG.IdxEdge Currency CompactOrderList)
     } deriving (Eq, Generic)

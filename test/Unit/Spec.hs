@@ -98,7 +98,7 @@ merge2 =
     TestCase $ Util.merge inputOrders `shouldBe` outputOrders
   where
     templateOrder = Lib.SomeSellOrder'
-        { soQty   = 0
+        { soQty   = 0 :: Int
         , soPrice = 0
         , soBase  = "base"
         , soQuote = "quote"
@@ -127,7 +127,7 @@ merge3A =
     TestCase $ Util.merge inputOrders `shouldBe` outputOrders
   where
     templateOrder = Lib.SomeSellOrder'
-        { soQty   = 0
+        { soQty   = 0 :: Int
         , soPrice = 0
         , soBase  = "base"
         , soQuote = "quote"
@@ -152,7 +152,7 @@ merge3B =
     TestCase $ Util.merge inputOrders `shouldBe` outputOrders
   where
     templateOrder = Lib.SomeSellOrder'
-        { soQty   = 0
+        { soQty   = 0 :: Int
         , soPrice = 0
         , soBase  = "base"
         , soQuote = "quote"

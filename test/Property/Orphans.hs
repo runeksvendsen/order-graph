@@ -23,10 +23,10 @@ instance (KnownSymbol base, KnownSymbol quote, Monad m) =>
          midPrice <- series
          let buyOrderProp o  = oPrice o < midPrice
              sellOrderProp o = oPrice o > midPrice
-         buyOrders  <- SS.series `suchThat` all buyOrderProp
-         sellOrders <- SS.series `suchThat` all sellOrderProp
-         return $ OrderBook (BuySide . Vec.fromList $ sortBy (comparing Down) buyOrders)
-                            (SellSide . Vec.fromList $ sort sellOrders)
+         buyOrders'  <- SS.series `suchThat` all buyOrderProp
+         sellOrders' <- SS.series `suchThat` all sellOrderProp
+         return $ OrderBook (BuySide . Vec.fromList $ sortBy (comparing Down) buyOrders')
+                            (SellSide . Vec.fromList $ sort sellOrders')
 
 newtype NonEmpty a = NonEmpty a deriving (Eq, Show)
 
@@ -36,10 +36,10 @@ instance (KnownSymbol base, KnownSymbol quote, Monad m) =>
          midPrice <- series
          let buyOrderProp o  = oPrice o < midPrice
              sellOrderProp o = oPrice o > midPrice
-         buyOrders  <- SS.series `suchThat` all buyOrderProp `suchThat` (not . null)
-         sellOrders <- SS.series `suchThat` all sellOrderProp `suchThat` (not . null)
-         return $ NonEmpty $ OrderBook (BuySide . Vec.fromList $ sortBy (comparing Down) buyOrders)
-                                       (SellSide . Vec.fromList $ sort sellOrders)
+         buyOrders'  <- SS.series `suchThat` all buyOrderProp `suchThat` (not . null)
+         sellOrders' <- SS.series `suchThat` all sellOrderProp `suchThat` (not . null)
+         return $ NonEmpty $ OrderBook (BuySide . Vec.fromList $ sortBy (comparing Down) buyOrders')
+                                       (SellSide . Vec.fromList $ sort sellOrders')
 
 
 instance (KnownSymbol base, KnownSymbol quote, Monad m) =>
@@ -73,10 +73,10 @@ instance (KnownSymbol base, KnownSymbol quote) =>
             QC.Arbitrary (OrderBook venue base quote) where
    arbitrary = do
       midPrice   <- QC.arbitrary
-      buyOrders  <- QC.listOf $ QC.arbitrary `QC.suchThat` (\o -> oPrice o < midPrice)
-      sellOrders <- QC.listOf $ QC.arbitrary `QC.suchThat` (\o -> oPrice o > midPrice)
-      return $ OrderBook (BuySide $ Vec.fromList (sortBy (comparing Down) buyOrders))
-                         (SellSide $ Vec.fromList (sort sellOrders))
+      buyOrders'  <- QC.listOf $ QC.arbitrary `QC.suchThat` (\o -> oPrice o < midPrice)
+      sellOrders' <- QC.listOf $ QC.arbitrary `QC.suchThat` (\o -> oPrice o > midPrice)
+      return $ OrderBook (BuySide $ Vec.fromList (sortBy (comparing Down) buyOrders'))
+                         (SellSide $ Vec.fromList (sort sellOrders'))
 
 instance QC.Arbitrary (Order base quote) where
    arbitrary = Order <$> QC.arbitrary `QC.suchThat` (> Money.dense' 0)

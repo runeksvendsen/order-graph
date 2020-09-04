@@ -15,21 +15,17 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Internal.Util              (merge)
 import qualified OrderBook.Graph                            as Lib
-import qualified Data.Graph.Digraph                         as DG
 import           Test.Hspec.Expectations.Pretty
 
 import qualified Control.Monad.ST                           as ST
 import qualified System.Random.Shuffle                      as Shuffle
 
-
-import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types.SomeSellOrder        (SomeSellOrder, SomeSellOrder'(..))
 import qualified OrderBook.Types                            as OB
 
 import qualified Money
 import qualified Data.Text                                  as T
 import qualified Data.Vector                                as Vec
-import qualified Data.List.NonEmpty                         as NE
 import           Data.String                                (fromString)
 import           GHC.TypeLits                               (KnownSymbol, symbolVal)
 import           Data.Proxy                                 (Proxy(..))

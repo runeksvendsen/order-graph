@@ -12,8 +12,6 @@ import qualified Test.Hspec.Runner                  as Run
 import           Test.Hspec                         (parallel)
 
 
-scDepth = 4
-
 main :: IO ()
 main = do
     void $ runTestTT Unit.tests
@@ -23,3 +21,4 @@ main = do
         Match.spec
   where
     runHspec = Run.hspecWith Run.defaultConfig { Run.configSmallCheckDepth = scDepth }
+    scDepth = 4
