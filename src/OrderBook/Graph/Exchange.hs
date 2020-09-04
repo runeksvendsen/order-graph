@@ -129,9 +129,9 @@ subtractExchange
     => Qty' numType src
     -> Order' numType src dst
     -> (Qty' numType dst, Order' numType src dst)
-subtractExchange qty (Order' oQty oPrice) =
-    ( exchange qty oPrice
-    , Order' (oQty-qty) oPrice
+subtractExchange qty (Order' oQty' oPrice') =
+    ( exchange qty oPrice'
+    , Order' (oQty'-qty) oPrice'
     )
 
 withSomeSellOrder

@@ -8,7 +8,6 @@ import           OrderBook.Graph.Internal.Prelude
 import qualified OrderBook.Graph.Build                      as B
 import qualified OrderBook.Graph.Query                      as Q
 import qualified Data.Graph.BellmanFord                     as BF
-import qualified Control.Monad.ST                           as ST
 
 
 runArb

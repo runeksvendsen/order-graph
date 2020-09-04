@@ -48,7 +48,7 @@ arbitrages
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
     -> Query.ArbGraphM s g (B.SellOrderGraph s g "buy", [SomeSellOrder])
-arbitrages bo = do
+arbitrages _ = do
     mr <- queryUpdateGraph unlimitedBuyOrder (Query.arbitrage src)
     g <- BF.getGraph
     return (unsafeCoerce g, reverse $ mrOrders mr)
