@@ -8,25 +8,26 @@ import           OrderBook.Graph.Internal.Prelude
 import qualified OrderBook.Graph.Build                      as B
 import qualified OrderBook.Graph.Query                      as Q
 import qualified Data.Graph.BellmanFord                     as BF
+import qualified Data.Graph.Digraph                         as DG
 
 
 runArb
-    :: B.SellOrderGraph s g "arb"
-    -> Q.ArbGraphM s g a
+    :: B.SellOrderGraph s "arb"
+    -> Q.ArbGraphM s a
     -> ST s a
 runArb graph =
     BF.runBF graph sumWeight
 
 runMatch
-    :: B.SellOrderGraph s g "buy"
-    -> Q.BuyGraphM s g a
+    :: B.SellOrderGraph s "buy"
+    -> Q.BuyGraphM s a
     -> ST s a
 runMatch graph =
     BF.runBF graph sumWeight
 
 sumWeight
-    :: BF.WeightedEdge e v Double
+    :: DG.HasWeight e Double
     => Double
     -> e
     -> Double
-sumWeight weight' edge = weight' + BF.weight edge
+sumWeight weight' edge = weight' + DG.weight edge

@@ -10,6 +10,8 @@ module OrderBook.Graph.Internal.Prelude
 , pprint
 , largeRational
 , uppercase
+, T.Text
+, lift
 )
 
 where
@@ -37,6 +39,8 @@ import Control.Exception                    as MoreStuff    (assert)
 import Debug.Trace                          as MoreStuff
 import Data.Int                             (Int64)
 import Data.Char                            (toUpper)
+import qualified Data.Text                  as T
+import Protolude                            (lift)
 
 
 pp :: PrettyVal a => a -> String
