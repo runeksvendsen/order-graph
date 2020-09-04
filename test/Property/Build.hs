@@ -41,12 +41,14 @@ addEdgesCheckOutgoing
     -> Expectation
 addEdgesCheckOutgoing orders = do
     shuffledOrders <- Shuffle.shuffleM orders
-    outgoingEdges <- ST.stToIO $ DG.withGraph $ \graph -> do
-        Build.buildFromOrders graph shuffledOrders
+    outgoingEdges <- ST.stToIO $ do
+        graph <- Build.buildFromOrders shuffledOrders
         foldM (collectOutgoing graph) [] =<< DG.vertices graph
-    let graphOrders = concat $ Build.toList . Build.unTagged <$> concat outgoingEdges
+    let graphOrders = concat . map (Build.toList . fromIdxEdge) $ concat outgoingEdges
     sort graphOrders `shouldBe` sort orders
   where
+    fromIdxEdge :: DG.IdxEdge Build.Currency (Build.Tagged a Build.CompactOrderList) -> Build.SortedOrders
+    fromIdxEdge = DG.eMeta . Build.toSortedOrders . fmap Build.unTagged
     collectOutgoing graph accum vertex = do
         outEdges <- DG.outgoingEdges graph vertex
         return $ outEdges : accum

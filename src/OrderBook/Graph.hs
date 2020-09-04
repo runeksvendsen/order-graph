@@ -13,18 +13,22 @@ where
 
 import Prelude hiding (log)
 import OrderBook.Graph.Internal.Prelude hiding (log)
-import OrderBook.Graph.Types as Export
-import OrderBook.Graph.Build
-import OrderBook.Graph.Exchange
-import OrderBook.Graph.Match
-import OrderBook.Graph.Run
+
+import OrderBook.Graph.Build (SellOrderGraph)
+import OrderBook.Graph.Exchange (invertSomeSellOrder)
 import qualified OrderBook.Graph.Types.Book as Book
 import qualified Data.Graph.Digraph as DG
 
+import Data.Text (Text)
 import Data.List (nub)
 import qualified Control.Monad.ST as ST
 import qualified Data.Aeson as Json
 
+-- Exports
+import OrderBook.Graph.Types as Export
+import OrderBook.Graph.Build as Export (build, buildFromOrders)
+import OrderBook.Graph.Match as Export (unlimited, BuyOrder, match, arbitrages)
+import OrderBook.Graph.Run as Export (runArb, runMatch)
 
 
 -- |

@@ -8,7 +8,7 @@ module OrderBook.Graph.Build
 ( module OrderBook.Graph.Types
 , SellOrderGraph
 , SortedOrders, first, rest, prepend, toList, replaceHead
-, CompactOrderList
+, CompactOrderList, toSortedOrders, fromSortedOrders
 , Tagged(..)
 , build
 , buildFromOrders
