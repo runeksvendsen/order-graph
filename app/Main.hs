@@ -48,7 +48,7 @@ main = Opt.withOptions $ \options ->
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of
                     Opt.Analyze ->
-                        (Just . showExecutionResult) <$> analyze crypto options execution
+                        (Just . showExecutionResult options) <$> analyze crypto options execution
                     Opt.AnalyzeCsv ->
                         (Just . csvExecutionResult) <$> analyze crypto options execution
                     Opt.Visualize outputDir -> do
@@ -182,48 +182,42 @@ analyze cryptocurrency Opt.Options{..} Execution{..} = do
         , liMaxSlippage     = maxSlippage
         , liCrypto          = cryptocurrency
         , liNumeraire       = numeraire
-        , liLiquidityInfo   = toLiquidityInfo maxNumPaths (buyOrders, sellOrders)
+        , liLiquidityInfo   = toLiquidityInfo (buyOrders, sellOrders)
         }
 
 toLiquidityInfo
-    :: Int
-    -> ([SomeSellOrder' Lib.NumType], [SomeSellOrder' Lib.NumType])
+    :: ([SomeSellOrder' Lib.NumType], [SomeSellOrder' Lib.NumType])
     -> Maybe LiquidityInfo
-toLiquidityInfo _ ([], []) = Nothing
-toLiquidityInfo maxNumPaths (buyOrders, sellOrders) = Just $
-    LiquidityInfo
+toLiquidityInfo (buyOrders, sellOrders) = do
+    allOrders <- NE.nonEmpty $ buyOrders ++ sellOrders
+    Just $ LiquidityInfo
         { liBaseQuote       = ordersMarket allOrders
-        , liBuyLiquidity    = toSideLiquidity maxNumPaths sellOrders
-        , liSellLiquidity   = toSideLiquidity maxNumPaths buyOrders
+        , liBuyLiquidity    = NE.nonEmpty sellOrders >>= toSideLiquidity
+        , liSellLiquidity   = NE.nonEmpty buyOrders >>= toSideLiquidity
         }
   where
-    allOrders = NE.fromList $ buyOrders ++ sellOrders
     ordersMarket nonEmptyOrders = orderMarket (NE.head nonEmptyOrders)
     orderMarket order = (Lib.soBase order, Lib.soQuote order)
 
 toSideLiquidity
-    :: Int
-    -> [SomeSellOrder' Lib.NumType]
+    :: NE.NonEmpty (SomeSellOrder' Lib.NumType)
     -> Maybe SideLiquidity
-toSideLiquidity _ [] = Nothing
-toSideLiquidity maxNumPaths _
-    | maxNumPaths <= 0 = Nothing
-toSideLiquidity maxNumPaths nonEmptyOrders = Just $
-    let paths = take maxNumPaths $ sortByQuantity $ map quoteSumVenue (groupByVenue nonEmptyOrders)
+toSideLiquidity nonEmptyOrders = Just $
+    let paths = NE.fromList $ sortByQuantity $ map quoteSumVenue (groupByVenue $ NE.toList nonEmptyOrders)
     in SideLiquidity
         { liLiquidity    = quoteSum nonEmptyOrders
-        , liPriceRange   = firstLastPrice $ NE.fromList nonEmptyOrders
-        , liPaths        = NE.fromList paths    -- Will not fail since "maxNumPaths > 0"
+        , liPriceRange   = firstLastPrice nonEmptyOrders
+        , liPaths        = paths
         }
   where
     firstLastPrice lst =
         let priceSorted = NE.sortBy (comparing soPrice) lst
         in PriceRange (soPrice $ NE.head priceSorted) (soPrice $ NE.last priceSorted)
     quoteSumVenue orders =
-        (quoteSum $ NE.toList orders, priceRange orders, soVenue $ NE.head orders)
+        (quoteSum orders, priceRange orders, soVenue $ NE.head orders)
     groupByVenue = NE.groupBy (\a b -> soVenue a == soVenue b) . sortOn soVenue
     sortByQuantity = sortBy (flip $ comparing $ \(quoteSum, _, _) -> quoteSum)
-    quoteSum orderList = sum $ map quoteQuantity orderList
+    quoteSum orderList = sum $ NE.map quoteQuantity orderList
     quoteQuantity order = Lib.soQty order * Lib.soPrice order
     priceRange
         :: NE.NonEmpty SomeSellOrder
@@ -232,8 +226,8 @@ toSideLiquidity maxNumPaths nonEmptyOrders = Just $
         let priceList = NE.map soPrice soList
         in PriceRange (minimum priceList) (maximum priceList)
 
-showExecutionResult :: ExecutionResult -> String
-showExecutionResult ExecutionResult{..}
+showExecutionResult :: Opt.Options -> ExecutionResult -> String
+showExecutionResult Opt.Options{..} ExecutionResult{..}
     | Nothing <- liLiquidityInfo = unlines $
         logHeader
         ++
@@ -247,27 +241,20 @@ showExecutionResult ExecutionResult{..}
         [ logLine "buy liquidity" $ showAmount quoteCurrency (liquidity liBuyLiquidity)
         , logLine "sell liquidity" $ showAmount quoteCurrency (liquidity liSellLiquidity)
         , logLine "SUM" $ showAmount quoteCurrency (liquidity liBuyLiquidity + liquidity liSellLiquidity)
-        ]
-        ++
-        catMaybes
-            [ fmap (logLine "Buy price (low/high)" . showPriceRange) (liPriceRange <$> liBuyLiquidity)
-            , fmap (logLine "Sell price (low/high)" . showPriceRange) (liPriceRange <$> liSellLiquidity)
-            ]
-        ++
-        [ lineSeparator
-        , "Buy paths:"
-        , ""
-        , maybe "" (showPaths quoteCurrency) (liPaths <$> liBuyLiquidity)
+        , logLine "Buy price (low/high)"  $ maybe "-" (showPriceRange) (liPriceRange <$> liBuyLiquidity)
+        , logLine "Sell price (low/high)" $ maybe "-" (showPriceRange) (liPriceRange <$> liSellLiquidity)
         , lineSeparator
-        , "Sell paths:"
-        , ""
-        , maybe "" (showPaths quoteCurrency) (liPaths <$> liSellLiquidity)
         ]
         ++
-        [ lineSeparator ]
+        if maxNumPaths > 0
+            then prettyPrintPaths quoteCurrency "Buy" liBuyLiquidity
+                 ++ prettyPrintPaths quoteCurrency "Sell" liSellLiquidity
+            else []
   where
+    prettyPrintPaths quoteCurrency strSide liSide =
+        [ strSide <> " paths:", "" , maybe "<no paths>" (showPaths quoteCurrency) (liPaths <$> liSide), lineSeparator ]
     showPaths quoteCurrency paths =
-        unlines . NE.toList $ NE.map (pathSumRange quoteCurrency) paths
+        unlines $ map (pathSumRange quoteCurrency) (NE.take maxNumPaths paths)
     liquidity = fromMaybe 0 . fmap liLiquidity
     showFloatSamePrecision num  = printf (printf "%%.%df" $ digitsAfterPeriod num) num
     digitsAfterPeriod num =
