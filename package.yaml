@@ -47,7 +47,6 @@ executables:
     - order-graph
     - bellman-ford
     - logging
-    - unliftio
     - unordered-containers
     - safe-money
     - vector
@@ -59,6 +58,7 @@ executables:
     - cassava
     - text-format
     - text
+    - parallel
 
 tests:
   order-graph-test:

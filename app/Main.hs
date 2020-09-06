@@ -33,7 +33,7 @@ import qualified Criterion
 import qualified Criterion.Main                             as Criterion
 import qualified Criterion.Main.Options                     as Criterion
 import qualified Criterion.Types                            as Criterion
-import qualified UnliftIO.Async                             as Async
+import qualified Control.Parallel.Strategies                as Par
 import qualified Data.Csv.Incremental                       as Csv
 
 
@@ -45,21 +45,21 @@ main = Opt.withOptions $ \options ->
             (Opt.logger options) (toRational $ Opt.maxSlippage options) inputFile
         (graphInfo, graph) <- ST.stToIO $ Lib.buildBuyGraph (Opt.logger options) orderBooks
         let executionCryptoList = mkExecutions options graphInfo inputFile graph
-        logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
-            case Opt.mode options of
-                    Opt.Analyze ->
-                        (Just . showExecutionResult options) <$> analyze crypto options execution
-                    Opt.AnalyzeCsv ->
-                        (Just . csvExecutionResult) <$> analyze crypto options execution
-                    Opt.Visualize outputDir -> do
-                        visualize options crypto outputDir execution
-                        return Nothing
-                    Opt.Benchmark -> do
-                        benchmark Nothing execution
-                        return Nothing
-                    Opt.BenchmarkCsv csvOut -> do
-                        benchmark (Just csvOut) execution
-                        return Nothing
+        let logResult = forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
+                case Opt.mode options of
+                        Opt.Analyze ->
+                            Just . showExecutionResult options $ analyze crypto options execution
+                        Opt.AnalyzeCsv ->
+                            Just . csvExecutionResult $ analyze crypto options execution
+                    -- Opt.Visualize outputDir -> do
+                    --     visualize options crypto outputDir execution
+                    --     return Nothing
+                    -- Opt.Benchmark -> do
+                    --     benchmark Nothing execution
+                    --     return Nothing
+                    -- Opt.BenchmarkCsv csvOut -> do
+                    --     benchmark (Just csvOut) execution
+                    --     return Nothing
         forM_ (catMaybes logResult) putStr
   where
     csvExecutionResult er = toS . Csv.encode $
@@ -86,23 +86,26 @@ forAll :: Opt.Mode
           -- ^ Mode
        -> [a]
           -- ^ Input list
-       -> (a -> IO (Maybe String))
+       -> (a -> Maybe String)
           -- ^ Do for all list items; return output
-       -> IO [Maybe String]
+       -> [Maybe String]
           -- ^ All outputs
-forAll  Opt.AnalyzeCsv   =
-            let addCsvHeader = fmap (fmap (Just csvHeader :))
-            in addCsvHeader . concurrent
-forAll  Opt.Analyze         = concurrent
-forAll (Opt.Visualize _)    = concurrent
-forAll  Opt.Benchmark       = sequential
-forAll (Opt.BenchmarkCsv _) = sequential
+-- forAll  Opt.AnalyzeCsv   =
+--             let addCsvHeader = fmap (fmap (Just csvHeader :))
+--             in addCsvHeader . concurrent
+forAll  Opt.Analyze         = flip (Par.parMap Par.rdeepseq)
+-- forAll (Opt.Visualize _)    = concurrent
+-- forAll  Opt.Benchmark       = sequential
+-- forAll (Opt.BenchmarkCsv _) = sequential
 
-concurrent :: [a] -> (a -> IO b) -> IO [b]
-concurrent = flip Async.pooledMapConcurrently
+-- concurrent :: [a] -> (a -> IO b) -> IO [b]
+concurrent input f = Par.parMap Par.rdeepseq f input
 
 sequential :: [a] -> (a -> IO b) -> IO [b]
 sequential = flip mapM
+
+-- parMap' :: Par.Strategy a1 -> (a2 -> a1) -> [a2] -> [a1]
+parMap' strat f = Par.withStrategyIO (Par.parList strat) . map f
 
 csvHeader :: String
 csvHeader = toS . Csv.encode $ Csv.encodeRecord
@@ -121,7 +124,7 @@ data Execution numType = Execution
       -- ^ Information about the graph
     , inputData     :: Lib.IBuyGraph
       -- ^ Graph without arbitrages. Built from order books read from 'inputFile'.
-    , mainRun       :: Lib.IBuyGraph -> IO ([SomeSellOrder], [SomeSellOrder])
+    , mainRun       :: Lib.IBuyGraph -> ([SomeSellOrder], [SomeSellOrder])
       -- ^ Process input data
     }
 
@@ -140,7 +143,7 @@ mkExecutions options graphInfo inputFile graph = do
             Opt.AllCryptos    -> Lib.giVertices graphInfo \\ [numeraire]
     mkExecution crypto =
         Execution inputFile graphInfo graph (mainRun crypto)
-    mainRun crypto orders = ST.stToIO $
+    mainRun crypto orders = ST.runST $
         Lib.withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
             Lib.matchOrders (Opt.logger options) buyOrder sellOrder orders
     numeraire   = Opt.numeraire options
@@ -174,10 +177,10 @@ data SideLiquidity = SideLiquidity
     , liPaths        :: NonEmpty (Lib.NumType, PriceRange Lib.NumType, T.Text)  -- ^ (quantity, price_range, path_description)
     }
 
-analyze :: Lib.Currency -> Opt.Options -> Execution numType -> IO ExecutionResult
-analyze cryptocurrency Opt.Options{..} Execution{..} = do
-    (buyOrders, sellOrders) <- mainRun inputData
-    return $ ExecutionResult
+-- analyze :: Lib.Currency -> Opt.Options -> Execution numType -> IO ExecutionResult
+analyze cryptocurrency Opt.Options{..} Execution{..} =
+    let (buyOrders, sellOrders) = mainRun inputData
+    in ExecutionResult
         { liInputFile       = inputFile
         , liMaxSlippage     = maxSlippage
         , liCrypto          = cryptocurrency
@@ -290,7 +293,7 @@ showExecutionResult Opt.Options{..} ExecutionResult{..}
 
 visualize :: Opt.Options -> Lib.Currency -> FilePath -> Execution numType -> IO ()
 visualize options currency outputDir Execution{..} =
-    mainRun inputData >>= writeChartFile options outFilePath
+    writeChartFile options outFilePath (mainRun inputData)
   where
     mkOutFileName path = FP.takeBaseName path <> "-" <> toS currency <> FP.takeExtension path
     outFilePath = outputDir </> mkOutFileName inputFile
@@ -301,10 +304,10 @@ benchmark
     :: NFData numType
     => Maybe FilePath   -- ^ Write results to CSV file?
     -> Execution numType
-    -> IO ()
+    -> Criterion.Benchmark
 benchmark csvFileM Execution{..} = do
-    benchmark' <- benchSingle inputFile graphInfo inputData (void . mainRun)
-    Criterion.runMode mode [benchmark']
+    benchSingle inputFile graphInfo inputData (void . return . mainRun)
+    -- Criterion.runMode mode [benchmark']
   where
     mode = Criterion.Run config Criterion.Prefix [""]
     config = Criterion.defaultConfig { Criterion.csvFile = csvFileM }
@@ -316,10 +319,10 @@ benchSingle
     -> Lib.GraphInfo numType
     -> Lib.IBuyGraph
     -> (Lib.IBuyGraph -> IO ())   -- ^ Run algorithm
-    -> IO Criterion.Benchmark
+    -> Criterion.Benchmark
 benchSingle obFile Lib.GraphInfo{..} graph action = do
     let name = obFile ++ " V=" ++ show (length giVertices) ++ " E=" ++ show giEdgeCount
-    return $ Criterion.bench name $
+    Criterion.bench name $
         Criterion.perBatchEnv (const $ return graph) action
 
 writeChartFile
