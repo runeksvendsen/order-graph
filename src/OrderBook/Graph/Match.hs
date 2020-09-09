@@ -66,8 +66,18 @@ queryUpdateGraph bo queryGraph =
             Nothing -> return mr
             Just sp -> do
                 let (edgeOrderList, buyPath) = subtractMatchedQty sp
-                forM_ edgeOrderList (uncurry updateGraphEdge)
+                forM_ edgeOrderList $ \(sortedOrders, sellOrder) -> updateGraphEdge sortedOrders sellOrder
                 go (addOrder mr buyPath)
+
+{-
+
+            Just (Query.BuyPath orderPath) -> do
+                   let reverseOrderPath = fmap toSortedOrders (NE.reverse orderPath)
+                let (newEdges, matchedOrder) = subtractMatchedQty (NE.map DG.eMeta reverseOrderPath)
+                forM_ (NE.zip reverseOrderPath newEdges) (uncurry updateGraphEdge)
+                go (addOrder mr matchedOrder)
+
+-}
 
 updateGraphEdge
     :: DG.IdxEdge Currency B.SortedOrders

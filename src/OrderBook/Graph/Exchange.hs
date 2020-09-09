@@ -28,6 +28,8 @@ import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types                  (SomeSellOrder'(..), SomeSellOrder)
 import           OrderBook.Graph.Query                  (ShortestPath(..))
 import qualified OrderBook.Graph.Build                  as B
+import qualified Data.Graph.Digraph                     as DG
+
 import qualified Control.Category                       as Cat
 import           Data.Thrist
 import qualified Data.Text                              as T
@@ -155,8 +157,8 @@ withSomeSellOrders
     -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => NonEmpty B.SortedOrders -> Thrist Order src dst -> r)
     -> r
 withSomeSellOrders (ShortestPath sortedOrders) f' =
-    let revSortedOrders = NE.reverse sortedOrders in
-    go (fmap B.first revSortedOrders) (f' revSortedOrders)
+    let revSortedOrders = NE.reverse $ NE.map (DG.eMeta . B.toSortedOrders) sortedOrders
+    in go (fmap B.first revSortedOrders) (f' revSortedOrders)
   where
     -- Join a list of 'SomeSellOrder' to produce a 'Thrist' parameterized over
     --    the source and destination currency.
