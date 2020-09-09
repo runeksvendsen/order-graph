@@ -17,8 +17,9 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Match.Types
 import           OrderBook.Graph.Build                      (Currency,  SomeSellOrder
-                                                            , SomeSellOrder'(..)
+                                                            , SomeSellOrder'(..), OrderBook
                                                             )
+import           OrderBook.Graph.Types.Path                 as Path
 import           OrderBook.Graph.Types.SortedOrders         (toSortedOrders, fromSortedOrders)
 import qualified OrderBook.Graph.Build                      as B
 import qualified OrderBook.Graph.Query                      as Query
@@ -35,7 +36,7 @@ match
     :: forall s base quote.
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
-    -> Query.BuyGraphM s [SomeSellOrder]
+    -> Query.BuyGraphM s [BuyPathR]
 match bo =
     reverse . mrOrders <$> queryUpdateGraph bo (Query.buyPath src dst)
   where
@@ -46,7 +47,7 @@ match bo =
 arbitrages
     :: Currency -- ^ Start here
     -- ^ Returns the arbitrages plus a graph from which these arbitrages have been removed
-    -> Query.ArbGraphM s (B.SellOrderGraph s "buy", [SomeSellOrder])
+    -> Query.ArbGraphM s (B.SellOrderGraph s "buy", [BuyPathR])
 arbitrages src = do
     mr <- queryUpdateGraph unlimited (Query.arbitrage src)
     g <- BF.getGraph
@@ -54,7 +55,7 @@ arbitrages src = do
 
 queryUpdateGraph
     :: BuyOrder base quote
-    -> Query.AnyGraphM s kind (Maybe Query.BuyPath)
+    -> Query.AnyGraphM s kind (Maybe Query.ShortestPath)
     -> Query.AnyGraphM s kind MatchResult
 queryUpdateGraph bo queryGraph =
     {-# SCC queryUpdateGraph #-} go empty
@@ -63,11 +64,10 @@ queryUpdateGraph bo queryGraph =
         buyPathM <- if not (orderFilled bo mr) then queryGraph else return Nothing
         case buyPathM of
             Nothing -> return mr
-            Just (Query.BuyPath orderPath) -> do
-                let reverseOrderPath = fmap toSortedOrders (NE.reverse orderPath)
-                let (newEdges, matchedOrder) = subtractMatchedQty (NE.map DG.eMeta reverseOrderPath)
-                forM_ (NE.zip reverseOrderPath newEdges) (uncurry updateGraphEdge)
-                go (addOrder mr matchedOrder)
+            Just sp -> do
+                let (edgeOrderList, buyPath) = subtractMatchedQty sp
+                forM_ edgeOrderList (uncurry updateGraphEdge)
+                go (addOrder mr buyPath)
 
 updateGraphEdge
     :: DG.IdxEdge Currency B.SortedOrders
@@ -104,30 +104,22 @@ replaceSubtractedOrder sortedOrders newOrder =
 --      ]
 --   at least one of the orders will end up with zero quantity.
 subtractMatchedQty
-    :: NonEmpty B.SortedOrders -- ^ Order path/sequence
-    -- | fst: New orders (old orders with the matched order subtracted)
-    --   snd: Matched order
-    -> ( NonEmpty SomeSellOrder
-       , SomeSellOrder
+    :: Query.ShortestPath -- ^ Order path/sequence
+    -- | fst: list of (existing graph edge, edge's new top order)
+    --   snd: Matched buy path
+    -> ( NonEmpty (B.SortedOrders, SomeSellOrder)
+       , BuyPathR
        )
-subtractMatchedQty sortedOrders =
-    Exchange.withSomeSellOrders someSellOrders $ \orders ->
+subtractMatchedQty sp =
+    Exchange.withSomeSellOrders sp $ \revSortedOrders orders ->
         let maxOrder = Exchange.maxOrder orders
             newOrders = Exchange.minusQty orders (Exchange.oQty maxOrder)
             newOrderQtys = Exchange.asList (Exchange.rawQty . Exchange.oQty) newOrders
+            newEdges = NE.zipWith setQty (NE.fromList newOrderQtys) (fmap B.first revSortedOrders)
         in
-            ( NE.zipWith setQty (NE.fromList newOrderQtys) someSellOrders
-            , Exchange.toSomeSellOrder maxOrder (T.concat cryptoPath)
+            ( NE.zip revSortedOrders newEdges
+            , toPath maxOrder revSortedOrders
             )
-  where
-    -- The path moved through from the buyer's perspective.
-    -- In the above example the buyer moves from LOL to BTC (quote to base).
-    -- The seller moves in the opposite direction: from BTC to LOL (base to quote).
-    cryptoPath =
-        let (first NE.:| rest) = NE.reverse someSellOrders
-            arrowToBase so = " --" <> soVenue so <> "--> " <> toS (soBase so)
-        in toS (soQuote first) : map arrowToBase (first : rest)
-    someSellOrders = fmap B.first sortedOrders
 
 -- | Helper function
 setQty

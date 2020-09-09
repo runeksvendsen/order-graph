@@ -29,6 +29,7 @@ import OrderBook.Graph.Types as Export
 import OrderBook.Graph.Build as Export (build, buildFromOrders, SellOrderGraph)
 import OrderBook.Graph.Match as Export (unlimited, BuyOrder, match, arbitrages)
 import OrderBook.Graph.Run as Export (runArb, runMatch)
+import OrderBook.Graph.Types.Path as Export
 
 
 -- |
