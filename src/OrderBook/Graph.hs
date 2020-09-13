@@ -89,7 +89,7 @@ readOrdersFile log maxSlippage filePath = do
 buildGraph
     :: (Real numType)
     => (forall m. Monad m => String -> m ())
-    -> [OrderBook numType]                         -- ^ Sell orders
+    -> [OrderBook numType]
     -> ST s (GraphInfo numType, SellOrderGraph s "arb")
 buildGraph log sellOrders = do
     log "Building graph..."

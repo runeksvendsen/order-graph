@@ -34,14 +34,14 @@ toSortedOrders idxEdge =
     let quote = fromNode idxEdge
         base = toNode idxEdge
         compactOrders = fmap getCompactOrders idxEdge
-        mkOrder co = SomeSellOrder'
+        mkOrder' co = SomeSellOrder'
             { soPrice = coPrice co
             , soQty   = coQty co
             , soBase  = base
             , soQuote = quote
             , soVenue = coVenue co
             }
-    in fmap (SortedOrders . NE.map mkOrder) compactOrders
+    in fmap (SortedOrders . NE.map mkOrder') compactOrders
 
 fromSortedOrders :: DG.IdxEdge Currency SortedOrders -> DG.IdxEdge Currency CompactOrderList
 fromSortedOrders idxSo =

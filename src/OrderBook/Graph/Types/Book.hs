@@ -3,6 +3,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph.Types.Book
 ( OrderBook
+, mkOrderBook
+, mkOrder
 , bookVenue
 , baseQuote
 , fromOrderBook
@@ -40,6 +42,23 @@ data Order numType = Order
 
 instance NFData numType => NFData (OrderBook numType)
 instance NFData numType => NFData (Order numType)
+
+-- |
+mkOrderBook
+    :: Vec.Vector (Order numType) -- ^ bids
+    -> Vec.Vector (Order numType) -- ^ asks
+    -> Text -- ^ venue
+    -> Currency -- ^ base
+    -> Currency -- ^ quote
+    -> OrderBook numType
+mkOrderBook = OrderBook
+
+-- |
+mkOrder
+    :: numType -- ^ quantity
+    -> numType -- ^ price
+    -> Order numType
+mkOrder = Order
 
 -- | Parse 'OrderBook' from JSON and simultaneously sort orders by price.
 --   Buy orders: descending, sell orders: ascending.

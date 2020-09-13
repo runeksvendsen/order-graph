@@ -10,6 +10,8 @@ module OrderBook.Graph.Types.Path
 , PathDescr
 , BuyPath
 , SellPath
+, BuyPath'
+, SellPath'
 , toPath
 , toBuyPath
 , toSellPath
@@ -25,6 +27,7 @@ import OrderBook.Graph.Exchange (invertSomeSellOrder, rawQty, rawPrice, Order', 
 import qualified OrderBook.Graph.Build                      as B
 import qualified Data.Text as T
 import qualified Data.List.NonEmpty as NE
+import Text.Printf (printf)
 
 
 -- | A description of a path (without any quantities)
@@ -60,7 +63,7 @@ type Path = Path' NumType
 
 -- | The same as 'Path''
 newtype BuyPath' numType = BuyPath' { getBuyPath :: Path' numType }
-  deriving (Eq, Generic)
+    deriving (Eq, Show, Generic, Functor)
 
 type BuyPath = BuyPath' NumType
 
@@ -68,7 +71,7 @@ type BuyPath = BuyPath' NumType
 --   Price unit is /destination currency/ per /start currency/;
 --   quantity unit is /start currency/.
 newtype SellPath' numType = SellPath' { getSellPath :: Path' numType }
-  deriving (Eq, Generic)
+    deriving (Eq, Show, Generic, Functor)
 
 toBuyPath
     :: Path' numType
@@ -117,6 +120,7 @@ class HasPath path => HasPathQuantity path numType | path -> numType where
     pPrice :: path -> numType
     pQty :: path -> numType
     toSellOrder :: path -> SomeSellOrder' numType
+    showPathQty :: path -> T.Text -- ^ format: "<qty> @ <price> <showPath>"
 
 instance HasPath PathDescr where
     pathDescr = id
@@ -131,7 +135,7 @@ instance HasPath (Path' numType) where
     pathDescr = _pPath
     showPath = showPath . _pPath
 
-instance HasPathQuantity (Path' numType) numType where
+instance Show numType => HasPathQuantity (Path' numType) numType where
     pPrice = _pPrice
     pQty = _pQty
     toSellOrder bp = SomeSellOrder'
@@ -141,21 +145,24 @@ instance HasPathQuantity (Path' numType) numType where
       , soQuote = _pStart $ _pPath bp
       , soVenue = showPath bp
       }
+    showPathQty path = toS (printf "%s @ %s %s" (show $ _pQty path) (show $ _pPrice path) (showPath path) :: String)
 
-instance HasPath BuyPath where
+instance HasPath (BuyPath' numType) where
     pathDescr = pathDescr . getBuyPath
     showPath = showPath . getBuyPath
 
-instance HasPathQuantity BuyPath Rational where
+instance Show numType => HasPathQuantity (BuyPath' numType) numType where
     pPrice = pPrice . getBuyPath
     pQty = pQty . getBuyPath
     toSellOrder = toSellOrder . getBuyPath
+    showPathQty = showPathQty . getBuyPath
 
-instance HasPath SellPath where
+instance HasPath (SellPath' numType) where
     pathDescr = pathDescr . getSellPath
     showPath = showPath . getSellPath
 
-instance HasPathQuantity SellPath Rational where
+instance (Fractional numType, Real numType, Show numType) => HasPathQuantity (SellPath' numType) numType where
     pPrice = _pPrice . getSellPath
     pQty = _pQty . getSellPath
-    toSellOrder = invertSomeSellOrder . toSellOrder . getSellPath
+    toSellOrder = fmap fromRational . invertSomeSellOrder . toSellOrder . fmap toRational . getSellPath
+    showPathQty = showPathQty . getSellPath
