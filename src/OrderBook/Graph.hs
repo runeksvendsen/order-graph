@@ -1,12 +1,19 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 module OrderBook.Graph
-( withBidsAsksOrder
+( -- * Read input data; build graph; match orders
+  withBidsAsksOrder
 , readOrdersFile
 , buildBuyGraph
 , GraphInfo(..)
 , IBuyGraph
 , matchOrders
+  -- * Process output of order matching
+, LiquidityInfo(..)
+, SideLiquidity(..)
+, PriceRange(..)
+, toLiquidityInfo
+, toSideLiquidity
   -- * Re-exports
 , module Export
 )
@@ -20,8 +27,10 @@ import qualified OrderBook.Graph.Types.Book as Book
 import qualified Data.Graph.Digraph as DG
 
 import Data.Text (Text)
-import Data.List (nub)
+import Data.List (sortOn, sortBy, nub)
 import qualified Data.Aeson as Json
+import qualified Data.List.NonEmpty as NE
+-- import qualified Data.Text as T
 
 -- Exports
 import OrderBook.Graph.Types as Export
@@ -30,6 +39,7 @@ import OrderBook.Graph.Match as Export (unlimited, BuyOrder, match, arbitrages)
 import OrderBook.Graph.Run as Export (runArb, runMatch)
 import OrderBook.Graph.Types.Path as Export
 import OrderBook.Graph.Exchange as Export (invertSomeSellOrder)
+import Data.Ord (comparing)
 
 
 -- |
@@ -131,12 +141,70 @@ matchOrders
     -> Currency -- ^ numeraire
     -> Currency -- ^ cryptocurrency
     -> IBuyGraph
-    -> ST s ([SellPath], [Path])
+    -> ST s ([SellPath], [BuyPath])
 matchOrders log numeraire crypto buyGraph = withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder -> do
     buyGraph' <- DG.thaw buyGraph
     runMatch buyGraph' $ do
         log "Matching sell order..."
-        bids <- map toSellPath <$> match sellOrder
+        sellPath <- map toSellPath <$> match sellOrder
         log "Matching buy order..."
-        asks <- match buyOrder
-        return (bids, asks)
+        buyPath <- map toBuyPath <$> match buyOrder
+        return (sellPath, buyPath)
+
+
+-- | Liquidity info in both buy and sell direction
+data LiquidityInfo = LiquidityInfo
+    { liBuyLiquidity    :: Maybe SideLiquidity
+    , liSellLiquidity   :: Maybe SideLiquidity
+    }
+
+-- | Liquidity info in a single direction (either buy or sell)
+data SideLiquidity = SideLiquidity
+    { liLiquidity    :: NumType             -- ^ Non-zero liquidity
+    , liPriceRange   :: PriceRange NumType
+    , liPaths        :: NonEmpty (NumType, PriceRange NumType, PathDescr)  -- ^ (quantity, price_range, path)
+    }
+
+data PriceRange numType =
+    PriceRange
+        { lowestPrice :: numType
+        , highestPrice :: numType
+        }
+
+toLiquidityInfo
+    :: ([SellPath], [BuyPath])
+    -> Maybe LiquidityInfo
+toLiquidityInfo (sellPath, buyPath) = do
+    Just $ LiquidityInfo
+        { liBuyLiquidity    = NE.nonEmpty buyPath >>= toSideLiquidity
+        , liSellLiquidity   = NE.nonEmpty sellPath >>= toSideLiquidity
+        }
+
+toSideLiquidity
+    :: forall path.
+       HasPathQuantity path NumType
+    => NE.NonEmpty path
+    -> Maybe SideLiquidity
+toSideLiquidity nonEmptyOrders = Just $
+    let paths = NE.fromList $ sortByQuantity $ map quoteSumVenue (groupByVenue $ NE.toList nonEmptyOrders)
+    in SideLiquidity
+        { liLiquidity    = quoteSum nonEmptyOrders
+        , liPriceRange   = firstLastPrice nonEmptyOrders
+        , liPaths        = paths
+        }
+  where
+    firstLastPrice lst =
+        let priceSorted = NE.sortBy (comparing pPrice) lst
+        in PriceRange (pPrice $ NE.head priceSorted) (pPrice $ NE.last priceSorted)
+    quoteSumVenue paths =
+        (quoteSum paths, priceRange paths, pathDescr $ NE.head paths)
+    groupByVenue = NE.groupBy (\a b -> pathDescr a == pathDescr b) . sortOn pathDescr
+    sortByQuantity = sortBy (flip $ comparing $ \(quoteQty, _, _) -> quoteQty)
+    quoteSum orderList = sum $ NE.map quoteQuantity orderList
+    quoteQuantity path = pQty path * pPrice path
+    priceRange
+        :: NE.NonEmpty path
+        -> PriceRange NumType
+    priceRange soList =
+        let priceList = NE.map pPrice soList
+        in PriceRange (minimum priceList) (maximum priceList)

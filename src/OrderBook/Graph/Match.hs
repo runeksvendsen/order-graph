@@ -17,7 +17,7 @@ where
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Match.Types
 import           OrderBook.Graph.Build                      (Currency,  SomeSellOrder
-                                                            , SomeSellOrder'(..), OrderBook
+                                                            , SomeSellOrder'(..)
                                                             )
 import           OrderBook.Graph.Types.Path                 as Path
 import           OrderBook.Graph.Types.SortedOrders         (toSortedOrders, fromSortedOrders)
@@ -28,7 +28,6 @@ import qualified OrderBook.Graph.Exchange                   as Exchange
 import qualified Data.Graph.Digraph                         as DG
 import qualified Data.Graph.BellmanFord                     as BF
 import qualified Data.List.NonEmpty                         as NE
-import qualified Data.Text                                  as T
 import           Unsafe.Coerce                              (unsafeCoerce)
 
 

@@ -41,7 +41,7 @@ data MatchResult' numTyp = MatchResult'
     { mrOrders      :: [Path' numTyp]
     , mrFirstOrder  :: Maybe (Path' numTyp)
     , mrQuantity    :: numTyp
-    } deriving (Eq)
+    } deriving (Eq, Show)
 
 empty :: Num numTyp => MatchResult' numTyp
 empty = MatchResult'
@@ -60,7 +60,7 @@ addOrder (MatchResult' [] Nothing _) order =
 addOrder (MatchResult' orders firstOrder@Just{} qty) order =
     MatchResult' (order : orders) firstOrder (qty + pQty order)
 addOrder mr@(MatchResult' _ Nothing _) _ =
-    error $ "invalid MatchResult' " -- ++ show mr
+    error $ "invalid MatchResult' " ++ show mr
 
 -- | Stop order execution if this returns 'True'
 --
@@ -71,7 +71,7 @@ orderFilled
     -> MatchResult' numTyp
     -> Bool
 orderFilled _ (MatchResult' _ Nothing _) = False
-orderFilled _ mr@(MatchResult' [] Just{} _) = error $ "invalid MatchResult' " -- ++ show mr
+orderFilled _ mr@(MatchResult' [] Just{} _) = error $ "invalid MatchResult' " ++ show mr
 orderFilled (BuyOrder' qtyM _ slipM) (MatchResult' (latest:_) (Just first) mrQty) =
     qtyFilled || slippageReached
   where

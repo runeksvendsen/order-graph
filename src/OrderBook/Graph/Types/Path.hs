@@ -7,10 +7,14 @@
 module OrderBook.Graph.Types.Path
 ( Path'
 , Path
-, toPath
-, toSellPath
+, PathDescr
+, BuyPath
 , SellPath
-, IsPath(..)
+, toPath
+, toBuyPath
+, toSellPath
+, HasPath(..)
+, HasPathQuantity(..)
 )
 where
 
@@ -22,6 +26,17 @@ import qualified OrderBook.Graph.Build                      as B
 import qualified Data.Text as T
 import qualified Data.List.NonEmpty as NE
 
+
+-- | A description of a path (without any quantities)
+data PathDescr = PathDescr
+    { _pStart :: Currency
+    -- ^ Start currency
+    , _pMoves :: (NonEmpty (T.Text, Currency))
+    -- ^ Each pair denotes a move /to/ the given currency /via/ the given venue.
+     -- Last currency is destination currency.
+    } deriving (Eq, Show, Ord, Generic)
+
+instance PrettyVal PathDescr
 
 -- | A path from one currency to another, going through at least a single venue, and zero or more intermediate currency+venue.
 --   Examples:
@@ -35,28 +50,36 @@ data Path' numType = Path'
     , _pQty   :: numType
       -- ^ Unit: "destination currency"
       -- (e.g. /BTC/ for path @USD --venue--> BTC@)
-    , _pStart :: Currency
-      -- ^ Start currency
-    , _pMoves :: NonEmpty (T.Text, Currency)
-      -- ^ One or more moves /to/ the given currency /via/ the given venue.
-      -- Last currency is destination currency.
+    , _pPath :: PathDescr
+      -- ^ Actual path
     } deriving (Eq, Show, Generic, Functor)
 
 instance PrettyVal numType => PrettyVal (Path' numType)
 
 type Path = Path' NumType
 
--- | The same as 'Path', except with different units for price and quantity.
---   Price unit is quantity of /destination currency/ per unit of /start currency/,
---   and quantity unit is /start currency/.
-newtype SellPath' numType = SellPath { getPath :: Path' numType }
+-- | The same as 'Path''
+newtype BuyPath' numType = BuyPath' { getBuyPath :: Path' numType }
   deriving (Eq, Generic)
 
+type BuyPath = BuyPath' NumType
+
+-- | The same as 'Path'', except with different units for price and quantity.
+--   Price unit is /destination currency/ per /start currency/;
+--   quantity unit is /start currency/.
+newtype SellPath' numType = SellPath' { getSellPath :: Path' numType }
+  deriving (Eq, Generic)
+
+toBuyPath
+    :: Path' numType
+    -> BuyPath' numType
+toBuyPath = BuyPath'
+
 toSellPath
-  :: Fractional numType
-  => Path' numType
-  -> SellPath' numType
-toSellPath bp@Path'{..} = SellPath $
+    :: Fractional numType
+    => Path' numType
+    -> SellPath' numType
+toSellPath bp@Path'{..} = SellPath' $
     bp
       { _pPrice = recip $ _pPrice
       , _pQty   = _pQty * _pPrice
@@ -76,38 +99,63 @@ toPath
     -> Path' numType
 toPath maxOrder sellOrders = Path'
     (rawPrice $ oPrice maxOrder)
-    (rawQty $ oQty maxOrder)
-    (soQuote first)
-    (NE.map venueAndBase revSellOrders)
+    (rawQty $ oQty maxOrder) $
+    PathDescr
+      (soQuote first)
+      (NE.map venueAndBase revSellOrders)
   where
     revSellOrders@(first NE.:| _) = NE.reverse sellOrders
     venueAndBase so = (soVenue so, soBase so)
 
-class IsPath path numType | path -> numType where
+-- | Describes a path
+class HasPath path where
+    pathDescr :: path -> PathDescr
+    showPath :: path -> T.Text
+
+-- | Describes price and quantity for a path
+class HasPath path => HasPathQuantity path numType | path -> numType where
     pPrice :: path -> numType
     pQty :: path -> numType
-    showPath :: path -> T.Text
     toSellOrder :: path -> SomeSellOrder' numType
 
-instance IsPath (Path' numType) numType where
-    pPrice = _pPrice
-    pQty = _pQty
-    showPath path =
-      toS (_pStart path) <> T.concat (NE.toList moves)
+instance HasPath PathDescr where
+    pathDescr = id
+    showPath (PathDescr pathStart pathMoves) =
+      toS pathStart <> T.concat (NE.toList moves)
       where
-        moves = NE.map venueAndBase (_pMoves path)
+        moves = NE.map venueAndBase pathMoves
         venueAndBase :: (T.Text, Currency) -> T.Text
         venueAndBase (venue, base) = " --" <> venue <> "--> " <> toS base
+
+instance HasPath (Path' numType) where
+    pathDescr = _pPath
+    showPath = showPath . _pPath
+
+instance HasPathQuantity (Path' numType) numType where
+    pPrice = _pPrice
+    pQty = _pQty
     toSellOrder bp = SomeSellOrder'
       { soPrice = pPrice bp
       , soQty   = pQty bp
-      , soBase  = snd $ NE.last (_pMoves bp)
-      , soQuote = _pStart bp
+      , soBase  = snd $ NE.last (_pMoves $ _pPath bp)
+      , soQuote = _pStart $ _pPath bp
       , soVenue = showPath bp
       }
 
-instance IsPath SellPath Rational where
-    pPrice = _pPrice . getPath
-    pQty = _pQty . getPath
-    showPath = showPath . getPath
-    toSellOrder = invertSomeSellOrder . toSellOrder . getPath
+instance HasPath BuyPath where
+    pathDescr = pathDescr . getBuyPath
+    showPath = showPath . getBuyPath
+
+instance HasPathQuantity BuyPath Rational where
+    pPrice = pPrice . getBuyPath
+    pQty = pQty . getBuyPath
+    toSellOrder = toSellOrder . getBuyPath
+
+instance HasPath SellPath where
+    pathDescr = pathDescr . getSellPath
+    showPath = showPath . getSellPath
+
+instance HasPathQuantity SellPath Rational where
+    pPrice = _pPrice . getSellPath
+    pQty = _pQty . getSellPath
+    toSellOrder = invertSomeSellOrder . toSellOrder . getSellPath
