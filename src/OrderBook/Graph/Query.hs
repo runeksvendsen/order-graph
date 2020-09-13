@@ -15,7 +15,8 @@ module OrderBook.Graph.Query
 , SomeSellOrder
 , buyPath
 , arbitrage
-, ShortestPath(..)
+, ShortestPath
+, spEdges
 , BuyGraphM
 , ArbGraphM
 , AnyGraphM
@@ -37,7 +38,7 @@ type ArbGraphM s = BF.BF s Currency (B.Tagged "arb" CompactOrderList)
 type BuyGraphM s = BF.BF s Currency (B.Tagged "buy" CompactOrderList)
 
 newtype ShortestPath = ShortestPath
-    { bpOrders  :: NonEmpty (DG.IdxEdge Currency CompactOrderList)
+    { _spEdges  :: NonEmpty (DG.IdxEdge Currency CompactOrderList)
     } deriving (Eq, Generic)
 
 -- ^ Find the lowest price buy path going from one 'Currency' to another
@@ -61,3 +62,6 @@ arbitrage start = do
     BF.bellmanFord start
     pathM <- BF.negativeCycle
     return $ ShortestPath . removeTag <$> pathM
+
+spEdges :: ShortestPath -> NonEmpty (DG.IdxEdge Currency CompactOrderList)
+spEdges = _spEdges

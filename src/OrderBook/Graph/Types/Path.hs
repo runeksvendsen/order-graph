@@ -32,9 +32,9 @@ import Text.Printf (printf)
 
 -- | A description of a path (without any quantities)
 data PathDescr = PathDescr
-    { _pStart :: Currency
+    { _pStart :: !Currency
     -- ^ Start currency
-    , _pMoves :: (NonEmpty (T.Text, Currency))
+    , _pMoves :: !(NonEmpty (T.Text, Currency))
     -- ^ Each pair denotes a move /to/ the given currency /via/ the given venue.
      -- Last currency is destination currency.
     } deriving (Eq, Show, Ord, Generic)
@@ -47,13 +47,13 @@ instance PrettyVal PathDescr
 --      * BTC --binance--> USDT --bitfinex--> USD
 --      * USD --bitfinex--> XTZ --binance--> USDT --bitfinex--> JPY --bitfinex--> BTC
 data Path' numType = Path'
-    { _pPrice :: numType
+    { _pPrice :: !numType
       -- ^ Unit: quantity of /start currency/ per unit of /destination currency/
       -- (e.g. /USD per BTC/ for path @USD --venue--> BTC@)
-    , _pQty   :: numType
+    , _pQty   :: !numType
       -- ^ Unit: "destination currency"
       -- (e.g. /BTC/ for path @USD --venue--> BTC@)
-    , _pPath :: PathDescr
+    , _pPath :: !PathDescr
       -- ^ Actual path
     } deriving (Eq, Show, Generic, Functor)
 

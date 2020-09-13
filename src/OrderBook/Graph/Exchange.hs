@@ -26,7 +26,7 @@ where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types                  (SomeSellOrder'(..), SomeSellOrder)
-import           OrderBook.Graph.Query                  (ShortestPath(..))
+import           OrderBook.Graph.Query                  (ShortestPath, spEdges)
 import qualified OrderBook.Graph.Build                  as B
 import qualified Data.Graph.Digraph                     as DG
 
@@ -159,8 +159,8 @@ withSomeSellOrders
                                                            -> r
        )
     -> r
-withSomeSellOrders (ShortestPath compactOrderLists) f' =
-    let revCompactOrderLists = NE.reverse compactOrderLists
+withSomeSellOrders shortestPath f' =
+    let revCompactOrderLists = NE.reverse (spEdges shortestPath)
         revSortedOrders = NE.map (DG.eMeta . B.toSortedOrders) revCompactOrderLists
     in go (fmap B.first revSortedOrders) (f' revCompactOrderLists)
   where
