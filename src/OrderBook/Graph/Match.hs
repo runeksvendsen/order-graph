@@ -36,7 +36,7 @@ match
     :: forall s base quote.
        (KnownSymbol base, KnownSymbol quote)
     => BuyOrder base quote
-    -> Query.BuyGraphM s [BuyPathR]
+    -> Query.BuyGraphM s [Path]
 match bo =
     reverse . mrOrders <$> queryUpdateGraph bo (Query.buyPath src dst)
   where
@@ -47,7 +47,7 @@ match bo =
 arbitrages
     :: Currency -- ^ Start here
     -- ^ Returns the arbitrages plus a graph from which these arbitrages have been removed
-    -> Query.ArbGraphM s (B.SellOrderGraph s "buy", [BuyPathR])
+    -> Query.ArbGraphM s (B.SellOrderGraph s "buy", [Path])
 arbitrages src = do
     mr <- queryUpdateGraph unlimited (Query.arbitrage src)
     g <- BF.getGraph
@@ -66,7 +66,7 @@ queryUpdateGraph bo queryGraph =
             Nothing -> return mr
             Just sp -> do
                 let (edgeOrderList, buyPath) = subtractMatchedQty sp
-                forM_ edgeOrderList $ \(sortedOrders, sellOrder) -> updateGraphEdge sortedOrders sellOrder
+                forM_ edgeOrderList $ \(idxEdges, sellOrder) -> updateGraphEdge idxEdges sellOrder
                 go (addOrder mr buyPath)
 
 {-
@@ -80,15 +80,15 @@ queryUpdateGraph bo queryGraph =
 -}
 
 updateGraphEdge
-    :: DG.IdxEdge Currency B.SortedOrders
+    :: DG.IdxEdge Currency B.CompactOrderList
     -> SomeSellOrder                -- ^ Updated top order
     -> Query.AnyGraphM s kind ()
 updateGraphEdge orderListEdge newTopOrder = do
     let newOrderListM orderList = replaceSubtractedOrder orderList newTopOrder
     graph <- BF.getGraph -- HACK: Just to make things work for now (before we improve the algorithm)
     -- TODO: use BellmanFord "remove/updateEdge"
-    case newOrderListM (DG.eMeta orderListEdge) >>= \so -> Just (fmap (const so) orderListEdge) of
-        Nothing           -> lift $ DG.removeEdge graph (B.Tagged <$> fromSortedOrders orderListEdge)
+    case newOrderListM (DG.eMeta $ toSortedOrders orderListEdge) >>= \so -> Just (fmap (const so) orderListEdge) of
+        Nothing           -> lift $ DG.removeEdge graph (B.Tagged <$> orderListEdge)
         Just newOrderList -> lift $ DG.updateEdge graph (B.Tagged <$> fromSortedOrders newOrderList)
 
 replaceSubtractedOrder
@@ -117,18 +117,21 @@ subtractMatchedQty
     :: Query.ShortestPath -- ^ Order path/sequence
     -- | fst: list of (existing graph edge, edge's new top order)
     --   snd: Matched buy path
-    -> ( NonEmpty (B.SortedOrders, SomeSellOrder)
-       , BuyPathR
+    -> ( NonEmpty (DG.IdxEdge Currency B.CompactOrderList, SomeSellOrder)
+       , Path
        )
 subtractMatchedQty sp =
-    Exchange.withSomeSellOrders sp $ \revSortedOrders orders ->
+    Exchange.withSomeSellOrders sp $ \revIdxEdges orders ->
         let maxOrder = Exchange.maxOrder orders
             newOrders = Exchange.minusQty orders (Exchange.oQty maxOrder)
             newOrderQtys = Exchange.asList (Exchange.rawQty . Exchange.oQty) newOrders
-            newEdges = NE.zipWith setQty (NE.fromList newOrderQtys) (fmap B.first revSortedOrders)
+            topSellOrders = NE.map (B.first . DG.eMeta . B.toSortedOrders) revIdxEdges
+            newEdges = NE.zipWith setQty (NE.fromList newOrderQtys) topSellOrders
+            -- TODO: move this logic into 'Exchange' so that this function doesn't have to worry
+            --       about the ordering of "revIdxEdges" versus the ordering of "newOrderQtys"
         in
-            ( NE.zip revSortedOrders newEdges
-            , toPath maxOrder revSortedOrders
+            ( NE.zip revIdxEdges newEdges
+            , toPath maxOrder topSellOrders
             )
 
 -- | Helper function

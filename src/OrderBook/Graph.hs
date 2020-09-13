@@ -16,7 +16,6 @@ import Prelude hiding (log)
 import OrderBook.Graph.Internal.Prelude hiding (log)
 
 import OrderBook.Graph.Build (CompactOrderList, Tagged)
-import OrderBook.Graph.Exchange (invertSomeSellOrder)
 import qualified OrderBook.Graph.Types.Book as Book
 import qualified Data.Graph.Digraph as DG
 
@@ -30,6 +29,7 @@ import OrderBook.Graph.Build as Export (build, buildFromOrders, SellOrderGraph)
 import OrderBook.Graph.Match as Export (unlimited, BuyOrder, match, arbitrages)
 import OrderBook.Graph.Run as Export (runArb, runMatch)
 import OrderBook.Graph.Types.Path as Export
+import OrderBook.Graph.Exchange as Export (invertSomeSellOrder)
 
 
 -- |
@@ -125,18 +125,18 @@ buildBuyGraph log sellOrders = do
     buyGraph <- DG.freeze =<< findArbitrages log gi mGraph
     return (gi, buyGraph)
 
+-- |
 matchOrders
-    :: (KnownSymbol src, KnownSymbol dst)
-    => (forall m. Monad m => String -> m ())
-    -> BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
-    -> BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
+    :: (forall m. Monad m => String -> m ()) -- ^ logger
+    -> Currency -- ^ numeraire
+    -> Currency -- ^ cryptocurrency
     -> IBuyGraph
-    -> ST s ([SomeSellOrder], [SomeSellOrder])
-matchOrders log buyOrder sellOrder buyGraph = do
+    -> ST s ([SellPath], [Path])
+matchOrders log numeraire crypto buyGraph = withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder -> do
     buyGraph' <- DG.thaw buyGraph
     runMatch buyGraph' $ do
         log "Matching sell order..."
-        bids <- map invertSomeSellOrder <$> match sellOrder
+        bids <- map toSellPath <$> match sellOrder
         log "Matching buy order..."
         asks <- match buyOrder
         return (bids, asks)

@@ -121,7 +121,7 @@ data Execution numType = Execution
       -- ^ Information about the graph
     , inputData     :: Lib.IBuyGraph
       -- ^ Graph without arbitrages. Built from order books read from 'inputFile'.
-    , mainRun       :: Lib.IBuyGraph -> IO ([SomeSellOrder], [SomeSellOrder])
+    , mainRun       :: Lib.IBuyGraph -> IO ([Lib.SellPath], [Lib.Path])
       -- ^ Process input data
     }
 
@@ -141,8 +141,7 @@ mkExecutions options graphInfo inputFile graph = do
     mkExecution crypto =
         Execution inputFile graphInfo graph (mainRun crypto)
     mainRun crypto orders = ST.stToIO $
-        Lib.withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
-            Lib.matchOrders (Opt.logger options) buyOrder sellOrder orders
+        Lib.matchOrders (Opt.logger options) numeraire crypto orders
     numeraire   = Opt.numeraire options
 
 data PriceRange numType =
@@ -182,7 +181,7 @@ analyze cryptocurrency Opt.Options{..} Execution{..} = do
         , liMaxSlippage     = maxSlippage
         , liCrypto          = cryptocurrency
         , liNumeraire       = numeraire
-        , liLiquidityInfo   = toLiquidityInfo (buyOrders, sellOrders)
+        , liLiquidityInfo   = toLiquidityInfo (map Lib.toSellOrder buyOrders, map Lib.toSellOrder sellOrders)
         }
 
 toLiquidityInfo
@@ -325,15 +324,21 @@ benchSingle obFile Lib.GraphInfo{..} graph action = do
 writeChartFile
     :: Opt.Options
     -> FilePath
-    -> ([SomeSellOrder], [SomeSellOrder])
+    -> ([Lib.SellPath], [Lib.Path])
     -> IO ()
-writeChartFile options obPath (bids, asks) = do
+writeChartFile options obPath (sellPaths, buyPaths) = do
     log "Writing order book.."
     let trimmedAsks = trimOrders $ sortBy (comparing soPrice)        asks
         trimmedBids = trimOrders $ sortBy (flip $ comparing soPrice) bids
+        (bids, asks) = (map toFakeSellOrder sellPaths, map Lib.toSellOrder buyPaths)
     Json.encodeFile obPath (mkJsonOb trimmedBids trimmedAsks)
     putStrLn $ "Wrote " ++ show obPath
   where
+    -- convert to a sell order that's really a buy order.
+    -- used to be compatible with 'mkJsonOb'.
+    -- works because 'mkJsonOb' doesn't care about base/quote symbol.
+    toFakeSellOrder :: Lib.SellPath -> SomeSellOrder
+    toFakeSellOrder = Lib.invertSomeSellOrder . Lib.toSellOrder
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
     trimOrders = Util.compress 500 . Util.merge
     log = Opt.logger options

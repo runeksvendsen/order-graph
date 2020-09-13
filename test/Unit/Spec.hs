@@ -20,6 +20,7 @@ import           Test.Hspec.Expectations.Pretty
 tests :: Test
 tests = TestList
   [ TestLabel "single order"  singleOrder
+  , TestLabel "single buy order" singleBuyOrder
   , TestLabel "simple graph" simpleGraph
   , TestLabel "buy/sell direction" buySellDirection
   , TestLabel "Util.merge 2" merge2
@@ -40,6 +41,22 @@ singleOrder =
         , soQty   = 20
         , soBase  = "BTC"
         , soQuote = "USD"
+        , soVenue = "test"
+        }
+
+singleBuyOrder :: Test
+singleBuyOrder =
+    TestCase $ assertMatchedOrders [testOrder] sellOrder
+        (`shouldBeIgnoringVenue` Util.merge [testOrder])
+  where
+    sellOrder :: Lib.BuyOrder "USD" "BTC"
+    sellOrder = Lib.unlimited
+    testOrder :: Lib.SomeSellOrder
+    testOrder = Lib.SomeSellOrder'
+        { soPrice = 1/10000
+        , soQty   = 20000
+        , soBase  = "USD"
+        , soQuote = "BTC"
         , soVenue = "test"
         }
 

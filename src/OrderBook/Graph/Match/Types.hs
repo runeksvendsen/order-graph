@@ -11,7 +11,7 @@ module OrderBook.Graph.Match.Types
 where
 
 import           OrderBook.Graph.Internal.Prelude
-import           OrderBook.Graph.Types.Path                 (bpPrice, bpQty, BuyPath)
+import           OrderBook.Graph.Types.Path                 (pPrice, pQty, Path')
 
 
 -- |
@@ -38,10 +38,10 @@ unlimited = BuyOrder'
 
 type MatchResult = MatchResult' Rational
 data MatchResult' numTyp = MatchResult'
-    { mrOrders      :: [BuyPath numTyp]
-    , mrFirstOrder  :: Maybe (BuyPath numTyp)
+    { mrOrders      :: [Path' numTyp]
+    , mrFirstOrder  :: Maybe (Path' numTyp)
     , mrQuantity    :: numTyp
-    } deriving (Eq, Show)
+    } deriving (Eq)
 
 empty :: Num numTyp => MatchResult' numTyp
 empty = MatchResult'
@@ -53,14 +53,14 @@ empty = MatchResult'
 addOrder
     :: (Real numTyp, Show numTyp)
     => MatchResult' numTyp
-    -> BuyPath numTyp
+    -> Path' numTyp
     -> MatchResult' numTyp
 addOrder (MatchResult' [] Nothing _) order =
-    MatchResult' [order] (Just order) (bpQty order)
+    MatchResult' [order] (Just order) (pQty order)
 addOrder (MatchResult' orders firstOrder@Just{} qty) order =
-    MatchResult' (order : orders) firstOrder (qty + bpQty order)
+    MatchResult' (order : orders) firstOrder (qty + pQty order)
 addOrder mr@(MatchResult' _ Nothing _) _ =
-    error $ "invalid MatchResult' " ++ show mr
+    error $ "invalid MatchResult' " -- ++ show mr
 
 -- | Stop order execution if this returns 'True'
 --
@@ -71,12 +71,12 @@ orderFilled
     -> MatchResult' numTyp
     -> Bool
 orderFilled _ (MatchResult' _ Nothing _) = False
-orderFilled _ mr@(MatchResult' [] Just{} _) = error $ "invalid MatchResult' " ++ show mr
+orderFilled _ mr@(MatchResult' [] Just{} _) = error $ "invalid MatchResult' " -- ++ show mr
 orderFilled (BuyOrder' qtyM _ slipM) (MatchResult' (latest:_) (Just first) mrQty) =
     qtyFilled || slippageReached
   where
     checkProp propM f = maybe False f propM
     qtyFilled = checkProp qtyM $ \qty -> mrQty >= qty
     slippageReached = checkProp slipM $ \maxSlippage ->
-        let slippagePct = abs $ (bpPrice latest - bpPrice first) / bpPrice first * 100
+        let slippagePct = abs $ (pPrice latest - pPrice first) / pPrice first * 100
         in slippagePct > maxSlippage
