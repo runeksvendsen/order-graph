@@ -57,13 +57,18 @@ data Path' numType = Path'
       -- ^ Actual path
     } deriving (Eq, Show, Generic, Functor)
 
+instance Ord numType => Ord (Path' numType) where
+    p1 `compare` p2 =
+        let mkTuple p = (_pQty p, _pPrice p, _pPath p)
+        in mkTuple p1 `compare` mkTuple p2
+
 instance PrettyVal numType => PrettyVal (Path' numType)
 
 type Path = Path' NumType
 
 -- | The same as 'Path''
 newtype BuyPath' numType = BuyPath' { getBuyPath :: Path' numType }
-    deriving (Eq, Show, Generic, Functor)
+    deriving (Eq, Show, Ord, Generic, Functor)
 
 type BuyPath = BuyPath' NumType
 
@@ -71,7 +76,7 @@ type BuyPath = BuyPath' NumType
 --   Price unit is /destination currency/ per /start currency/;
 --   quantity unit is /start currency/.
 newtype SellPath' numType = SellPath' { getSellPath :: Path' numType }
-    deriving (Eq, Show, Generic, Functor)
+    deriving (Eq, Show, Ord, Generic, Functor)
 
 toBuyPath
     :: Path' numType

@@ -156,37 +156,37 @@ matchOrders log numeraire crypto buyGraph = withBidsAsksOrder numeraire crypto $
 data LiquidityInfo = LiquidityInfo
     { liBuyLiquidity    :: Maybe SideLiquidity
     , liSellLiquidity   :: Maybe SideLiquidity
-    }
+    } deriving (Eq, Show)
 
 -- | Liquidity info in a single direction (either buy or sell)
 data SideLiquidity = SideLiquidity
     { liLiquidity    :: NumType             -- ^ Non-zero liquidity
     , liPriceRange   :: PriceRange NumType
     , liPaths        :: NonEmpty (NumType, PriceRange NumType, PathDescr)  -- ^ (quantity, price_range, path)
-    }
+    } deriving (Eq, Show)
 
 data PriceRange numType =
     PriceRange
         { lowestPrice :: numType
         , highestPrice :: numType
-        }
+        } deriving (Eq, Show)
 
 toLiquidityInfo
     :: ([SellPath], [BuyPath])
     -> Maybe LiquidityInfo
 toLiquidityInfo (sellPath, buyPath) = do
     Just $ LiquidityInfo
-        { liBuyLiquidity    = NE.nonEmpty buyPath >>= toSideLiquidity
-        , liSellLiquidity   = NE.nonEmpty sellPath >>= toSideLiquidity
+        { liBuyLiquidity    = toSideLiquidity <$> NE.nonEmpty buyPath
+        , liSellLiquidity   = toSideLiquidity <$> NE.nonEmpty sellPath
         }
 
 toSideLiquidity
     :: forall path.
        HasPathQuantity path NumType
     => NE.NonEmpty path
-    -> Maybe SideLiquidity
-toSideLiquidity nonEmptyOrders = Just $
-    let paths = NE.fromList $ sortByQuantity $ map quoteSumVenue (groupByVenue $ NE.toList nonEmptyOrders)
+    -> SideLiquidity
+toSideLiquidity nonEmptyOrders =
+    let paths = NE.fromList $ sortByQuantity $ map quoteSumVenue (groupByPath $ NE.toList nonEmptyOrders)
     in SideLiquidity
         { liLiquidity    = quoteSum nonEmptyOrders
         , liPriceRange   = firstLastPrice nonEmptyOrders
@@ -198,7 +198,7 @@ toSideLiquidity nonEmptyOrders = Just $
         in PriceRange (pPrice $ NE.head priceSorted) (pPrice $ NE.last priceSorted)
     quoteSumVenue paths =
         (quoteSum paths, priceRange paths, pathDescr $ NE.head paths)
-    groupByVenue = NE.groupBy (\a b -> pathDescr a == pathDescr b) . sortOn pathDescr
+    groupByPath = NE.groupBy (\a b -> pathDescr a == pathDescr b) . sortOn pathDescr
     sortByQuantity = sortBy (flip $ comparing $ \(quoteQty, _, _) -> quoteQty)
     quoteSum orderList = sum $ NE.map quoteQuantity orderList
     quoteQuantity path = pQty path * pPrice path
