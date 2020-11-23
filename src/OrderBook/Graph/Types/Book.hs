@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -96,7 +97,7 @@ baseQuote :: OrderBook numType -> (T.Text, T.Text)
 baseQuote ob = (toS $ base ob, toS $ quote ob)
 
 -- | Convert all orders in an orderbook (consisting of both sell orders and buy orders)
---    into a pair of sell orders, where the first item is sell orders and
+--    into a pair of sell orders and buy orders
 toSellBuyOrders
     :: Real numType
     => OrderBook numType
@@ -106,7 +107,7 @@ toSellBuyOrders ob =
     , map (fromSellOrder venue quote base . invert) (Vec.toList bids)
     )
   where
-    OrderBook{..} = fmap toRational ob
+    OrderBook{..} = fmap realToFrac ob
     -- invert . invert = id
     invert :: Fractional numType => Order numType -> Order numType
     invert o = Order
@@ -119,7 +120,7 @@ fromSellOrder
     :: T.Text           -- ^ Venue
     -> Currency         -- ^ Base
     -> Currency         -- ^ Quote
-    -> Order Rational   -- ^ Order
+    -> Order Double   -- ^ Order
     -> SomeSellOrder
 fromSellOrder venue base quote o =
     SomeSellOrder'
@@ -138,19 +139,35 @@ fromOrderBook ob = concat
   where
     (sellOrders, buyOrders) = toSellBuyOrders ob
 
+showKind :: OrderBook numType -> T.Text
+showKind ob =
+    T.unwords [bookVenue ob, base' <> "/" <> quote' ]
+  where
+    (base', quote') = baseQuote ob
+
 -- ^ Same as 'trimSlippageGeneric' but do it for an order book
 trimSlippageOB
-    :: (Fractional numType, Ord numType)
+    :: forall numType.
+       (Fractional numType, Ord numType)
     => Rational
     -- ^ Slippage in percent. E.g. 50%1 = 50%
     -> OrderBook numType
-    -> OrderBook numType
+    -> (OrderBook numType, Maybe Text) -- ^ (trimmed order book, maybe warning)
 trimSlippageOB maxSlippage ob =
-    let buySide = bids ob
-        sellSide = asks ob
-        trimObSide =
-            Vec.fromList . trimSlippageGeneric price (fromRational maxSlippage) . Vec.toList
-    in ob
-        { bids = trimObSide buySide
-        , asks = trimObSide sellSide
-        }
+    let trimObSide = trimSlippageGeneric price (fromRational maxSlippage) . Vec.toList
+        trimObGetWarnings sideStr = fmap (maybe (Just [sideStr]) (const Nothing) . listToMaybe) . trimObSide
+        (trimmedBids, bidsWarningM) = trimObGetWarnings "bids" (bids ob)
+        (trimmedAsks, asksWarningM) = trimObGetWarnings "asks" (asks ob)
+        mkWarning' ([], _) = Nothing
+        mkWarning' (_, []) = Just "uh oh"
+        mkWarning' (_, _) = Nothing
+        newOb = ob
+            { bids = Vec.fromList trimmedBids
+            , asks = Vec.fromList trimmedAsks
+            }
+        mkWarning sideStrLst = T.unwords
+            [ showKind ob
+            , "(" <> T.intercalate ", " sideStrLst <> "):"
+            , "insufficient order book depth"
+            ]
+    in (newOb, mkWarning <$> bidsWarningM <> asksWarningM)

@@ -16,6 +16,7 @@ module OrderBook.Graph.Types.SomeSellOrder
 , SomeSellOrder
 , CompactOrder'(..)
 , CompactOrder
+, toDouble
 , toCompactOrder
 , NumType
 )
@@ -40,7 +41,7 @@ data SomeSellOrder' numType =
     , soVenue :: T.Text
     } deriving (Eq, Read, Ord, Functor, Generic)
 
-type NumType = Rational
+type NumType = Double
 type SomeSellOrder = SomeSellOrder' NumType
 
 instance Real numType => Show (SomeSellOrder' numType) where
@@ -55,7 +56,7 @@ instance Real numType => Show (SomeSellOrder' numType) where
 instance NFData numType => NFData (SomeSellOrder' numType)
 instance PrettyVal (SomeSellOrder' Double)
 
-instance PrettyVal SomeSellOrder where
+instance PrettyVal (SomeSellOrder' Rational) where
     prettyVal sso =
         prettyVal (fmap realToFrac sso :: SomeSellOrder' Double)
 
@@ -74,12 +75,16 @@ data CompactOrder' numType = CompactOrder'
     , coVenue :: T.Text
     } deriving (Eq, Show, Read, Ord, Functor, Generic)
 
+instance PrettyVal (CompactOrder' Double)
 type CompactOrder = CompactOrder' NumType
+
+toDouble :: Real numType => CompactOrder' numType -> CompactOrder' Double
+toDouble = fmap realToFrac
 
 instance NFData numType => NFData (CompactOrder' numType)
 
 instance DG.HasWeight CompactOrder Double where
-    weight = log . fromRational . coPrice
+    weight = log . coPrice
 
 toCompactOrder :: SomeSellOrder' numType -> CompactOrder' numType
 toCompactOrder o = CompactOrder' (soPrice o) (soQty o) (soVenue o)

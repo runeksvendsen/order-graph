@@ -9,6 +9,7 @@ module OrderBook.Graph.Internal.Prelude
 , pp
 , pprint
 , largeRational
+, largeDouble
 , uppercase
 , T.Text
 , lift
@@ -61,6 +62,9 @@ instance PrettyVal a => PrettyVal (NonEmpty a) where
 
 largeRational :: Rational
 largeRational = fromIntegral (maxBound :: Int64) % 1
+
+largeDouble :: Double
+largeDouble = realToFrac largeRational
 
 uppercase :: String -> String
 uppercase = map toUpper

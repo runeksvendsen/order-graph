@@ -8,6 +8,7 @@ module OrderBook.Graph.Types.Path
 ( Path'
 , Path
 , PathDescr
+, pStart
 , BuyPath
 , SellPath
 , BuyPath'
@@ -38,6 +39,9 @@ data PathDescr = PathDescr
     -- ^ Each pair denotes a move /to/ the given currency /via/ the given venue.
      -- Last currency is destination currency.
     } deriving (Eq, Show, Ord, Generic)
+
+pStart :: PathDescr -> Currency
+pStart = _pStart
 
 instance PrettyVal PathDescr
 
@@ -166,8 +170,8 @@ instance HasPath (SellPath' numType) where
     pathDescr = pathDescr . getSellPath
     showPath = showPath . getSellPath
 
-instance (Fractional numType, Real numType, Show numType) => HasPathQuantity (SellPath' numType) numType where
+instance HasPathQuantity SellPath NumType where
     pPrice = _pPrice . getSellPath
     pQty = _pQty . getSellPath
-    toSellOrder = fmap fromRational . invertSomeSellOrder . toSellOrder . fmap toRational . getSellPath
+    toSellOrder = invertSomeSellOrder . toSellOrder . getSellPath
     showPathQty = showPathQty . getSellPath

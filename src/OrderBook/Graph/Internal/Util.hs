@@ -13,6 +13,7 @@ import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types.SomeSellOrder        (SomeSellOrder, SomeSellOrder'(..))
 
 import qualified Data.List.NonEmpty                         as NE
+import Data.List (partition)
 
 
 -- | merge adjacent orders with same price (ignoring venue)
@@ -62,13 +63,14 @@ trimSlippageGeneric
     -- ^ Slippage in percent. E.g. 50%1 = 50%
     -> [order]
     -- ^ List of trimmed orders sorted by price
-    -> [order]
-trimSlippageGeneric _ _ [] = []
+    -> ([order], [order])
+trimSlippageGeneric _ _ [] = ([], [])
 trimSlippageGeneric oPrice percentDifference (firstOrder : remainingOrders) =
     let startPrice = oPrice firstOrder
-        filterByPricePercentage order =
+        isWithinRange order =
             abs ((oPrice order - startPrice) / startPrice) <= (percentDifference / 100)
-    in firstOrder : filter filterByPricePercentage remainingOrders
+        (withinRangeOrders, notWithinRangeOrders) = partition isWithinRange remainingOrders
+    in (firstOrder : withinRangeOrders, notWithinRangeOrders)
 
 -- | Merge a large number of orders into a smaller number of orders
 --    by merging the volume of adjacent orders into a single order, so
