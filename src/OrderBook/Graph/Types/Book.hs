@@ -97,7 +97,7 @@ baseQuote :: OrderBook numType -> (T.Text, T.Text)
 baseQuote ob = (toS $ base ob, toS $ quote ob)
 
 -- | Convert all orders in an orderbook (consisting of both sell orders and buy orders)
---    into a pair of sell orders and buy orders
+--    into a pair of 'SomeSellOrder' representing both sell orders and buy orders.
 toSellBuyOrders
     :: Real numType
     => OrderBook numType
