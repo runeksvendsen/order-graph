@@ -41,7 +41,7 @@ data SomeSellOrder' numType =
     , soVenue :: T.Text
     } deriving (Eq, Read, Ord, Functor, Generic)
 
-type NumType = Double
+type NumType = Rational
 type SomeSellOrder = SomeSellOrder' NumType
 
 instance Real numType => Show (SomeSellOrder' numType) where
@@ -73,7 +73,14 @@ data CompactOrder' numType = CompactOrder'
     { coPrice :: numType
     , coQty   :: numType
     , coVenue :: T.Text
-    } deriving (Eq, Show, Read, Ord, Functor, Generic)
+    } deriving (Eq, Read, Ord, Functor, Generic)
+
+instance Real numType => Show (CompactOrder' numType) where
+    show CompactOrder'{..} =
+        printf "CompactOrder { %s qty=%f price=%f }"
+            coVenue
+            (realToFrac coQty :: Double)
+            (realToFrac coPrice :: Double)
 
 instance PrettyVal (CompactOrder' Double)
 type CompactOrder = CompactOrder' NumType
@@ -84,7 +91,7 @@ toDouble = fmap realToFrac
 instance NFData numType => NFData (CompactOrder' numType)
 
 instance DG.HasWeight CompactOrder Double where
-    weight = log . coPrice
+    weight = log . fromRational . coPrice
 
 toCompactOrder :: SomeSellOrder' numType -> CompactOrder' numType
 toCompactOrder o = CompactOrder' (soPrice o) (soQty o) (soVenue o)

@@ -120,8 +120,8 @@ fromSellOrder
     :: T.Text           -- ^ Venue
     -> Currency         -- ^ Base
     -> Currency         -- ^ Quote
-    -> Order Double   -- ^ Order
-    -> SomeSellOrder
+    -> Order numType   -- ^ Order
+    -> SomeSellOrder' numType
 fromSellOrder venue base quote o =
     SomeSellOrder'
         { soPrice = price o

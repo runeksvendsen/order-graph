@@ -24,7 +24,7 @@ data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
       -- ^ maximum percentage difference between price of first and last matched order
     }
 
-type BuyOrder = BuyOrder' Double
+type BuyOrder = BuyOrder' NumType
 
 -- | A buy order whose execution will continue until there
 --    is no path from 'src' to 'dst'.
