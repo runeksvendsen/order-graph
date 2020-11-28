@@ -34,7 +34,12 @@ import qualified Criterion.Main.Options                     as Criterion
 import qualified Criterion.Types                            as Criterion
 import qualified UnliftIO.Async                             as Async
 import qualified Data.Csv.Incremental                       as Csv
+-- TMP TEST
+import Control.Exception (SomeException(SomeException), catch, throwIO)
 
+
+printErr :: SomeException -> IO a
+printErr se@(SomeException e) = putStrLn ("caught: " ++ show e) >> throwIO se
 
 main :: IO ()
 main = Opt.withOptions $ \options ->
@@ -42,7 +47,7 @@ main = Opt.withOptions $ \options ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
         orderBooks :: [OrderBook numType] <- Lib.readOrdersFile
             (Opt.logger options) (toRational $ Opt.maxSlippage options) inputFile
-        (graphInfo, graph) <- ST.stToIO $ Lib.buildBuyGraph (Opt.logger options) orderBooks
+        (graphInfo, graph) <- Lib.buildBuyGraph (Opt.logger options) orderBooks
         let executionCryptoList = mkExecutions options graphInfo inputFile graph
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of

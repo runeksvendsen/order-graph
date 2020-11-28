@@ -9,7 +9,7 @@
 module OrderBook.Graph.Types.SortedOrders
 ( SortedOrders, mkSortedOrders, first, rest, prepend, toList, replaceHead
 , CompactOrderList'(..), toSortedOrders, fromSortedOrders
-, CompactOrderList, compactOrderListDouble
+, CompactOrderList, compactOrderListDouble, compactOrderListHead
 , Tag.Tagged(..)
 )
 where
@@ -31,6 +31,9 @@ newtype CompactOrderList' numType = CompactOrderList' { getCompactOrders' :: NE.
 compactOrderListDouble :: Real numType => CompactOrderList' numType -> CompactOrderList' Double
 compactOrderListDouble = fmap realToFrac
 
+compactOrderListHead :: Real numType => CompactOrderList' numType -> CompactOrder' numType
+compactOrderListHead = NE.head . getCompactOrders'
+
 instance PrettyVal (CompactOrderList' Double)
 
 instance DG.HasWeight CompactOrderList Double where
@@ -39,6 +42,7 @@ instance DG.HasWeight CompactOrderList Double where
 instance DG.HasWeight (Tag.Tagged kind CompactOrderList) Double where
     weight = DG.weight . Tag.unTagged
 
+-- TODO: use 'toSellOrder'
 toSortedOrders :: DG.IdxEdge Currency CompactOrderList -> DG.IdxEdge Currency SortedOrders
 toSortedOrders idxEdge =
     let quote = fromNode idxEdge
