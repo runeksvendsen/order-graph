@@ -79,7 +79,7 @@ type CompactOrder = CompactOrder' NumType
 instance NFData numType => NFData (CompactOrder' numType)
 
 instance DG.HasWeight CompactOrder Double where
-    weight = log . fromRational . coPrice
+    weight = fromRational . coPrice
 
 toCompactOrder :: SomeSellOrder' numType -> CompactOrder' numType
 toCompactOrder o = CompactOrder' (soPrice o) (soQty o) (soVenue o)

@@ -9,12 +9,12 @@ packages:
     version: 0.1.0.0
     git: https://github.com/runeksvendsen/bellman-ford.git
     pantry-tree:
-      size: 1649
-      sha256: 008cf9a333526815f4d223eb8d0d1a2aa0642979e0100a72116aa50507b08f0b
-    commit: cf3f399a4b04c8bded22ccd93ad5a76109e7b2a1
+      size: 1696
+      sha256: 541e6b99d7b56d04f19dafd6bdb9d9f7d0081c455299b024946c0f670a38c11b
+    commit: fb44707becdc82573423dea3644cf4195831b65e
   original:
     git: https://github.com/runeksvendsen/bellman-ford.git
-    commit: cf3f399a4b04c8bded22ccd93ad5a76109e7b2a1
+    commit: fb44707becdc82573423dea3644cf4195831b65e
 - completed:
     hackage: logging-3.0.5@sha256:88096d3124fce9a19af3720f751e1a354d866ed5030d2e5197238d2277cdb2f2,2374
     pantry-tree:
