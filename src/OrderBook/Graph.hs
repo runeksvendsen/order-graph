@@ -155,9 +155,7 @@ buildBuyGraph log sellOrders = do
     iGraph <- stToIO $ DG.freeze newGraph
     return (gi, iGraph)
   where
-    -- printGraph :: SellOrderGraph RealWorld "arb" -> SomeException -> IO a
     printGraph gi graph se@(SomeException _) = do
-        stToIO (DG.lookupVertexR graph (unsafeCoerce (67 :: Int))) >>= \lbl -> putStrLn $ show 67 ++ "  " ++ show lbl
         vsyVtx <- stToIO $ DG.lookupVertex graph "VSY"
         putStrLn $ "VSY: " ++ show vsyVtx
         putStrLn ""

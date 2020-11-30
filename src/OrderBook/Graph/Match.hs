@@ -66,7 +66,7 @@ queryUpdateGraph bo queryGraph =
             Just sp -> do
                 let (edgeOrderList, buyPath) = subtractMatchedQty sp
                 forM_ edgeOrderList $ \(idxEdges, sellOrder) -> updateGraphEdge idxEdges sellOrder
-                "###### queryUpdateGraph.go #####" `trace` go (addOrder mr buyPath)
+                go (addOrder mr buyPath)
 
 updateGraphEdge
     :: DG.IdxEdge Currency B.CompactOrderList
