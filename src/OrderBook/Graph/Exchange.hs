@@ -25,7 +25,7 @@ module OrderBook.Graph.Exchange
 where
 
 import           OrderBook.Graph.Internal.Prelude
-import           OrderBook.Graph.Types                  (SomeSellOrder'(..), SomeSellOrder)
+import           OrderBook.Graph.Types                  (NumType, SomeSellOrder'(..), SomeSellOrder)
 import           OrderBook.Graph.Query                  (ShortestPath, spEdges)
 import qualified OrderBook.Graph.Build                  as B
 import qualified Data.Graph.Digraph                     as DG
@@ -39,7 +39,7 @@ import qualified Data.List.NonEmpty                     as NE
 -- ^ Some quantity of "thing"
 newtype Qty' numType (thing :: Symbol) = Qty' numType
     deriving (Eq, Ord, Num)
-type Qty = Qty' Rational
+type Qty = Qty' NumType
 
 rawQty :: Qty' numType thing -> numType
 rawQty (Qty' qty) = qty
@@ -51,7 +51,7 @@ instance (KnownSymbol thing, Real numType) => Show (Qty' numType thing) where
 -- ^ A price for exchanging some quantity of "src" for "dst"
 newtype Price' numType (src :: Symbol) (dst :: Symbol) = Price' numType
     deriving (Eq, Show, Ord, Num)
-type Price = Price' Rational
+type Price = Price' NumType
 
 rawPrice :: Price' numType src dst -> numType
 rawPrice (Price' price) = price
@@ -83,7 +83,7 @@ data Order' numType (src :: Symbol) (dst :: Symbol) = Order'
     (Qty' numType src)
     (Price' numType src dst)
         deriving (Eq, Show, Ord)
-type Order = Order' Rational
+type Order = Order' NumType
 
 oQty :: Order' numType src dst -> Qty' numType src
 oQty (Order' qty _) = qty

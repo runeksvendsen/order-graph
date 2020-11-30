@@ -12,6 +12,7 @@ where
 
 import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types.Path                 (pPrice, pQty, Path')
+import OrderBook.Graph.Types.SomeSellOrder (NumType)
 
 
 -- |
@@ -23,7 +24,7 @@ data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
       -- ^ maximum percentage difference between price of first and last matched order
     }
 
-type BuyOrder = BuyOrder' Rational
+type BuyOrder = BuyOrder' NumType
 
 -- | A buy order whose execution will continue until there
 --    is no path from 'src' to 'dst'.
@@ -36,7 +37,7 @@ unlimited = BuyOrder'
     , boMaxSlippage = Nothing
     }
 
-type MatchResult = MatchResult' Rational
+type MatchResult = MatchResult' NumType
 data MatchResult' numTyp = MatchResult'
     { mrOrders      :: [Path' numTyp]
     , mrFirstOrder  :: Maybe (Path' numTyp)
