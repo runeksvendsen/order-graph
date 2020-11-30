@@ -1,0 +1,156 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: d987e6d9f9a8dec4440d479dd39e3a84e47dfceacf0518fb2a82782574d56c4c
+
+name:           order-graph
+version:        0.1.0.0
+category:       value
+homepage:       https://github.com/runeksvendsen/order-graph#readme
+author:         Rune K. Svendsen
+maintainer:     runesvend@gmail.com
+copyright:      CC0
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+
+library
+  exposed-modules:
+      OrderBook.Graph
+      OrderBook.Graph.Build
+      OrderBook.Graph.Exchange
+      OrderBook.Graph.Internal.Prelude
+      OrderBook.Graph.Internal.Util
+      OrderBook.Graph.Match
+      OrderBook.Graph.Match.Types
+      OrderBook.Graph.Query
+      OrderBook.Graph.Run
+      OrderBook.Graph.Types
+      OrderBook.Graph.Types.Book
+      OrderBook.Graph.Types.Currency
+      OrderBook.Graph.Types.Path
+      OrderBook.Graph.Types.SomeSellOrder
+      OrderBook.Graph.Types.SortedOrders
+  other-modules:
+      Paths_order_graph
+  hs-source-dirs:
+      src
+  default-extensions: FlexibleContexts DeriveGeneric DataKinds PolyKinds
+  ghc-options: -O2 -fno-ignore-asserts -Wall
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bellman-ford
+    , deepseq
+    , hashable
+    , pretty-show
+    , primitive
+    , protolude
+    , tagged
+    , text
+    , thrist
+    , vector
+  default-language: Haskell2010
+
+executable order-graph-exe
+  main-is: Main.hs
+  other-modules:
+      Format
+      Options
+      Paths_order_graph
+  hs-source-dirs:
+      app
+  default-extensions: FlexibleContexts DeriveGeneric DataKinds PolyKinds
+  ghc-options: -O2 -fno-ignore-asserts -Wall
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bellman-ford
+    , cassava
+    , criterion
+    , directory
+    , filepath
+    , logging
+    , optparse-applicative
+    , order-graph
+    , orderbook
+    , protolude
+    , safe-money
+    , text
+    , text-format
+    , unliftio
+    , unordered-containers
+    , vector
+  default-language: Haskell2010
+
+test-suite order-graph-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Common.Util
+      Property.Build
+      Property.Combine
+      Property.Match
+      Property.Orphans
+      Unit.Integration
+      Unit.Regression
+      Unit.Spec
+      Paths_order_graph
+  hs-source-dirs:
+      test
+  default-extensions: FlexibleContexts DeriveGeneric DataKinds PolyKinds
+  ghc-options: -O2 -fno-ignore-asserts -Wall
+  build-depends:
+      HUnit
+    , QuickCheck
+    , base >=4.7 && <5
+    , bellman-ford
+    , hspec
+    , hspec-expectations
+    , hspec-expectations-pretty-diff
+    , hspec-smallcheck
+    , order-graph
+    , orderbook
+    , random-shuffle
+    , safe-money
+    , smallcheck
+    , tasty
+    , tasty-quickcheck
+    , tasty-smallcheck
+    , text
+    , vector
+  default-language: Haskell2010
+
+benchmark order-graph-bench
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_order_graph
+  hs-source-dirs:
+      bench
+  default-extensions: FlexibleContexts DeriveGeneric DataKinds PolyKinds
+  ghc-options: -O2 -fno-ignore-asserts -Wall
+  build-depends:
+      HUnit
+    , QuickCheck
+    , base >=4.7 && <5
+    , bellman-ford
+    , gauge
+    , hspec
+    , hspec-expectations
+    , hspec-expectations-pretty-diff
+    , hspec-smallcheck
+    , order-graph
+    , orderbook
+    , random-shuffle
+    , safe-money
+    , smallcheck
+    , tasty
+    , tasty-quickcheck
+    , tasty-smallcheck
+    , text
+    , vector
+  default-language: Haskell2010
