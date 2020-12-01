@@ -91,19 +91,3 @@ benchmarks:
     dependencies:
     - order-graph
     - gauge
-    - vector
-    - HUnit
-    - hspec-expectations
-    - hspec-expectations-pretty-diff
-    - QuickCheck
-    - hspec
-    - tasty
-    - tasty-smallcheck
-    - tasty-quickcheck
-    - smallcheck
-    - hspec-smallcheck
-    - random-shuffle
-    - text
-    - safe-money
-    - orderbook
-    - bellman-ford

@@ -42,7 +42,7 @@ main = Opt.withOptions $ \options ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
         orderBooks :: [OrderBook numType] <- Lib.readOrdersFile
             (Opt.logger options) (toRational $ Opt.maxSlippage options) inputFile
-        (graphInfo, graph) <- stToIO $ Lib.buildBuyGraph (Opt.logger options) orderBooks
+        (graphInfo, graph) <- ST.stToIO $ Lib.buildBuyGraph (Opt.logger options) orderBooks
         let executionCryptoList = mkExecutions options graphInfo inputFile graph
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of

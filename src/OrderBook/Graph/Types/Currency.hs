@@ -18,7 +18,7 @@ newtype Currency = Currency T.Text
     deriving (Eq, Ord, Read, IsString, Semigroup, Monoid, Hashable, Generic, PrettyVal)
 
 instance Show Currency where
-    show (Currency txt) = "\"" <> toS txt <> "\""
+    show (Currency txt) = toS txt
 instance NFData Currency
 instance StringConv String Currency where
     strConv _ = fromString
