@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3446ff1388d465603e359f6a548907c627aba06453228b7d7fabe7adfac79e81
+-- hash: d987e6d9f9a8dec4440d479dd39e3a84e47dfceacf0518fb2a82782574d56c4c
 
 name:           order-graph
 version:        0.1.0.0
@@ -108,6 +108,37 @@ test-suite order-graph-test
     , QuickCheck
     , base >=4.7 && <5
     , bellman-ford
+    , hspec
+    , hspec-expectations
+    , hspec-expectations-pretty-diff
+    , hspec-smallcheck
+    , order-graph
+    , orderbook
+    , random-shuffle
+    , safe-money
+    , smallcheck
+    , tasty
+    , tasty-quickcheck
+    , tasty-smallcheck
+    , text
+    , vector
+  default-language: Haskell2010
+
+benchmark order-graph-bench
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_order_graph
+  hs-source-dirs:
+      bench
+  default-extensions: FlexibleContexts DeriveGeneric DataKinds PolyKinds
+  ghc-options: -O2 -fno-ignore-asserts -Wall
+  build-depends:
+      HUnit
+    , QuickCheck
+    , base >=4.7 && <5
+    , bellman-ford
+    , gauge
     , hspec
     , hspec-expectations
     , hspec-expectations-pretty-diff

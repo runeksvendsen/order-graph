@@ -43,12 +43,7 @@ import OrderBook.Graph.Run as Export (runArb, runMatch)
 import OrderBook.Graph.Types.Path as Export
 import OrderBook.Graph.Exchange as Export (invertSomeSellOrder)
 import Data.Ord (comparing)
--- TMP
-import Control.Exception (SomeException(SomeException), catch, throwIO)
-import OrderBook.Graph.Types.SortedOrders (compactOrderListHead)
-import OrderBook.Graph.Types.SortedOrders (Tagged(unTagged))
-import qualified OrderBook.Graph.Types.SomeSellOrder as SO
-import Unsafe.Coerce (unsafeCoerce)
+
 
 -- |
 withBidsAsksOrder
@@ -100,8 +95,8 @@ buildGraph
     :: (Real numType)
     => (forall m. Monad m => String -> m ())
     -> [OrderBook numType]
-    -> IO (GraphInfo numType, SellOrderGraph RealWorld "arb")
-buildGraph log sellOrders = stToIO $ do
+    -> ST s (GraphInfo numType, SellOrderGraph s "arb")
+buildGraph log sellOrders = do
     log "Building graph..."
     graph <- build sellOrders -- buildFromOrders testOrders
     currencies <- DG.vertexLabels graph
@@ -121,10 +116,10 @@ data GraphInfo numType = GraphInfo
 findArbitrages
     :: (forall m. Monad m => String -> m ())
     -> GraphInfo numType
-    -> SellOrderGraph RealWorld "arb"
-    -> IO (SellOrderGraph RealWorld "buy")
+    -> SellOrderGraph s "arb"
+    -> ST s (SellOrderGraph s "buy")
 findArbitrages log gi graph = do
-    stToIO $ runArb graph $ do
+    runArb graph $ do
         log "Finding arbitrages..."
         let findArbs (_, arbsAccum) src = do
                 log $ "\t" ++ toS src
@@ -148,23 +143,12 @@ buildBuyGraph
     :: Real numType
     => (forall m. Monad m => String -> m ())
     -> [OrderBook numType]
-    -> IO (GraphInfo numType, IBuyGraph)
+    -> ST s (GraphInfo numType, IBuyGraph)
 buildBuyGraph log sellOrders = do
     (gi, mGraph) <- buildGraph log sellOrders
-    newGraph <- findArbitrages log gi mGraph `catch` printGraph gi mGraph
-    iGraph <- stToIO $ DG.freeze newGraph
+    newGraph <- findArbitrages log gi mGraph
+    iGraph <- DG.freeze newGraph
     return (gi, iGraph)
-  where
-    printGraph gi graph se@(SomeException _) = do
-        vsyVtx <- stToIO $ DG.lookupVertex graph "VSY"
-        putStrLn $ "VSY: " ++ show vsyVtx
-        putStrLn ""
-        edges <- stToIO $ mapM (DG.outgoingEdges' graph) (giVertices gi)
-        let edges' = fmap (compactOrderListHead . unTagged) <$> concat (catMaybes edges)
-        putStrLn $ unlines (sedgewickWayneFormat (length $ giVertices gi)  edges')
-        -- mapM_ (putStrLn . show . SO.fromCompactOrder) edges'
-        -- print $ sort vertexList
-        throwIO se
 
 -- |
 matchOrders
