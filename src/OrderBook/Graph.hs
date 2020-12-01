@@ -29,7 +29,7 @@ import qualified OrderBook.Graph.Types.Book as Book
 import qualified Data.Graph.Digraph as DG
 
 import Data.Text (Text)
-import Data.List (sort, sortOn, sortBy, nub, groupBy)
+import Data.List (sortOn, sortBy, nub, groupBy)
 import qualified Data.Aeson as Json
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T

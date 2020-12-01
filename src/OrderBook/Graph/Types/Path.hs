@@ -1,5 +1,4 @@
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -178,4 +177,10 @@ instance HasPathQuantity SellPath NumType where
     pPrice = _pPrice . getSellPath
     pQty = _pQty . getSellPath
     toSellOrder = invertSomeSellOrder . toSellOrder . getSellPath
+    showPathQty = showPathQty . getSellPath
+
+instance HasPathQuantity (SellPath' Double) Double where
+    pPrice = _pPrice . getSellPath
+    pQty = _pQty . getSellPath
+    toSellOrder = fmap realToFrac . toSellOrder . fmap toRational
     showPathQty = showPathQty . getSellPath
