@@ -44,6 +44,7 @@ pStart :: PathDescr -> Currency
 pStart = _pStart
 
 instance PrettyVal PathDescr
+instance NFData PathDescr
 
 -- | A path from one currency to another, going through at least a single venue, and zero or more intermediate currency+venue.
 --   Examples:
@@ -67,6 +68,7 @@ instance Ord numType => Ord (Path' numType) where
         in mkTuple p1 `compare` mkTuple p2
 
 instance PrettyVal numType => PrettyVal (Path' numType)
+instance NFData numType => NFData (Path' numType)
 
 type Path = Path' NumType
 
@@ -75,6 +77,7 @@ newtype BuyPath' numType = BuyPath' { getBuyPath :: Path' numType }
     deriving (Eq, Show, Ord, Generic, Functor)
 
 type BuyPath = BuyPath' NumType
+instance NFData numType => NFData (BuyPath' numType)
 
 -- | The same as 'Path'', except with different units for price and quantity.
 --   Price unit is /destination currency/ per /start currency/;
@@ -98,6 +101,7 @@ toSellPath bp@Path'{..} = SellPath' $
       }
 
 instance PrettyVal numType => PrettyVal (SellPath' numType)
+instance NFData numType => NFData (SellPath' numType)
 
 type SellPath = SellPath' NumType
 
