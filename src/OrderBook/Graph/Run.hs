@@ -16,14 +16,14 @@ runArb
     -> Q.ArbGraphM s a
     -> ST s a
 runArb graph =
-    BF.runBF graph sumWeight
+    BF.runBF graph sumWeight 0
 
 runMatch
     :: B.SellOrderGraph s "buy"
     -> Q.BuyGraphM s a
     -> ST s a
 runMatch graph =
-    BF.runBF graph sumWeight
+    BF.runBF graph sumWeight 0
 
 sumWeight
     :: DG.HasWeight e Double

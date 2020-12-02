@@ -4,7 +4,7 @@ extra-deps:
   - git: https://github.com/runeksvendsen/orderbook.git
     commit: 1cfe64aeb59ddebcfb0b8353f82457d16766fa36
   - git: https://github.com/runeksvendsen/bellman-ford.git
-    commit: 5d62c5045c4451df215f23b1fb003dd7cb889833
+    commit: f5ebad4d2cff23ccf21b8806ae6cdedea2a20e5c
   - git: https://github.com/runeksvendsen/mono-traversable.git
     commit: d1c7e00240482b57ed61e9342cb227d44a02c70a
     subdirs:
