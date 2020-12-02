@@ -1,0 +1,1287 @@
+4.0918553559999994e-2 BTC --binance--> USDT --bittrex--> ATOM --coinbase--> USD
+6.441736227045076e-2 BTC --bitfinex--> ETH --bitfinex--> EUR --coinbase--> XLM --binance--> USDT --binance--> FUN --bitfinex--> USD
+9.696979979999999e-2 BTC --binance--> ENJ --bitfinex--> USD
+0.10613727432 BTC --binance--> USDT --bittrex--> DASH --coinbase--> USD
+0.126 BTC --bitfinex--> ETH --bitfinex--> LOO --bitfinex--> USD
+0.142394288 BTC --binance--> PIVX --binance--> ETH --bitfinex--> USD
+0.14264249999999998 BTC --binance--> BNB --binance--> LTC --bitfinex--> UST --bitfinex--> USD
+0.610189944 BTC --binance--> KMD --binance--> ETH --bitfinex--> USD
+1.0 BTC --bitfinex--> ETH --bitfinex--> SWM --bitfinex--> USD
+1.4421899109792284 BTC --binance--> COS --binance--> BNB --binance--> NEO --bitfinex--> USD
+1.55 BTC --bitfinex--> ETH --bitfinex--> TKN --bitfinex--> USD
+1.6063921799999954 BTC --binance--> USDT --binance--> FUN --bitfinex--> USD
+2.1603114 BTC --bitfinex--> ETH --bitfinex--> ODE --bitfinex--> USD
+2.2286940042817798 BTC --bitfinex--> ETH --bitfinex--> VLD --bitfinex--> USD
+2.2606670196109993 BTC --binance--> QTUM --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+2.4515845336787563 BTC --binance--> ONE --binance--> BNB --binance--> XRP --bittrex--> USD
+2.4880693837999996 BTC --binance--> VIA --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+2.49813 BTC --binance--> BNB --binance--> DUSK --bitfinex--> USD
+2.6149500000000003 BTC --binance--> BNB --binance--> OMG --bitfinex--> USD
+2.8635 BTC --binance--> USDC --binance--> BNB --binance--> NEO --bitfinex--> USD
+3.1116950812 BTC --bitfinex--> ETH --bitfinex--> ORS --bitfinex--> USD
+3.403462848 BTC --bitfinex--> ETH --bittrex--> BNT --bitfinex--> USD
+3.75 BTC --bitfinex--> ETH --bitfinex--> OKB --bitfinex--> USD
+3.8039700600000006 BTC --binance--> QLC --binance--> ETH --bitfinex--> USD
+3.8221256102599996 BTC --binance--> AGI --bitfinex--> USD
+3.8360570719999987 BTC --binance--> STRAT --bittrex--> ETH --bitfinex--> USD
+3.9265513085039996 BTC --bitfinex--> ETH --bittrex--> XRP --bittrex--> USD
+3.999984 BTC --bitfinex--> ETH --bitfinex--> MLN --bitfinex--> USD
+4.0124699999999995 BTC --binance--> BNB --binance--> BTT --bitfinex--> USD
+4.15922595001 BTC --bitfinex--> ETH --bitfinex--> XRA --bitfinex--> USD
+4.272183362477632 BTC --bitfinex--> ETH --bitfinex--> YGG --bitfinex--> USD
+4.291580677916 BTC --bitfinex--> MIT --bitfinex--> USD
+4.379358390418006 BTC --bitfinex--> ETH --bitfinex--> EUR --coinbase--> XLM --binance--> USDT --binance--> ETC --bitfinex--> USD
+4.429345632567933 BTC --bittrex--> USDT --binance--> BAT --bittrex--> ETH --bitfinex--> USD
+4.4642 BTC --bitfinex--> ESS --bitfinex--> USD
+4.49198532 BTC --binance--> BRD --binance--> ETH --bitfinex--> USD
+4.560029171717172 BTC --binance--> QTUM --binance--> BNB --binance--> ZEN --bittrex--> USD
+4.6144816053017 BTC --bitfinex--> ZCN --bitfinex--> USD
+4.794212961149 BTC --bitfinex--> POA --bitfinex--> USD
+5.071089456 BTC --bitfinex--> ATM --bitfinex--> USD
+5.193751476683937 BTC --binance--> ENJ --binance--> BNB --binance--> XRP --bitstamp--> USD
+5.423514079199999 BTC --bitfinex--> ETH --bitfinex--> TRI --bitfinex--> USD
+5.4873 BTC --bitfinex--> JPY --bitfinex--> EOS --bitfinex--> USK --bitfinex--> USD
+5.494097910000001 BTC --binance--> USDT --bittrex--> LTC --coinbase--> USD
+5.51524969077552 BTC --bitfinex--> DTH --bitfinex--> USD
+5.645904000000001 BTC --binance--> USDT --bittrex--> BCH --bitstamp--> USD
+5.657086071887035 BTC --bittrex--> DASH --binance--> USDT --binance--> XRP --bitfinex--> USD
+5.7618784000000005 BTC --bitfinex--> NEC --bitfinex--> USD
+5.7638252032 BTC --binance--> REP --bitfinex--> USD
+6.075752679654999 BTC --bitfinex--> CBT --bitfinex--> USD
+6.1851 BTC --binance--> USDC --binance--> BNB --binance--> ETC --bitfinex--> USD
+6.29865897 BTC --bitfinex--> ETH --bitfinex--> ABS --bitfinex--> USD
+6.440841749665924 BTC --binance--> USDT --binance--> ERD --binance--> BNB --binance--> XRP --bitfinex--> USD
+6.6000000000000005 BTC --bitfinex--> ETH --bitfinex--> DRN --bitfinex--> USD
+6.66419863692 BTC --bittrex--> XLM --bitfinex--> WLO --bitfinex--> USD
+7.25130916920917 BTC --bitfinex--> EUR --coinbase--> ZRX --bitfinex--> USD
+7.312041538801999 BTC --binance--> IOTX --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+7.6743549600000005 BTC --bitfinex--> ETH --bitfinex--> UTN --bitfinex--> USD
+7.687582637729549 BTC --bitfinex--> GBP --bitfinex--> TRX --binance--> WIN --binance--> USDT --binance--> FUN --bitfinex--> USD
+7.8 BTC --binance--> ETH --binance--> FUN --bitfinex--> USD
+7.865 BTC --bittrex--> AID --bitfinex--> USD
+8.380799999999999 BTC --binance--> BUSD --binance--> USDT --binance--> BNB --binance--> XTZ --bitfinex--> USD
+8.409118073681675 BTC --binance--> KAVA --binance--> BNB --binance--> BCH --coinbase--> USD
+8.468891165851097 BTC --bitfinex--> ETH --bitfinex--> ATM --bitfinex--> USD
+8.7015 BTC --binance--> BNB --binance--> XTZ --coinbase--> USD
+9.21119268258189 BTC --bitfinex--> JPY --bitfinex--> EOS --bitfinex--> USK --bitfinex--> UST --bitfinex--> USD
+9.26406 BTC --bitfinex--> RIF --bitfinex--> USD
+9.337651525356 BTC --bitfinex--> VEE --bitfinex--> USD
+9.419937856 BTC --bitfinex--> OMN --bitfinex--> USD
+9.542594880000001 BTC --binance--> WAVES --binance--> ETH --bitfinex--> USD
+9.613312200000001 BTC --bitfinex--> ODE --bitfinex--> USD
+9.97506243 BTC --binance--> ATOM --bittrex--> USD
+10.041007269175422 BTC --binance--> ONG --binance--> USDT --binance--> PAX --binance--> EOS --bitfinex--> USD
+10.06075030922448 BTC --bitfinex--> ETH --bitfinex--> DTH --bitfinex--> USD
+10.1850865698648 BTC --binance--> USDS --bittrex--> USD
+10.22551 BTC --bitfinex--> ETH --binance--> RUB --binance--> XRP --bitfinex--> USD
+10.225622469997456 BTC --bitfinex--> DTA --bitfinex--> USD
+10.4669782107282 BTC --binance--> BUSD --binance--> USDT --bittrex--> XVG --bitfinex--> USD
+10.532433214380001 BTC --bitfinex--> ETH --bitfinex--> NIO --bitfinex--> USD
+10.656693898 BTC --bitfinex--> BNT --bitfinex--> USD
+10.91971435794431 BTC --bitfinex--> ETH --binance--> REQ --bitfinex--> USD
+10.930444099715999 BTC --bitfinex--> ETH --bitfinex--> MIT --bitfinex--> USD
+11.112 BTC --bitfinex--> ZEC --binance--> USDT --binance--> FUN --bitfinex--> USD
+11.2014 BTC --bitfinex--> AVT --bitfinex--> USD
+11.25 BTC --bitfinex--> OKB --bitfinex--> USD
+12.788099999999998 BTC --binance--> USDC --binance--> ATOM --coinbase--> USD
+13.081354876948131 BTC --bitfinex--> ETH --binance--> RUB --binance--> XRP --coinbase--> USD
+13.683600000000002 BTC --bitfinex--> ETH --bitfinex--> UFR --bitfinex--> USD
+14.59307738436 BTC --bitfinex--> STJ --bitfinex--> USD
+14.63275482858189 BTC --bitfinex--> ETH --bitfinex--> USK --bitfinex--> UST --bitfinex--> USD
+14.63275482858189 BTC --bitfinex--> USK --bitfinex--> UST --bitfinex--> USD
+15.085022691620113 BTC --binance--> HC --binance--> USDT --binance--> LTC --coinbase--> USD
+15.568183743529998 BTC --bitfinex--> ETH --bittrex--> LTC --bittrex--> USD
+16.74708022992 BTC --bitfinex--> ETH --bitfinex--> EUS --bitfinex--> USD
+17.0879104 BTC --binance--> PAX --binance--> LTC --coinbase--> USD
+17.207118468486552 BTC --binance--> CVC --binance--> USDT --binance--> XRP --bitfinex--> USD
+17.63207190756936 BTC --bitfinex--> ETH --bitfinex--> IOS --bitfinex--> USD
+17.972733378935576 BTC --bitfinex--> ETH --binance--> BNB --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+18.2156904 BTC --bitfinex--> SEN --bitfinex--> USD
+18.886194342552393 BTC --bitfinex--> JPY --bitfinex--> EOS --bitfinex--> IQX --bitfinex--> USD
+19.030996563279 BTC --bitfinex--> ETH --bitfinex--> ANT --bitfinex--> USD
+19.1792598 BTC --bitfinex--> SPK --bitfinex--> USD
+19.541058321247437 BTC --bitfinex--> ETH --binance--> HC --binance--> USDT --binance--> ETC --bitfinex--> USD
+20.000000019999998 BTC --bitfinex--> ETH --bitfinex--> GNO --bitfinex--> USD
+20.0042853609 BTC --binance--> TUSD --binance--> USDT --bittrex--> ETC --bitfinex--> USD
+20.449924346499998 BTC --binance--> CND --bitfinex--> USD
+21.310383879396 BTC --bitfinex--> ETH --bitfinex--> NCA --bitfinex--> USD
+21.34020110221519 BTC --binance--> USDT --binance--> ERD --binance--> BNB --binance--> ETC --bitfinex--> USD
+21.85422278241116 BTC --bitfinex--> IOS --bitfinex--> USD
+22.45498527946128 BTC --binance--> BRD --binance--> BNB --binance--> ZEN --bittrex--> USD
+23.4090304608 BTC --binance--> TUSD --binance--> USDT --bittrex--> BCH --coinbase--> USD
+25.1361304402 BTC --binance--> WTC --bitfinex--> USD
+26.1738 BTC --bitfinex--> ETH --bitfinex--> ONL --bitfinex--> USD
+28.4991 BTC --bitfinex--> ETH --binance--> REP --coinbase--> USD
+28.8927 BTC --binance--> DUSK --bitfinex--> USD
+29.083230692599624 BTC --binance--> ENJ --binance--> BNB --binance--> ETC --bitfinex--> USD
+29.855567451800002 BTC --bitfinex--> ETH --bitfinex--> PAS --bitfinex--> USD
+30.282 BTC --bittrex--> RCN --bitfinex--> USD
+30.77221487840518 BTC --bitfinex--> ETH --bitfinex--> MTN --bitfinex--> USD
+31.29 BTC --bitfinex--> XCH --bitfinex--> USD
+31.51513373737374 BTC --binance--> ONT --binance--> BNB --binance--> ZEN --bittrex--> USD
+31.52022566758803 BTC --binance--> WAVES --binance--> TUSD --binance--> XRP --bitstamp--> USD
+32.257691251320004 BTC --bitfinex--> WAX --bitfinex--> USD
+32.5325 BTC --bitfinex--> ETH --bitfinex--> OKB --bitfinex--> UST --bitfinex--> USD
+34.35707041695513 BTC --binance--> RUB --binance--> XRP --bitstamp--> USD
+35.28 BTC --bitfinex--> ETH --bitfinex--> FOA --bitfinex--> USD
+35.5333333332978 BTC --bitfinex--> PAI --bitfinex--> USD
+35.862354932 BTC --bitfinex--> ETH --bitfinex--> BNT --bitfinex--> USD
+35.92513424699835 BTC --binance--> SKY --binance--> BNB --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+37.933279999999996 BTC --binance--> PAX --binance--> BTT --bitfinex--> USD
+38.121962112 BTC --binance--> SYS --binance--> ETH --bitfinex--> USD
+38.123277545705 BTC --bitfinex--> ETH --bitfinex--> CBT --bitfinex--> USD
+38.17237483576441 BTC --binance--> RUB --binance--> XRP --coinbase--> USD
+38.462722190971036 BTC --bitfinex--> EUR --binance--> BNB --binance--> EOS --bitfinex--> USD
+39.231106524104696 BTC --binance--> ZRX --bittrex--> USD
+41.00498745761659 BTC --bitfinex--> ETH --bitfinex--> BOX --bitfinex--> USD
+41.23549234717433 BTC --binance--> USDC --binance--> BCH --coinbase--> USD
+41.51204089714001 BTC --bitfinex--> BAT --bitfinex--> USD
+43.02856067209475 BTC --binance--> RVN --binance--> BNB --binance--> XRP --bitstamp--> USD
+44.119720391372994 BTC --bitfinex--> SAN --bitfinex--> USD
+44.121208705573 BTC --bitfinex--> ETH --bitfinex--> SAN --bitfinex--> USD
+44.434550311986 BTC --bitfinex--> AIO --bitfinex--> USD
+44.9494163386411 BTC --bitfinex--> ETH --bitfinex--> ZCN --bitfinex--> USD
+45.6 BTC --bitfinex--> ETH --bitfinex--> CSX --bitfinex--> USD
+45.699704232117504 BTC --bitfinex--> ETH --bittrex--> XTZ --bittrex--> USD
+46.067570532 BTC --binance--> CDT --binance--> ETH --bitfinex--> USD
+46.16475470516861 BTC --bitfinex--> IQX --bitfinex--> USD
+46.70734609369593 BTC --bitfinex--> MTN --bitfinex--> USD
+46.77671007366509 BTC --bitfinex--> ETH --bitfinex--> VEE --bitfinex--> USD
+47.1302200248 BTC --bitfinex--> ETH --bitfinex--> IMP --bitfinex--> USD
+49.619833893287996 BTC --bitfinex--> DAD --bitfinex--> USD
+50.23375894734691 BTC --bitfinex--> ETH --bitfinex--> AUC --bitfinex--> USD
+50.43092959479447 BTC --bitfinex--> ETH --binance--> RUB --binance--> XRP --bitstamp--> USD
+50.721224660640004 BTC --coinbase--> REP --binance--> ETH --bitfinex--> USD
+50.73823257019291 BTC --binance--> HC --binance--> USDT --binance--> XTZ --coinbase--> USD
+51.11447005393097 BTC --binance--> BUSD --binance--> XRP --bittrex--> USD
+51.62326314863465 BTC --binance--> BUSD --binance--> XRP --bitfinex--> USD
+52.06209160345651 BTC --binance--> ONE --binance--> USDT --bittrex--> ETC --bitfinex--> USD
+53.403349999999996 BTC --bitfinex--> AMP --bitfinex--> UST --bitfinex--> USD
+56.48916486278595 BTC --binance--> WAVES --binance--> USDC --binance--> XRP --bitstamp--> USD
+57.2539205 BTC --binance--> BUSD --binance--> BCH --bitstamp--> USD
+59.80617022194984 BTC --bitfinex--> ETH --bitfinex--> LYM --bitfinex--> USD
+59.85717912361544 BTC --binance--> ONT --binance--> BNB --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+59.99999999999999 BTC --bitfinex--> SEE --bitfinex--> USD
+60.0 BTC --bittrex--> BNT --bitfinex--> USD
+60.2695047626573 BTC --binance--> USDC --binance--> BCH --bitstamp--> USD
+62.527179600000004 BTC --bitfinex--> ETH --bitfinex--> GEN --bitfinex--> USD
+62.650355600618475 BTC --bitfinex--> ETH --binance--> TRY --binance--> XRP --bitstamp--> USD
+62.857595710682745 BTC --binance--> TRY --binance--> XRP --bitstamp--> USD
+64.0 BTC --bitfinex--> ETH --bitfinex--> INT --bitfinex--> USD
+64.48736470859524 BTC --binance--> QTUM --binance--> BUSD --binance--> ETC --bitfinex--> USD
+67.49244 BTC --bitfinex--> POY --bitfinex--> USD
+71.7667422 BTC --bitfinex--> ETH --bitfinex--> SEN --bitfinex--> USD
+74.23133245027499 BTC --binance--> MTL --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+74.37983543468731 BTC --bitfinex--> UTK --bitfinex--> USD
+74.95445717311136 BTC --bitfinex--> LYM --bitfinex--> USD
+76.91553063833521 BTC --bitfinex--> ETH --bitfinex--> YYW --bitfinex--> USD
+79.24750523735506 BTC --binance--> USDC --binance--> BNB --binance--> XRP --bitfinex--> USD
+79.98019149624959 BTC --bitfinex--> ETH --bitfinex--> POY --bitfinex--> USD
+81.65821182773 BTC --bitfinex--> EUR --bitfinex--> TRX --binance--> XRP --bitstamp--> USD
+82.8913370714 BTC --bitfinex--> ETH --bitfinex--> GOT --bitfinex--> USD
+83.696067 BTC --coinbase--> USDC --binance--> XRP --bitstamp--> USD
+83.735312 BTC --bittrex--> USDT --binance--> HBAR --bittrex--> USD
+87.78921439999999 BTC --binance--> BUSD --binance--> LTC --coinbase--> USD
+88.70602467794899 BTC --binance--> USDT --binance--> BTT --bitfinex--> USD
+89.628222295983 BTC --bittrex--> XTZ --coinbase--> USD
+89.73216982032903 BTC --binance--> TUSD --binance--> USDT --bittrex--> XTZ --bittrex--> USD
+91.2139992326672 BTC --bitfinex--> ETH --bittrex--> DGB --bittrex--> USD
+94.04627085752449 BTC --bitfinex--> ETH --bitfinex--> SPK --bitfinex--> USD
+94.88964572403025 BTC --binance--> BUSD --binance--> USDT --binance--> BTT --bitfinex--> USD
+98.28360925071803 BTC --binance--> BUSD --binance--> USDT --binance--> XLM --coinbase--> USD
+99.1049845589111 BTC --bittrex--> VEE --bitfinex--> USD
+100.412316 BTC --coinbase--> USDC --binance--> ETH --bitfinex--> USD
+101.44832188781702 BTC --binance--> USDT --binance--> DUSK --bitfinex--> USD
+102.37021837589784 BTC --bitfinex--> EUR --bitfinex--> TRX --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+103.75 BTC --binance--> LRC --bitfinex--> USD
+104.71361612060399 BTC --bitfinex--> NCA --bitfinex--> USD
+105.89413116378272 BTC --bitfinex--> ETH --binance--> BUSD --binance--> USDT --binance--> BCH --bittrex--> USD
+110.79173340000001 BTC --bittrex--> USDT --binance--> TUSD --binance--> LTC --bitfinex--> USD
+112.63145545414018 BTC --bittrex--> PAX --binance--> EOS --bitfinex--> USD
+112.75996301219 BTC --bitfinex--> ETH --bitfinex--> CTX --bitfinex--> USD
+112.905713135 BTC --bitfinex--> ETH --bittrex--> SC --bittrex--> USD
+113.593633656948 BTC --binance--> RDN --bitfinex--> USD
+114.66931909326807 BTC --binance--> WAVES --binance--> USDT --binance--> XTZ --coinbase--> USD
+115.66482 BTC --bitfinex--> ETH --binance--> LTC --bitfinex--> USD
+117.83762005137591 BTC --binance--> ZRX --bitfinex--> USD
+123.9575792458442 BTC --bitfinex--> ETH --bittrex--> DGB --bitfinex--> USD
+125.12499999999999 BTC --binance--> CHZ --bitfinex--> UST --bitfinex--> USD
+127.7913629161365 BTC --bittrex--> USDT --binance--> XMR --bitfinex--> USD
+128.52259771794877 BTC --binance--> WAVES --binance--> USDT --binance--> ETC --bitfinex--> USD
+131.83 BTC --bitfinex--> ETH --bittrex--> HBAR --bittrex--> USD
+132.02028528 BTC --binance--> USDT --binance--> ZRX --coinbase--> USD
+134.8900668 BTC --binance--> ICX --binance--> ETH --bitfinex--> USD
+136.141463892555 BTC --bitfinex--> CTX --bitfinex--> USD
+140.5664892 BTC --binance--> PERL --binance--> USDT --binance--> XLM --coinbase--> USD
+144.70005289713552 BTC --bitfinex--> XLM --coinbase--> USD
+147.66812444337347 BTC --binance--> TRY --binance--> XRP --bitfinex--> USD
+151.42168520755772 BTC --binance--> ONT --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+152.08153326185993 BTC --binance--> PAX --binance--> LTC --bitstamp--> USD
+153.92423890954174 BTC --bitfinex--> ETH --bitfinex--> RTE --bitfinex--> USD
+153.96670659378324 BTC --bitstamp--> XRP --bittrex--> USD
+156.45526209000002 BTC --bitfinex--> ETH --bitfinex--> WBT --bitfinex--> USD
+156.96513699354023 BTC --bitfinex--> YYW --bitfinex--> USD
+158.72949467121103 BTC --binance--> ADA --binance--> USDC --binance--> BNB --binance--> XRP --bitfinex--> USD
+162.457087038851 BTC --bitfinex--> ETH --bitfinex--> POA --bitfinex--> USD
+169.59208704009964 BTC --binance--> ADA --binance--> USDT --binance--> PAX --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+169.89 BTC --binance--> BAT --bittrex--> USD
+170.5206242841804 BTC --binance--> USDC --binance--> USDT --binance--> XTZ --bittrex--> USD
+170.56446 BTC --coinbase--> USDC --binance--> XRP --bitfinex--> USD
+173.2305744 BTC --coinbase--> USDC --binance--> LTC --bitstamp--> USD
+174.58395088415432 BTC --binance--> QTUM --binance--> USDT --binance--> XTZ --coinbase--> USD
+175.4081234738154 BTC --bitfinex--> ETH --bitfinex--> UTK --bitfinex--> USD
+176.49230992654213 BTC --bitfinex--> ETH --bitfinex--> MGO --bitfinex--> USD
+180.38538 BTC --bitfinex--> ETH --binance--> XVG --bitfinex--> USD
+180.535395607974 BTC --bitfinex--> ETH --bitfinex--> ETP --bitfinex--> USD
+182.3724069183394 BTC --bittrex--> BFT --bitfinex--> USD
+183.44596679325613 BTC --binance--> BNB --binance--> BUSD --binance--> ETC --bitfinex--> USD
+183.91266229599998 BTC --bitfinex--> GBP --bitfinex--> TRX --binance--> XRP --bitfinex--> USD
+184.74043532809998 BTC --binance--> KNC --bitfinex--> USD
+186.32250295613002 BTC --bittrex--> XTZ --bittrex--> USD
+187.7300001 BTC --bittrex--> DCR --bittrex--> USD
+188.4822000914339 BTC --bitfinex--> EUR --binance--> BNB --binance--> XRP --bitfinex--> USD
+193.5355436780993 BTC --binance--> TUSD --binance--> BNB --binance--> XRP --bitfinex--> USD
+199.400399998004 BTC --bitfinex--> ETH --bitfinex--> AIO --bitfinex--> USD
+202.7209184688 BTC --bittrex--> FSN --bitfinex--> USD
+204.83519971639598 BTC --binance--> USDC --binance--> BNB --binance--> EOS --bitfinex--> UST --bitfinex--> USD
+204.9085631439 BTC --binance--> AST --bitfinex--> USD
+209.96020706221555 BTC --binance--> BUSD --binance--> USDT --binance--> PAX --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+211.86340263083687 BTC --binance--> ADA --binance--> BUSD --binance--> USDT --binance--> ETC --bitfinex--> USD
+214.359 BTC --bitfinex--> ETH --coinbase--> LINK --coinbase--> USD
+215.33859398977802 BTC --binance--> BUSD --binance--> USDT --binance--> ZRX --coinbase--> USD
+216.7705776942216 BTC --bitfinex--> CLO --bitfinex--> USD
+217.09073211574952 BTC --binance--> BUSD --binance--> USDT --binance--> BNB --binance--> ETC --bitfinex--> USD
+225.9917160251399 BTC --binance--> ONE --binance--> BNB --binance--> XRP --bitfinex--> USD
+226.9051019303042 BTC --binance--> HC --binance--> USDT --binance--> PAX --binance--> EOS --bitfinex--> USD
+227.13613351380647 BTC --binance--> COS --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+227.20000000000002 BTC --bitfinex--> DAT --bitfinex--> USD
+228.690170594456 BTC --bitfinex--> RRT --bitfinex--> USD
+239.8085178987957 BTC --bitfinex--> ETH --bitfinex--> EUR --coinbase--> XRP --bitfinex--> USD
+242.86950000000002 BTC --binance--> BNB --binance--> XTZ --bitfinex--> USD
+251.43946763227206 BTC --binance--> BUSD --binance--> USDT --binance--> LTC --bittrex--> USD
+252.4694612189 BTC --bitfinex--> ETH --bitfinex--> DGX --bitfinex--> USD
+254.1914 BTC --bitfinex--> ETH --binance--> NEO --bitfinex--> USD
+255.20328366 BTC --bitfinex--> ETH --bitfinex--> CNN --bitfinex--> USD
+257.3010565138834 BTC --binance--> WPR --bitfinex--> USD
+258.973296192776 BTC --bittrex--> XRP --coinbase--> USD
+259.3088209868153 BTC --binance--> PERL --binance--> USDT --binance--> XMR --bitfinex--> USD
+259.5495262074249 BTC --binance--> USDC --binance--> BNB --binance--> EOS --bitfinex--> USD
+277.33124407319997 BTC --coinbase--> LTC --bitstamp--> USD
+277.7457104819798 BTC --bitfinex--> ETH --bitfinex--> MAN --bitfinex--> USD
+278.18679235342495 BTC --bitfinex--> UOS --bitfinex--> USD
+279.3222251037614 BTC --binance--> AION --binance--> BNB --binance--> USDT --bittrex--> ETC --bitfinex--> USD
+280.828250701052 BTC --binance--> TUSD --binance--> USDT --binance--> BTT --bitfinex--> USD
+283.754684881659 BTC --binance--> TNB --bitfinex--> USD
+283.82825887279165 BTC --coinbase--> USDC --binance--> XRP --coinbase--> USD
+287.453447244 BTC --bittrex--> USDT --binance--> BAT --binance--> ETH --bitfinex--> USD
+288.6934014816841 BTC --bitfinex--> ETH --binance--> BUSD --binance--> USDT --binance--> ETC --bitfinex--> USD
+289.15266399999996 BTC --bitfinex--> SNG --bitfinex--> USD
+289.5134540339938 BTC --binance--> REQ --bitfinex--> USD
+294.10921181144784 BTC --binance--> BNB --binance--> ZEN --bittrex--> USD
+305.895389164 BTC --binance--> USDT --binance--> BAT --binance--> ETH --bitfinex--> USD
+308.3009179 BTC --binance--> TUSD --binance--> BCH --coinbase--> USD
+308.36784654 BTC --bitfinex--> EUR --bitfinex--> GOT --bitfinex--> USD
+311.304688 BTC --binance--> HBAR --bittrex--> USD
+330.98026208768266 BTC --binance--> HC --binance--> USDT --binance--> XRP --bitfinex--> USD
+335.12412528474067 BTC --bittrex--> ZEC --bittrex--> USD
+335.60999999999996 BTC --binance--> PERL --binance--> USDT --binance--> TUSD --binance--> XRP --bitfinex--> USD
+337.08675 BTC --binance--> PAX --bitfinex--> UST --bitfinex--> USD
+338.1378416715974 BTC --bittrex--> USDT --binance--> TUSD --bittrex--> USD
+341.2607878698512 BTC --binance--> PAX --binance--> USDT --binance--> BCH --bittrex--> USD
+344.88343297000006 BTC --bitfinex--> ETH --binance--> BUSD --binance--> BCH --bittrex--> USD
+345.103275 BTC --binance--> PAX --binance--> XRP --bitstamp--> USD
+345.647918 BTC --binance--> TUSD --binance--> LTC --coinbase--> USD
+346.7353644316163 BTC --binance--> ETH --bitfinex--> EUR --coinbase--> XRP --bitfinex--> USD
+347.334613861856 BTC --bitfinex--> ETH --bitfinex--> EUR --bitstamp--> BCH --binance--> USDT --binance--> PAX --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+351.19453924910044 BTC --bittrex--> UTK --bitfinex--> USD
+359.99999999976 BTC --bitfinex--> ETH --bitfinex--> PNK --bitfinex--> USD
+366.03606952044004 BTC --bitfinex--> ETH --bitfinex--> ATO --bitfinex--> USD
+366.07836000000003 BTC --binance--> ZEN --bittrex--> USD
+366.69444 BTC --binance--> BNB --binance--> XRP --coinbase--> USD
+368.8370564279527 BTC --binance--> ADA --binance--> BUSD --binance--> USDT --binance--> CHZ --bitfinex--> USD
+372.2333 BTC --binance--> POA --bitfinex--> USD
+375.615 BTC --binance--> TUSD --binance--> USDT --binance--> XMR --bitfinex--> USD
+379.9512 BTC --bitfinex--> ETH --binance--> POA --bitfinex--> USD
+381.78139999999996 BTC --bittrex--> ETH --bitfinex--> UST --bitfinex--> USD
+381.789702 BTC --bitfinex--> EUR --binance--> USDT --binance--> XLM --coinbase--> USD
+383.6917206874707 BTC --binance--> ADA --binance--> BUSD --binance--> USDT --binance--> XMR --bitfinex--> USD
+388.1128065136402 BTC --bitfinex--> EUR --bitfinex--> TRX --binance--> TUSD --binance--> XRP --bitstamp--> USD
+390.377412468 BTC --binance--> VIB --binance--> ETH --bitfinex--> USD
+394.739572559876 BTC --bitfinex--> ETP --bitfinex--> USD
+396.39655999999997 BTC --binance--> BNB --binance--> LTC --coinbase--> USD
+398.01724388783 BTC --bitfinex--> ETH --binance--> USDT --binance--> BCH --bittrex--> USD
+399.39199999999994 BTC --bittrex--> TUSD --binance--> LTC --bitfinex--> USD
+404.562671160851 BTC --bitfinex--> JPY --bitfinex--> TRX --binance--> BTT --bitfinex--> USD
+410.04072 BTC --coinbase--> REP --coinbase--> USD
+413.80292361046764 BTC --bitfinex--> GBP --bitfinex--> TRX --binance--> WIN --binance--> USDT --binance--> XMR --bitfinex--> USD
+421.44844600412557 BTC --binance--> QTUM --binance--> USDT --binance--> ETC --bitfinex--> USD
+423.3462885896791 BTC --bittrex--> USDT --binance--> NEO --bitfinex--> USD
+424.6332535740253 BTC --bitfinex--> EOS --bitfinex--> JPY --bitfinex--> TRX --bitfinex--> USD
+429.41819153999995 BTC --binance--> FTT --bitfinex--> USD
+433.37820175649995 BTC --binance--> DGD --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+437.36765842 BTC --binance--> BUSD --binance--> LTC --bittrex--> USD
+444.8645253065606 BTC --binance--> USDS --binance--> USDT --bittrex--> USD
+445.86115816529104 BTC --bitfinex--> EUR --bitfinex--> TRX --bittrex--> USDT --binance--> BCH --bittrex--> USD
+449.942742249 BTC --bitfinex--> EUR --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+451.14433350280876 BTC --binance--> CHZ --bitfinex--> USD
+460.50660310978236 BTC --bittrex--> USDT --binance--> LTC --bitstamp--> USD
+466.051967899767 BTC --bitfinex--> ZRX --bitfinex--> USD
+470.2438208069516 BTC --binance--> USDC --binance--> XRP --bittrex--> USD
+476.99036290589584 BTC --bittrex--> USDT --binance--> LTC --coinbase--> USD
+480.98701735468 BTC --bitfinex--> ETH --binance--> ELF --bitfinex--> USD
+490.00531232660467 BTC --binance--> ADA --binance--> USDC --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+499.4746427999999 BTC --binance--> USDT --binance--> TUSD --binance--> LTC --bitfinex--> USD
+512.4313907655668 BTC --binance--> BUSD --binance--> USDT --binance--> BCH --bittrex--> USD
+517.75692 BTC --bitfinex--> ETH --binance--> LTC --coinbase--> USD
+518.739 BTC --binance--> GNT --bitfinex--> USD
+528.790965 BTC --binance--> TUSD --binance--> BCH --bitstamp--> USD
+533.1629431530321 BTC --bittrex--> ZEN --bittrex--> USD
+533.6963775663 BTC --bitfinex--> ANT --bitfinex--> USD
+544.75796846 BTC --bitfinex--> RBT --bitfinex--> USD
+545.05222992 BTC --bitfinex--> EUR --binance--> BUSD --binance--> USDT --binance--> ETC --bitfinex--> USD
+545.122485819252 BTC --bitfinex--> ETH --bitfinex--> DAT --bitfinex--> USD
+545.2406770561596 BTC --binance--> ADA --binance--> USDT --binance--> LTC --bittrex--> USD
+545.6385000000001 BTC --binance--> TUSD --binance--> USDT --binance--> XRP --coinbase--> USD
+548.3743272183016 BTC --binance--> USDS --binance--> USDT --bittrex--> ETC --bitfinex--> USD
+548.79872 BTC --binance--> BNB --binance--> XLM --coinbase--> USD
+553.20114176329 BTC --binance--> QTUM --binance--> USDT --binance--> LTC --bittrex--> USD
+559.8830889631486 BTC --binance--> BNB --binance--> USDT --binance--> LTC --bitstamp--> USD
+569.1406220499999 BTC --binance--> MCO --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+569.6433575548 BTC --bitfinex--> FSN --bitfinex--> USD
+577.69654301624 BTC --bitfinex--> ETH --bitfinex--> FSN --bitfinex--> USD
+591.8720000000001 BTC --binance--> ELF --bitfinex--> USD
+595.1546633918415 BTC --binance--> USDC --binance--> BCH --bittrex--> USD
+605.8407093364679 BTC --binance--> QTUM --binance--> USDT --bittrex--> ETC --bitfinex--> USD
+606.0907012355827 BTC --bitfinex--> ETH --binance--> XRP --bittrex--> USD
+609.7710955859995 BTC --bitfinex--> GBP --bitfinex--> EOS --bitfinex--> USD
+622.1101237266618 BTC --binance--> BUSD --binance--> USDT --binance--> XMR --bitfinex--> USD
+634.2640505424359 BTC --bitfinex--> ETH --bittrex--> ANT --bitfinex--> USD
+639.621014016656 BTC --bitfinex--> ETH --bitfinex--> EUR --coinbase--> XLM --bitfinex--> USD
+643.1799981604 BTC --bitfinex--> ETH --bitfinex--> SNT --bitfinex--> USD
+643.3190199999999 BTC --binance--> BNB --binance--> LTC --bitstamp--> USD
+644.1166342186436 BTC --binance--> PAX --binance--> TUSD --binance--> XRP --bitstamp--> USD
+646.499439134598 BTC --bitfinex--> QSH --bitfinex--> USD
+660.2305942094827 BTC --binance--> USDC --binance--> EOS --bitfinex--> JPY --bitfinex--> NEO --bitfinex--> USD
+675.9092597121424 BTC --binance--> PERL --binance--> USDT --binance--> TUSD --binance--> EOS --bitfinex--> USD
+677.214072 BTC --bitfinex--> EUR --binance--> ETH --bitfinex--> USD
+687.4185 BTC --binance--> TUSD --binance--> USDT --binance--> XTZ --coinbase--> USD
+711.9644000000001 BTC --bitfinex--> ETH --bitfinex--> EUR --binance--> XRP --bitfinex--> USD
+752.75711825306 BTC --bitfinex--> ETH --bittrex--> XTZ --bitfinex--> USD
+768.6780560720853 BTC --bitfinex--> MNA --bitfinex--> USD
+776.4027403587478 BTC --binance--> BUSD --binance--> XRP --bitstamp--> USD
+783.1696200481275 BTC --binance--> USDT --binance--> TUSD --bittrex--> USD
+794.26161 BTC --bittrex--> USDT --binance--> XTZ --bitfinex--> USD
+797.7526821987094 BTC --binance--> ADA --binance--> USDT --binance--> XRP --bitfinex--> USD
+799.6672156315421 BTC --binance--> ONT --binance--> USDT --binance--> LTC --bitstamp--> USD
+814.5292819263184 BTC --binance--> BNB --binance--> BCH --coinbase--> USD
+817.4989840747382 BTC --binance--> PAX --binance--> USDT --binance--> ZRX --coinbase--> USD
+828.20222216158 BTC --bitfinex--> ETH --binance--> XRP --bitfinex--> USD
+836.2345085978909 BTC --binance--> USDC --coinbase--> ETH --bitfinex--> USD
+852.23432727344 BTC --binance--> RLC --bitfinex--> USD
+864.2222938506936 BTC --binance--> BNB --binance--> USDT --binance--> LTC --bittrex--> USD
+879.6078375864778 BTC --bitfinex--> ALG --bitfinex--> UST --bitfinex--> USD
+888.725 BTC --bitstamp--> LTC --bittrex--> USD
+899.459234387794 BTC --binance--> FTT --bitfinex--> UST --bitfinex--> USD
+905.4363908513551 BTC --binance--> EDO --bitfinex--> USD
+908.594947673 BTC --bitfinex--> EUR --bitfinex--> TRX --binance--> XRP --coinbase--> USD
+925.2613290703657 BTC --binance--> ADA --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+930.4994319798105 BTC --binance--> XVG --bitfinex--> USD
+933.6633916911399 BTC --binance--> PAX --binance--> USDT --bittrex--> LTC --bittrex--> USD
+934.7526572908956 BTC --bitfinex--> EUR --binance--> BNB --binance--> XRP --bitstamp--> USD
+937.6908276185385 BTC --binance--> TUSD --binance--> LTC --bitstamp--> USD
+943.2064100890208 BTC --binance--> BNB --binance--> NEO --bitfinex--> USD
+949.4565035870139 BTC --binance--> BUSD --binance--> USDT --binance--> PAX --binance--> ETH --bitfinex--> USD
+976.5373515197433 BTC --bitfinex--> BAT --coinbase--> USDC --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+978.489310898088 BTC --bitfinex--> AMP --bitfinex--> USD
+979.1888017465178 BTC --bittrex--> USDT --binance--> PAX --binance--> XRP --bitfinex--> USD
+984.8460498081586 BTC --coinbase--> USDC --binance--> BCH --bittrex--> USD
+993.0574256067961 BTC --binance--> BUSD --binance--> USDT --binance--> NEO --bitfinex--> USD
+994.4 BTC --binance--> BAT --bitfinex--> USD
+999.8415144 BTC --binance--> BUSD --binance--> USDT --binance--> PAX --binance--> LTC --bitfinex--> USD
+1030.9426399272 BTC --coinbase--> REP --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+1036.97088 BTC --bitfinex--> ETH --binance--> LTC --bitstamp--> USD
+1037.4346915897115 BTC --binance--> USDT --binance--> VET --bitfinex--> USD
+1038.978552870282 BTC --binance--> USDT --binance--> BAT --bitfinex--> USD
+1044.272467785884 BTC --bittrex--> TUSD --binance--> LTC --bitstamp--> USD
+1050.139536517309 BTC --binance--> QTUM --binance--> USDT --binance--> XRP --bitfinex--> USD
+1076.912 BTC --bitfinex--> ETH --binance--> BNT --bitfinex--> USD
+1084.88350845251 BTC --binance--> PAX --bitfinex--> USD
+1088.3382911392405 BTC --bitfinex--> EUR --binance--> BNB --binance--> ETC --bitfinex--> USD
+1090.8197894044563 BTC --binance--> USDT --binance--> PAX --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+1096.7386401739452 BTC --binance--> BNB --binance--> XRP --bittrex--> USD
+1114.9706355420988 BTC --bitfinex--> ETH --binance--> LTC --bittrex--> USD
+1115.0 BTC --binance--> BNT --bitfinex--> USD
+1139.268 BTC --bitfinex--> BSV --bittrex--> USD
+1140.7775784 BTC --bitfinex--> ETH --binance--> ZEN --bittrex--> USD
+1146.84 BTC --bitfinex--> EUR --bitstamp--> BCH --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+1161.447664 BTC --bitfinex--> ETH --binance--> ZRX --coinbase--> USD
+1164.3754312072274 BTC --bittrex--> USDT --bittrex--> USD
+1181.2601686688538 BTC --binance--> KMD --bittrex--> USD
+1229.1609837087383 BTC --binance--> LTC --bitfinex--> UST --bitfinex--> USD
+1231.1773415038654 BTC --binance--> ENJ --binance--> USDT --binance--> BCH --bittrex--> USD
+1248.6432 BTC --coinbase--> ATOM --coinbase--> USD
+1286.1231714318 BTC --bittrex--> GNT --bitfinex--> USD
+1296.2330321244626 BTC --binance--> PAX --binance--> TUSD --binance--> XRP --bitfinex--> USD
+1311.7375128656715 BTC --bitfinex--> EUR --binance--> USDT --binance--> ETC --bitfinex--> USD
+1314.6605028061815 BTC --binance--> USDT --binance--> XRP --bittrex--> USD
+1320.0935712892335 BTC --bitfinex--> ZRX --coinbase--> USD
+1351.4872546341528 BTC --binance--> TUSD --binance--> USDT --binance--> XRP --bitfinex--> USD
+1356.8000000000002 BTC --bitfinex--> EOS --coinbase--> USD
+1381.071704883975 BTC --bittrex--> ANT --bitfinex--> USD
+1401.2665420622423 BTC --binance--> USDT --binance--> XTZ --bittrex--> USD
+1401.7190793133757 BTC --bitfinex--> ETH --binance--> USDT --binance--> BCH --bitstamp--> USD
+1408.3960342347839 BTC --bitfinex--> EUR --binance--> BUSD --binance--> USDT --binance--> XMR --bitfinex--> USD
+1410.5808880048703 BTC --bittrex--> ZRX --coinbase--> USD
+1421.1545341458993 BTC --bittrex--> ZEC --bitfinex--> USD
+1445.9749679145173 BTC --bitfinex--> EOS --bitfinex--> JPY --bitfinex--> NEO --bitfinex--> USD
+1461.9941574451407 BTC --bitfinex--> GBP --coinbase--> LTC --bitfinex--> UST --bitfinex--> USD
+1471.3920348952 BTC --bitfinex--> EUR --bitfinex--> TRX --binance--> XRP --bitfinex--> USD
+1480.0860399703924 BTC --binance--> BNB --binance--> XRP --bitstamp--> USD
+1481.0593810534542 BTC --binance--> TUSD --binance--> BCH --bittrex--> USD
+1491.0026400000002 BTC --bitfinex--> EUR --coinbase--> XLM --coinbase--> USD
+1495.5960903999999 BTC --binance--> USDT --binance--> TUSD --binance--> LTC --coinbase--> USD
+1506.0104575560001 BTC --binance--> DGD --binance--> ETH --bitfinex--> USD
+1509.0219995261004 BTC --binance--> PAX --binance--> USDT --binance--> BCH --bitstamp--> USD
+1514.5549509984062 BTC --bitfinex--> EUR --binance--> BUSD --binance--> ETC --bitfinex--> USD
+1515.665102934045 BTC --bitfinex--> ZEC --binance--> USDT --binance--> XRP --bitfinex--> USD
+1542.7659826257513 BTC --bitfinex--> EUR --binance--> USDT --bittrex--> ETC --bitfinex--> USD
+1544.1720599999999 BTC --binance--> BNB --binance--> LTC --bitfinex--> USD
+1549.7895168799998 BTC --binance--> USDC --binance--> LTC --bittrex--> USD
+1561.0840939999998 BTC --binance--> USDC --binance--> LTC --bitfinex--> USD
+1572.1160775284313 BTC --binance--> BUSD --binance--> XRP --coinbase--> USD
+1591.7494023471274 BTC --binance--> PAX --binance--> USDT --binance--> XRP --bitstamp--> USD
+1592.4038611649999 BTC --coinbase--> ZRX --bitfinex--> USD
+1615.0421497099999 BTC --binance--> PAX --binance--> USDT --binance--> LTC --bittrex--> USD
+1618.6000995839506 BTC --binance--> BNB --binance--> USDT --binance--> LTC --coinbase--> USD
+1622.1299999999999 BTC --bitfinex--> GBP --coinbase--> ETC --bitfinex--> USD
+1638.5497529845711 BTC --binance--> TUSD --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+1644.6997976083803 BTC --bitfinex--> ETH --bitfinex--> QTM --bitfinex--> USD
+1713.61575 BTC --binance--> USDC --binance--> EOS --coinbase--> USD
+1723.225 BTC --bitfinex--> EUR --bitfinex--> EUT --bitfinex--> USD
+1822.82243006396 BTC --bittrex--> ATOM --coinbase--> USD
+1832.9282055 BTC --binance--> PAX --binance--> BCH --bitstamp--> USD
+1841.2138610672482 BTC --bitfinex--> EUR --binance--> USDT --binance--> XRP --bitfinex--> USD
+1847.27200347243 BTC --bitfinex--> ATO --bitfinex--> USD
+1922.16075660255 BTC --bitfinex--> QTM --bitfinex--> USD
+1926.02222268588 BTC --bittrex--> USDT --binance--> PAX --bittrex--> USD
+1940.0094942191931 BTC --bitfinex--> EUR --binance--> BUSD --binance--> USDT --binance--> XRP --bitfinex--> USD
+1946.9516698023556 BTC --bitfinex--> ETH --bitfinex--> EUR --bitstamp--> BCH --binance--> BUSD --binance--> USDT --binance--> ETC --bitfinex--> USD
+1966.504783858965 BTC --bittrex--> USDT --binance--> PAX --binance--> ETH --bitfinex--> USD
+1990.25526 BTC --binance--> PAX --binance--> XRP --coinbase--> USD
+1990.5168712202942 BTC --binance--> USDT --bittrex--> XRP --coinbase--> USD
+1998.1148400000002 BTC --binance--> PAX --binance--> ETH --bitfinex--> USD
+1999.7194122000003 BTC --bitfinex--> GBP --coinbase--> LTC --coinbase--> USD
+2031.5926935720472 BTC --binance--> BUSD --binance--> USDT --binance--> CHZ --bitfinex--> USD
+2036.5283245381402 BTC --binance--> PAX --binance--> LTC --bitfinex--> USD
+2068.338864688838 BTC --binance--> USDC --binance--> EOS --bitfinex--> UST --bitfinex--> USD
+2080.598853875344 BTC --coinbase--> XLM --coinbase--> USD
+2120.462341972238 BTC --binance--> BUSD --binance--> USDT --binance--> XTZ --coinbase--> USD
+2127.7729320715894 BTC --coinbase--> BCH --bittrex--> USD
+2128.6087093985 BTC --bittrex--> REP --coinbase--> USD
+2134.226971461684 BTC --bitfinex--> ETH --bitfinex--> IOT --bitfinex--> USD
+2142.676389492 BTC --binance--> TUSD --binance--> USDT --binance--> BCH --bitstamp--> USD
+2188.006317136752 BTC --binance--> TUSD --binance--> USDT --binance--> XRP --bitstamp--> USD
+2220.933591935751 BTC --binance--> BUSD --binance--> USDT --binance--> PAX --binance--> EOS --bitfinex--> USD
+2251.6783155061175 BTC --binance--> PERL --binance--> USDT --binance--> XRP --bitfinex--> USD
+2264.3894101383275 BTC --coinbase--> USDC --coinbase--> ETH --bitfinex--> USD
+2275.27104 BTC --bitfinex--> GBP --coinbase--> BCH --coinbase--> USD
+2320.5945926498 BTC --bitfinex--> ETH --bittrex--> BCH --coinbase--> USD
+2339.7222667827073 BTC --bittrex--> TUSD --binance--> XRP --bitfinex--> USD
+2351.591528416 BTC --bitfinex--> MKR --bitfinex--> USD
+2365.535076335619 BTC --coinbase--> DASH --coinbase--> USD
+2373.609287265585 BTC --binance--> USDT --binance--> BCH --bittrex--> USD
+2389.113831781337 BTC --bitfinex--> ETH --bittrex--> XTZ --coinbase--> USD
+2402.9957288269998 BTC --bitfinex--> ETH --bittrex--> BSV --bitfinex--> USD
+2413.669023602481 BTC --binance--> BNB --binance--> USDT --bittrex--> USD
+2434.8606115584203 BTC --bittrex--> XTZ --bitfinex--> USD
+2440.4880822 BTC --coinbase--> USDC --binance--> LTC --bitfinex--> USD
+2447.207703161927 BTC --coinbase--> LTC --coinbase--> USD
+2453.6960522047652 BTC --binance--> PAX --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+2468.9414521582776 BTC --binance--> USDT --binance--> LTC --bittrex--> USD
+2497.043309600128 BTC --binance--> TUSD --binance--> XRP --bitstamp--> USD
+2536.7269501706664 BTC --binance--> DCR --bittrex--> USD
+2556.175379745487 BTC --bitfinex--> EOS --bitfinex--> UST --bitfinex--> USD
+2687.3380871343284 BTC --bitfinex--> ZEC --binance--> USDT --binance--> ETC --bitfinex--> USD
+2706.446839900303 BTC --bitfinex--> EUR --coinbase--> XLM --bitfinex--> USD
+2733.9617313112167 BTC --bitfinex--> ETH --bitfinex--> ZRX --coinbase--> USD
+2751.3828676594 BTC --bitfinex--> EUR --binance--> USDT --binance--> DASH --coinbase--> USD
+2759.990669930431 BTC --bitfinex--> JPY --bitfinex--> EOS --bittrex--> USD
+2768.1090423410374 BTC --bittrex--> USDT --binance--> XRP --bitfinex--> USD
+2781.2894994798103 BTC --binance--> USDT --binance--> TUSD --binance--> XRP --bitfinex--> USD
+2789.1581820618476 BTC --binance--> TUSD --binance--> USDT --binance--> BCH --bittrex--> USD
+2793.1109627854307 BTC --bitfinex--> EUR --bitfinex--> TRX --bittrex--> USD
+2806.4400592709003 BTC --bitfinex--> EUR --binance--> USDT --bittrex--> USD
+2838.9248999999995 BTC --bitfinex--> LTC --bittrex--> USD
+2845.631320072 BTC --bitfinex--> ETH --bittrex--> NEO --bitfinex--> USD
+2861.600223942265 BTC --bittrex--> OMG --bitfinex--> USD
+2906.202017357835 BTC --binance--> PAX --binance--> USDT --binance--> BCH --coinbase--> USD
+2968.996579736985 BTC --binance--> USDT --binance--> TUSD --binance--> EOS --bitfinex--> USD
+2990.3540773 BTC --binance--> TUSD --binance--> LTC --bitfinex--> USD
+3072.4289163981002 BTC --bittrex--> BCH --coinbase--> USD
+3112.4068074621 BTC --bitfinex--> ETH --bittrex--> LTC --bitstamp--> USD
+3121.5372562505618 BTC --binance--> BNB --binance--> USDT --bittrex--> ETC --bitfinex--> USD
+3125.843681962582 BTC --binance--> USDT --binance--> PAX --binance--> XRP --bitfinex--> USD
+3135.7993495368914 BTC --bitfinex--> ETH --bittrex--> XRP --bitstamp--> USD
+3248.3170742180187 BTC --bitfinex--> ETH --bitfinex--> EUR --bitfinex--> IOT --bitfinex--> USD
+3272.4054251788893 BTC --bitfinex--> EUR --bitstamp--> ETH --bitfinex--> UST --bitfinex--> USD
+3298.5065299999997 BTC --coinbase--> LTC --bittrex--> USD
+3358.140204950041 BTC --coinbase--> ETH --bitfinex--> EUR --bitstamp--> XRP --bitfinex--> USD
+3414.196248380332 BTC --coinbase--> ETH --bitfinex--> EUR --coinbase--> XRP --bitfinex--> USD
+3465.1006440577 BTC --bittrex--> LTC --coinbase--> USD
+3510.681024 BTC --binance--> USDT --binance--> ATOM --coinbase--> USD
+3583.1649494188023 BTC --bittrex--> USDT --bittrex--> LTC --bittrex--> USD
+3610.4587484 BTC --coinbase--> USDC --binance--> LTC --coinbase--> USD
+3610.713259841067 BTC --bittrex--> USDT --binance--> BCH --bittrex--> USD
+3690.8400078754244 BTC --bitfinex--> JPY --bitfinex--> EOS --coinbase--> USD
+3733.9575200000004 BTC --binance--> USDT --binance--> XTZ --bitfinex--> USD
+3788.5410667519945 BTC --binance--> BNB --binance--> XRP --bitfinex--> USD
+3832.9241673126953 BTC --binance--> USDT --binance--> OMG --bitfinex--> USD
+3876.0671727000004 BTC --bitfinex--> EUR --binance--> USDT --binance--> LTC --bitfinex--> USD
+3971.6567102637546 BTC --binance--> TUSD --binance--> USDT --binance--> BCH --coinbase--> USD
+3980.6736779815 BTC --binance--> REP --coinbase--> USD
+3980.733640083495 BTC --bitfinex--> ETH --bittrex--> XRP --coinbase--> USD
+3986.24208 BTC --bitfinex--> EUR --binance--> XRP --bitfinex--> USD
+4148.6464 BTC --bitfinex--> ETH --binance--> EOS --coinbase--> USD
+4240.697015792942 BTC --bittrex--> USDT --binance--> XRP --bitstamp--> USD
+4257.412861127208 BTC --binance--> USDC --binance--> XRP --coinbase--> USD
+4394.879855884097 BTC --binance--> LTC --bitstamp--> USD
+4403.809432111924 BTC --binance--> BNB --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+4442.237305184118 BTC --bitfinex--> ETH --bitfinex--> LEO --bitfinex--> USD
+4556.5009353222995 BTC --binance--> USDT --bittrex--> ETC --bitfinex--> USD
+4556.904124299999 BTC --bittrex--> LTC --bittrex--> USD
+4662.7201290945295 BTC --coinbase--> XRP --bittrex--> USD
+4721.794802444458 BTC --coinbase--> USDC --binance--> EOS --bitfinex--> USD
+4805.218497506925 BTC --bitfinex--> GBP --bitfinex--> EOS --coinbase--> USD
+4859.657614811999 BTC --bitfinex--> JPY --bitfinex--> EOS --bitfinex--> LEO --bitfinex--> UST --bitfinex--> USD
+4920.297417581198 BTC --binance--> USDT --bittrex--> LTC --bittrex--> USD
+4952.376325 BTC --binance--> OMG --bitfinex--> USD
+5098.070095504708 BTC --bitstamp--> XRP --coinbase--> USD
+5173.15522 BTC --binance--> XRP --bitstamp--> USD
+5197.752078944756 BTC --binance--> TUSD --binance--> EOS --coinbase--> USD
+5211.9074317497825 BTC --binance--> BNB --binance--> USDT --binance--> BCH --coinbase--> USD
+5302.036599999999 BTC --binance--> EOS --coinbase--> USD
+5541.473721306001 BTC --bitfinex--> UST --bitfinex--> LTC --bitfinex--> USD
+5549.339578358856 BTC --binance--> BUSD --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+5557.1854759323205 BTC --bitfinex--> EUR --coinbase--> XRP --bitfinex--> USD
+5578.007801025158 BTC --binance--> USDT --binance--> PAX --binance--> EOS --bitfinex--> USD
+5612.033866083041 BTC --binance--> XLM --bitfinex--> USD
+5627.709122976916 BTC --coinbase--> USDC --binance--> USDT --binance--> XTZ --bittrex--> USD
+5649.039522750127 BTC --bitfinex--> EUR --bitstamp--> LTC --coinbase--> USD
+5685.410933219863 BTC --bitfinex--> ETH --bitfinex--> EUR --binance--> USDT --binance--> ETC --bitfinex--> USD
+5743.684814089179 BTC --bitfinex--> EUR --coinbase--> BCH --coinbase--> USD
+6005.83965244182 BTC --binance--> TUSD --binance--> USDT --binance--> XTZ --bitfinex--> USD
+6021.210445332144 BTC --coinbase--> USDC --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+6030.791187637158 BTC --binance--> BUSD --binance--> USDT --bittrex--> USD
+6070.469434553016 BTC --binance--> BCH --bitstamp--> USD
+6106.32783613953 BTC --bitstamp--> ETH --bitfinex--> UST --bitfinex--> USD
+6155.45867322085 BTC --bitfinex--> ZEC --bittrex--> USD
+6501.731360764829 BTC --bittrex--> XLM --coinbase--> USD
+6531.964849330262 BTC --binance--> USDC --binance--> XRP --bitstamp--> USD
+6566.59596 BTC --binance--> BNB --binance--> EOS --bitfinex--> USD
+6706.420982459697 BTC --binance--> USDT --binance--> LTC --bitstamp--> USD
+6770.260469214876 BTC --binance--> TUSD --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+6891.107030913301 BTC --binance--> TUSD --binance--> USDT --binance--> ETC --bitfinex--> USD
+7045.597849396686 BTC --bitfinex--> EUR --bitfinex--> TRX --bitfinex--> USD
+7049.149999675277 BTC --bitfinex--> ETH --bittrex--> XRP --bitfinex--> USD
+7052.062874640819 BTC --binance--> USDT --binance--> DASH --coinbase--> USD
+7287.240545649062 BTC --coinbase--> ETH --bitfinex--> UST --bitfinex--> USD
+7298.1 BTC --bitfinex--> GBP --bitfinex--> ETH --bitfinex--> USD
+7386.337961600001 BTC --bitfinex--> ETH --bitfinex--> EOS --coinbase--> USD
+7420.390365370445 BTC --bittrex--> XRP --bitstamp--> USD
+7480.0701659999995 BTC --binance--> USDT --binance--> LTC --bitfinex--> USD
+7574.490966021979 BTC --bitfinex--> BAB --bitfinex--> UST --bitfinex--> USD
+7590.621598827066 BTC --binance--> USDT --binance--> XMR --bitfinex--> USD
+7644.88638898952 BTC --coinbase--> XTZ --bitfinex--> USD
+7652.532352385472 BTC --binance--> PAX --binance--> EOS --bitfinex--> USD
+7681.2910341630995 BTC --binance--> BTG --bitfinex--> USD
+7740.205094520688 BTC --binance--> LTC --bittrex--> USD
+7791.532837217177 BTC --bitfinex--> LTC --bitstamp--> USD
+7831.428777524709 BTC --bitfinex--> GBP --bitfinex--> TRX --bitfinex--> USD
+7930.895902510001 BTC --bitfinex--> EUR --coinbase--> LTC --bitfinex--> USD
+8018.755707978552 BTC --binance--> USDT --binance--> XRP --coinbase--> USD
+8408.787228800002 BTC --bittrex--> ETH --bitfinex--> USD
+8485.89091406913 BTC --binance--> USDT --binance--> XTZ --coinbase--> USD
+8575.707811010472 BTC --bitfinex--> ETH --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+8587.301820563327 BTC --bittrex--> USDT --binance--> ETC --bitfinex--> USD
+8626.754906561046 BTC --binance--> USDC --binance--> EOS --bitfinex--> USD
+8641.215390984391 BTC --bitfinex--> ETH --bitfinex--> LEO --bitfinex--> UST --bitfinex--> USD
+8678.026955803525 BTC --binance--> USDT --binance--> NEO --bitfinex--> USD
+8716.653818519258 BTC --binance--> USDT --binance--> XLM --coinbase--> USD
+8822.343358425755 BTC --bittrex--> LTC --bitfinex--> USD
+8836.681271613019 BTC --binance--> TUSD --binance--> XRP --bitfinex--> USD
+8872.802016653422 BTC --binance--> USDT --bittrex--> USD
+8938.709059333694 BTC --binance--> PAX --binance--> USDT --binance--> XTZ --coinbase--> USD
+9030.1507748466 BTC --bitstamp--> LTC --bitfinex--> USD
+9121.780359999999 BTC --binance--> USDC --binance--> XRP --bitfinex--> USD
+9401.0117329 BTC --binance--> USDT --binance--> LINK --coinbase--> USD
+9738.91841225444 BTC --bitfinex--> ETH --binance--> EOS --bitfinex--> USD
+9847.280788525324 BTC --binance--> BUSD --binance--> USDT --binance--> XRP --bitfinex--> USD
+9882.124144950196 BTC --binance--> BNB --binance--> ETC --bitfinex--> USD
+10097.9271 BTC --bitfinex--> ETH --bitfinex--> EUR --coinbase--> LTC --bitfinex--> USD
+10176.681390172036 BTC --binance--> LTC --coinbase--> USD
+10197.952418462371 BTC --coinbase--> EOS --bitfinex--> UST --bitfinex--> USD
+10624.337804072895 BTC --binance--> USDT --binance--> EOS --coinbase--> USD
+10640.505185257221 BTC --bitfinex--> GBP --coinbase--> LTC --bitfinex--> USD
+10673.845825035169 BTC --binance--> PAX --binance--> XRP --bitfinex--> USD
+10681.4842 BTC --binance--> ALGO --coinbase--> USD
+10712.858788126756 BTC --bitfinex--> LEO --bitfinex--> USD
+10793.297580188813 BTC --binance--> USDT --binance--> BCH --bitstamp--> USD
+10924.91855907906 BTC --binance--> PAX --bittrex--> USD
+11026.69869705132 BTC --bittrex--> DASH --coinbase--> USD
+11162.538599185998 BTC --bitfinex--> ETH --bitfinex--> MKR --bitfinex--> USD
+11568.829542989717 BTC --bitfinex--> EUR --coinbase--> ETH --bitfinex--> UST --bitfinex--> USD
+11741.7970443486 BTC --bitfinex--> ETH --bittrex--> ETC --bitfinex--> USD
+11756.558596580895 BTC --bitstamp--> LTC --coinbase--> USD
+11867.109391080001 BTC --bitfinex--> GBP --coinbase--> ETH --bitfinex--> USD
+11899.553565899998 BTC --binance--> ETH --bitfinex--> UST --bitfinex--> USD
+12069.215496554021 BTC --binance--> USDT --binance--> PAX --binance--> ETH --bitfinex--> USD
+12163.444302939268 BTC --binance--> USDT --binance--> LTC --coinbase--> USD
+12424.718557976492 BTC --bitfinex--> IOT --bitfinex--> USD
+12666.750279148673 BTC --coinbase--> BCH --bitstamp--> USD
+12843.811662262759 BTC --bitfinex--> EUR --bitstamp--> BCH --coinbase--> USD
+13078.503812838802 BTC --bitfinex--> ETH --bitfinex--> EUR --bitstamp--> XRP --bitfinex--> USD
+13256.482584886538 BTC --bitstamp--> XRP --bitstamp--> USD
+13329.88676136738 BTC --binance--> XTZ --bitfinex--> USD
+13349.4868 BTC --bitfinex--> ETH --bitfinex--> EUR --bitstamp--> LTC --bitfinex--> USD
+13411.53956929295 BTC --binance--> ZEC --bittrex--> USD
+13421.156725081084 BTC --binance--> ADA --bittrex--> USD
+13497.70944201947 BTC --bitfinex--> ETH --bitfinex--> JPY --bitfinex--> TRX --bitfinex--> USD
+13549.731393750033 BTC --binance--> ZRX --coinbase--> USD
+13611.80538223695 BTC --bitfinex--> OMG --bitfinex--> USD
+13623.531737851219 BTC --bitfinex--> ETH --binance--> XRP --bitstamp--> USD
+13730.28508959702 BTC --coinbase--> ZRX --coinbase--> USD
+14002.2200778079 BTC --bitfinex--> BTG --bitfinex--> USD
+14010.22296961218 BTC --binance--> TUSD --binance--> LTC --bittrex--> USD
+14267.148858992174 BTC --binance--> BUSD --binance--> USDT --binance--> ETC --bitfinex--> USD
+15317.940350492714 BTC --binance--> XLM --coinbase--> USD
+15977.905811038521 BTC --binance--> DASH --coinbase--> USD
+16026.12510325823 BTC --binance--> USDT --binance--> XRP --bitstamp--> USD
+16211.95072738248 BTC --binance--> ATOM --coinbase--> USD
+16247.942047405348 BTC --bitfinex--> XRP --bitstamp--> USD
+16297.66834155972 BTC --binance--> BCH --bittrex--> USD
+16313.281210775229 BTC --bitfinex--> ETH --binance--> XRP --coinbase--> USD
+16611.06287514828 BTC --bitfinex--> ETH --bittrex--> USD
+16779.624617499743 BTC --binance--> BUSD --binance--> ETC --bitfinex--> USD
+17558.682 BTC --bitfinex--> ETH --binance--> ETC --bitfinex--> USD
+18199.52583942756 BTC --binance--> TUSD --bittrex--> USD
+18451.4643211038 BTC --coinbase--> ETC --bitfinex--> USD
+18501.064646775332 BTC --binance--> USDT --bittrex--> BSV --bitfinex--> USD
+18545.38839574074 BTC --bitfinex--> XTZ --bitfinex--> USD
+18952.3554415 BTC --bitfinex--> XAUT --bitfinex--> USD
+19056.417481229844 BTC --bitstamp--> XRP --bitfinex--> USD
+19253.6369533089 BTC --bitfinex--> XMR --bitfinex--> USD
+19982.9948781959 BTC --binance--> USDT --bittrex--> BCH --coinbase--> USD
+20193.53543358251 BTC --bitfinex--> LTC --bitfinex--> UST --bitfinex--> USD
+20193.741880723 BTC --binance--> XMR --bitfinex--> USD
+20288.375361898663 BTC --bitstamp--> BCH --bitstamp--> USD
+20829.702879596873 BTC --bitstamp--> LTC --bitstamp--> USD
+21124.655745714237 BTC --binance--> TUSD --binance--> EOS --bitfinex--> USD
+22521.525599999997 BTC --bitfinex--> XTZ --coinbase--> USD
+25579.3543159833 BTC --bittrex--> ETC --bitfinex--> USD
+25677.740059344407 BTC --bitfinex--> EUR --bitstamp--> XRP --bitfinex--> USD
+26702.201168341046 BTC --binance--> USDT --binance--> BCH --coinbase--> USD
+29082.4586380169 BTC --bittrex--> NEO --bitfinex--> USD
+29345.819109193 BTC --bitfinex--> BSV --bitfinex--> USD
+30802.870338055127 BTC --coinbase--> LTC --bitfinex--> USD
+32410.9758033308 BTC --bitfinex--> XRP --coinbase--> USD
+32558.038072025407 BTC --bitfinex--> EUR --bitfinex--> NEO --bitfinex--> USD
+33069.906706412 BTC --binance--> ZEC --bitfinex--> USD
+35103.85293371627 BTC --binance--> USDT --binance--> XRP --bitfinex--> USD
+36191.58937959945 BTC --bittrex--> XRP --bitfinex--> USD
+36639.63358552656 BTC --coinbase--> BCH --coinbase--> USD
+36799.3289 BTC --coinbase--> XRP --bitfinex--> USD
+36903.47989302953 BTC --bitfinex--> UST --bitfinex--> ETH --bitfinex--> USD
+38390.75495655075 BTC --bitfinex--> ETH --bitfinex--> EOS --bitfinex--> USD
+40843.59082854637 BTC --bitfinex--> JPY --bitfinex--> IOT --bitfinex--> USD
+41354.6314406976 BTC --bitfinex--> EUR --bitstamp--> USD
+41668.269716188006 BTC --bitstamp--> ETH --bitfinex--> USD
+41780.0617798556 BTC --bitfinex--> ZEC --bitfinex--> USD
+41788.96659782576 BTC --bitfinex--> GBP --bitfinex--> IOT --bitfinex--> USD
+41873.965772671996 BTC --bittrex--> BSV --bitfinex--> USD
+43481.48576489641 BTC --coinbase--> EOS --bitfinex--> USD
+43719.74047092019 BTC --bitstamp--> BCH --coinbase--> USD
+50597.685 BTC --binance--> NEO --bitfinex--> USD
+51820.804191909665 BTC --bitfinex--> GBP --bitfinex--> NEO --bitfinex--> USD
+53408.1810503 BTC --binance--> LINK --coinbase--> USD
+53913.04143533198 BTC --binance--> USDT --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+54077.2629 BTC --binance--> ETC --bitfinex--> USD
+54208.300467082125 BTC --bitfinex--> CNHT --bitfinex--> UST --bitfinex--> USD
+54353.29402355164 BTC --binance--> BCH --coinbase--> USD
+54871.70020820038 BTC --bitfinex--> EUR --bitstamp--> LTC --bitfinex--> USD
+56449.127606297 BTC --bitfinex--> NEO --bitfinex--> USD
+56924.86976251068 BTC --bitfinex--> LTC --coinbase--> USD
+57495.062508480005 BTC --coinbase--> ETH --bitfinex--> USD
+60962.6597872 BTC --binance--> ETH --bitfinex--> USD
+60965.11509204272 BTC --binance--> USDT --binance--> ETC --bitfinex--> USD
+73685.50775634914 BTC --bitfinex--> JPY --bitfinex--> NEO --bitfinex--> USD
+74412.12800990591 BTC --bitfinex--> ETH --bitstamp--> USD
+82011.91664673013 BTC --coinbase--> USDC --coinbase--> DAI --bitfinex--> USD
+82724.8987013025 BTC --bitfinex--> EUR --coinbase--> ETC --bitfinex--> USD
+89327.5192 BTC --binance--> XRP --bitfinex--> USD
+89614.55989789199 BTC --binance--> LTC --bitfinex--> USD
+103196.429683866 BTC --bitfinex--> DSH --bitfinex--> USD
+113776.13587271457 BTC --binance--> USDC --coinbase--> DAI --bitfinex--> USD
+127335.4088888553 BTC --bitfinex--> ETC --bitfinex--> USD
+154291.61933501306 BTC --bitfinex--> EUR --bitfinex--> IOT --bitfinex--> USD
+154644.73606977766 BTC --binance--> EOS --bitfinex--> USD
+173609.270870948 BTC --bitfinex--> BAB --bitfinex--> USD
+196604.71167604593 BTC --bittrex--> USD
+208570.71800941887 BTC --bitfinex--> LTC --bitfinex--> USD
+261241.17189012928 BTC --bitfinex--> XRP --bitfinex--> USD
+266340.7701443004 BTC --bitfinex--> ETH --coinbase--> USD
+275529.8315950019 BTC --bitfinex--> EOS --bitfinex--> USD
+310150.9878251104 BTC --bitfinex--> ETH --bitfinex--> UST --bitfinex--> USD
+857222.2282009667 BTC --bitfinex--> UST --bitfinex--> USD
+872337.0296823981 BTC --coinbase--> USD
+918952.326317867 BTC --bitstamp--> USD
+2878874.162716343 BTC --bitfinex--> ETH --bitfinex--> USD
+1.2086581766321255e7 BTC --bitfinex--> USD
+1.021e-10 USD --bitfinex--> SNG --bitfinex--> ETH --bitfinex--> BTC
+2.8857600000000002e-3 USD --bitfinex--> ETH --binance--> ICX --binance--> BTC
+0.10200012078267172 USD --bitstamp--> XRP --binance--> USDT --binance--> RLC --binance--> BTC
+0.9415766359356 USD --bitfinex--> SPK --bitfinex--> ETH --bitfinex--> BTC
+1.4185584701765128 USD --bittrex--> USDT --binance--> BNB --binance--> NGN --binance--> BTC
+2.0817360000000003 USD --bittrex--> LTC --binance--> BNB --binance--> BTC
+2.111814 USD --coinbase--> DASH --coinbase--> BTC
+2.3229882474364403 USD --bitfinex--> ATM --bitfinex--> BTC
+2.6352 USD --bitfinex--> OMG --binance--> BNB --binance--> BTC
+2.73401856 USD --bitfinex--> ETH --binance--> ARDR --binance--> BTC
+4.0635 USD --bittrex--> DCR --binance--> BNB --binance--> BTC
+4.89867767652 USD --bittrex--> EOS --bitfinex--> JPY --bitfinex--> BTC
+5.2863126205575 USD --bitfinex--> BFT --bittrex--> BTC
+5.543973461898002 USD --bitfinex--> AUC --bitfinex--> BTC
+5.70372572700864 USD --bitfinex--> ETH --binance--> ENJ --bittrex--> BTC
+5.7467760000000006 USD --bittrex--> HBAR --binance--> BNB --binance--> BTC
+5.86747392 USD --bitfinex--> ETH --binance--> BCD --binance--> BTC
+6.323960652 USD --bitfinex--> UOS --bitfinex--> BTC
+6.500524049999999 USD --bitfinex--> ABS --bitfinex--> ETH --bitfinex--> BTC
+6.672000000000001 USD --bitfinex--> EUS --bitfinex--> ETH --bitfinex--> JPY --bitfinex--> BTC
+6.91503191483 USD --bitfinex--> AID --bittrex--> BTC
+7.038 USD --bittrex--> ETC --bitfinex--> BTC
+7.05 USD --bittrex--> ETC --binance--> BNB --binance--> USDT --binance--> BTC
+7.32573510552 USD --bitfinex--> TRI --bitfinex--> ETH --bitfinex--> BTC
+7.553520367200001 USD --bitfinex--> USK --bitfinex--> BTC
+7.71524 USD --bitfinex--> ETH --binance--> STRAT --bittrex--> BTC
+8.148 USD --bitfinex--> GEN --bitfinex--> ETH --bitfinex--> BTC
+8.20709 USD --bitfinex--> POA --binance--> ETH --bitfinex--> BTC
+8.44 USD --bitfinex--> CBT --bitfinex--> ETH --bitfinex--> BTC
+8.585856323649883 USD --bitfinex--> XRP --binance--> RUB --binance--> BNB --binance--> BTC
+8.76244 USD --bitfinex--> WPR --binance--> ETH --bitfinex--> BTC
+9.030362879999998 USD --bitfinex--> ETH --binance--> NANO --binance--> BTC
+9.082749277095 USD --bitfinex--> AGI --binance--> BNB --binance--> USDT --binance--> BTC
+9.744 USD --bitfinex--> IMP --bitfinex--> ETH --bitfinex--> BTC
+9.76322515 USD --bitfinex--> YGG --bitfinex--> ETH --bitfinex--> BTC
+9.83296 USD --bitfinex--> ONL --bitfinex--> ETH --bitfinex--> BTC
+9.91801 USD --bitfinex--> RIF --bitfinex--> BTC
+10.0592669996 USD --bitfinex--> FSN --bitfinex--> BTC
+10.503111972293935 USD --bitstamp--> BCH --binance--> BNB --binance--> BTC
+11.400012679356001 USD --bitfinex--> RTE --bitfinex--> ETH --bitfinex--> BTC
+11.973596342796213 USD --coinbase--> LTC --binance--> BUSD --binance--> USDT --binance--> IOTA --binance--> BTC
+12.0674886003198 USD --bitfinex--> MIT --bitfinex--> BTC
+12.55983 USD --bitfinex--> SEE --bitfinex--> ETH --bitfinex--> BTC
+12.8 USD --bitfinex--> RCN --binance--> BTC
+12.848383895999998 USD --bitfinex--> CSX --bitfinex--> ETH --bitfinex--> BTC
+13.004317440000001 USD --bitfinex--> ETH --binance--> DNT --bittrex--> BTC
+13.00698 USD --bitfinex--> HOT --binance--> BTC
+13.27348 USD --bitfinex--> VLD --bitfinex--> ETH --bitfinex--> BTC
+13.54441509792 USD --bitfinex--> IOS --bitfinex--> ETH --bitfinex--> BTC
+13.812334080000001 USD --bitfinex--> ETH --binance--> MCO --binance--> BTC
+13.84944529136844 USD --bitfinex--> DTH --bitfinex--> ETH --bitfinex--> BTC
+14.050864256000002 USD --bitfinex--> ETH --binance--> XZC --bittrex--> BTC
+14.297723596834029 USD --bittrex--> BAT --bittrex--> ETH --bitfinex--> JPY --bitfinex--> BTC
+14.891183999999999 USD --coinbase--> XLM --binance--> ETH --bitfinex--> EUR --bitfinex--> BTC
+15.187999999999999 USD --bitfinex--> NEC --bitfinex--> ETH --bitfinex--> BTC
+15.6632532 USD --bittrex--> ZEN --binance--> BNB --binance--> USDT --binance--> BTC
+15.890887679999999 USD --bitfinex--> ETH --binance--> MTL --binance--> BTC
+16.191 USD --bitfinex--> CNN --bitfinex--> ETH --bitfinex--> BTC
+16.499500188 USD --bitfinex--> SPK --bitfinex--> BTC
+16.9966 USD --bitfinex--> TKN --bitfinex--> ETH --bitfinex--> BTC
+17.159695449999997 USD --bitfinex--> REP --binance--> BTC
+17.2175672625 USD --bitfinex--> AIO --bitfinex--> BTC
+17.663667834010205 USD --bitfinex--> ETH --binance--> TRY --binance--> USDT --binance--> BTC
+17.9234760965913 USD --bitfinex--> UST --bitfinex--> USK --bitfinex--> BTC
+18.252 USD --bitfinex--> FOA --bitfinex--> ETH --bitfinex--> BTC
+18.450561999999998 USD --bitfinex--> WBT --bitfinex--> ETH --bitfinex--> BTC
+19.380525739995 USD --bitfinex--> ESS --bitfinex--> ETH --bitfinex--> BTC
+19.979 USD --bitfinex--> SEN --bitfinex--> ETH --bitfinex--> BTC
+20.133846 USD --bitfinex--> DGB --bittrex--> BTC
+20.26192 USD --bitfinex--> WLO --bitfinex--> XLM --bittrex--> USDT --binance--> BTC
+20.352960000000003 USD --bitfinex--> ETH --binance--> AION --binance--> BTC
+22.714333333331062 USD --bitfinex--> ATM --bitfinex--> ETH --bitfinex--> BTC
+22.733217529217 USD --bitfinex--> ESS --bitfinex--> BTC
+23.389575741604 USD --bitfinex--> AID --bitfinex--> BTC
+23.4174 USD --coinbase--> ZRX --binance--> BTC
+25.3329387576423 USD --bittrex--> TRX --bitfinex--> BTC
+26.109863999999998 USD --bitfinex--> MGO --bitfinex--> ETH --bitfinex--> BTC
+27.531759723114533 USD --bittrex--> BAT --coinbase--> USDC --coinbase--> BTC
+28.368852 USD --bitfinex--> UST --bitfinex--> FTT --binance--> BNB --binance--> USDT --binance--> BTC
+28.66578459932801 USD --bitfinex--> ETH --binance--> BUSD --binance--> USDT --binance--> PAX --binance--> BTC
+29.237978546491334 USD --coinbase--> XRP --binance--> BNB --binance--> NGN --binance--> BTC
+29.242512 USD --bitfinex--> RBT --bitfinex--> BTC
+29.376 USD --bitfinex--> XRA --bitfinex--> ETH --bitfinex--> BTC
+30.155868233171997 USD --bitfinex--> AUC --bitfinex--> ETH --bitfinex--> BTC
+30.62333962770181 USD --bitfinex--> XRP --binance--> RUB --binance--> USDT --binance--> BTC
+30.876715933320003 USD --bitfinex--> MAN --bitfinex--> ETH --bitfinex--> BTC
+31.631947037287443 USD --bitfinex--> IQX --bitfinex--> BTC
+32.590906624875686 USD --coinbase--> XRP --binance--> RUB --binance--> BTC
+32.817360382 USD --bitfinex--> WAX --bitfinex--> ETH --bitfinex--> BTC
+33.45417691527594 USD --bitfinex--> ETH --binance--> RUB --binance--> BTC
+33.78291 USD --bitfinex--> POA --binance--> BTC
+34.53543 USD --bitfinex--> AST --binance--> BTC
+35.85 USD --bitstamp--> LTC --bitstamp--> BTC
+36.71725230911684 USD --coinbase--> ETH --bitfinex--> EUR --coinbase--> BTC
+36.8 USD --bitfinex--> NIO --bitfinex--> ETH --bitfinex--> BTC
+37.049946586 USD --bitfinex--> MLN --bitfinex--> ETH --bitfinex--> BTC
+39.16044694399999 USD --bitfinex--> GNO --bittrex--> BTC
+39.670465924830005 USD --bitfinex--> ODE --bitfinex--> ETH --bitfinex--> BTC
+40.39603960392 USD --bitfinex--> YYW --bitfinex--> BTC
+43.245648196210745 USD --coinbase--> LTC --binance--> BNB --binance--> SKY --binance--> BTC
+43.466920805088 USD --bitfinex--> STJ --bitfinex--> ETH --bitfinex--> BTC
+44.371383744 USD --bitfinex--> ETH --binance--> BNB --binance--> NGN --binance--> BTC
+48.265685999999995 USD --bitfinex--> BOX --bitfinex--> ETH --bitfinex--> BTC
+49.024492800000004 USD --coinbase--> XLM --binance--> BUSD --binance--> USDT --binance--> BTC
+49.816849627037996 USD --bitfinex--> CND --binance--> ETH --bitfinex--> BTC
+50.406028000000006 USD --coinbase--> XLM --binance--> BNB --binance--> BTC
+51.95308188 USD --bitfinex--> ETH --binance--> STORJ --binance--> BTC
+52.504799999999996 USD --coinbase--> ALGO --binance--> TUSD --bittrex--> BTC
+53.306639999999994 USD --bitfinex--> OMN --bitfinex--> BTC
+53.9576487403978 USD --bitfinex--> REQ --binance--> ETH --bitfinex--> BTC
+59.76118477481337 USD --bitfinex--> UTK --bitfinex--> ETH --bitfinex--> BTC
+60.70599 USD --bitfinex--> CHZ --binance--> BTC
+61.872009999999996 USD --bitfinex--> REQ --binance--> BTC
+65.73414 USD --bitfinex--> CHZ --binance--> BNB --binance--> USDT --binance--> BTC
+66.81487624809361 USD --bitfinex--> VEE --bittrex--> BTC
+67.014512681024 USD --bitfinex--> VSY --bitfinex--> BTC
+69.72792590250025 USD --bitfinex--> PAS --bitfinex--> ETH --bitfinex--> BTC
+70.47744 USD --bitfinex--> ETH --binance--> RUB --binance--> USDT --binance--> PAX --binance--> BTC
+70.93578861517797 USD --coinbase--> XRP --binance--> TRY --binance--> USDT --binance--> BTC
+75.28718546999997 USD --coinbase--> REP --coinbase--> BTC
+77.0133199744006 USD --bitfinex--> ETH --binance--> RUB --binance--> USDT --binance--> BTC
+81.543624161157 USD --bitfinex--> PAI --bitfinex--> BTC
+84.072869190002 USD --bitfinex--> FSN --bittrex--> BTC
+86.5126242782538 USD --bitfinex--> POY --bitfinex--> ETH --bitfinex--> BTC
+86.81845744183632 USD --bitfinex--> NCA --bitfinex--> BTC
+91.647873 USD --bitfinex--> ZRX --bittrex--> ETH --bitfinex--> BTC
+93.0424 USD --coinbase--> EOS --binance--> BUSD --binance--> USDT --binance--> BTC
+94.067 USD --bitfinex--> ENJ --binance--> BTC
+94.9026351001168 USD --bitfinex--> WPR --binance--> BTC
+101.24948453777989 USD --bitfinex--> UTN --bitfinex--> ETH --bitfinex--> BTC
+102.46566183919492 USD --bitfinex--> VET --binance--> BUSD --binance--> USDT --binance--> BTC
+103.56197045162472 USD --bitfinex--> CND --binance--> BTC
+105.60965441252999 USD --bitfinex--> ORS --bitfinex--> BTC
+106.826992 USD --bittrex--> ADA --binance--> USDC --coinbase--> BTC
+108.19694784081 USD --bitfinex--> OKB --bitfinex--> ETH --bitfinex--> BTC
+108.59419999999999 USD --bitfinex--> NEC --bitfinex--> BTC
+110.66284384397579 USD --bitfinex--> UFR --bitfinex--> ETH --bitfinex--> BTC
+111.521910472328 USD --bitfinex--> DAD --bitfinex--> ETH --bitfinex--> BTC
+112.64149608347999 USD --bitfinex--> SAN --bitfinex--> ETH --bitfinex--> BTC
+112.9399703497 USD --bitfinex--> LOO --bitfinex--> ETH --bitfinex--> BTC
+115.68777537844 USD --bitfinex--> QSH --bitfinex--> ETH --bitfinex--> BTC
+117.2833014424 USD --bittrex--> KMD --binance--> ETH --bitfinex--> BTC
+119.35345541098509 USD --bitfinex--> ETH --bitfinex--> SNT --binance--> BTC
+119.84162878786559 USD --bitfinex--> CLO --bitfinex--> BTC
+120.64389999999999 USD --bitfinex--> ODE --bitfinex--> BTC
+124.26657784812 USD --bitfinex--> CTX --bitfinex--> ETH --bitfinex--> BTC
+124.32537276806 USD --bitfinex--> AGI --binance--> BTC
+127.9302756752 USD --bitfinex--> CBT --bitfinex--> BTC
+129.2434675499 USD --bittrex--> USDS --binance--> BTC
+133.12 USD --bitfinex--> ZEC --coinbase--> USDC --coinbase--> BTC
+151.09029303123597 USD --bitfinex--> ALG --bitfinex--> BTC
+152.5563 USD --bitfinex--> UST --bitfinex--> PAX --binance--> BTC
+154.08097805363002 USD --bitfinex--> WTC --binance--> BTC
+154.19184221356 USD --bitfinex--> AVT --bitfinex--> ETH --bitfinex--> BTC
+154.324806100292 USD --bitfinex--> UTK --bittrex--> BTC
+155.40229885050002 USD --bitfinex--> AID --bitfinex--> ETH --bitfinex--> BTC
+156.6412216050709 USD --bitfinex--> SNG --bitfinex--> BTC
+162.63262 USD --bitfinex--> ZRX --binance--> BNB --binance--> USDT --binance--> BTC
+168.73928049888 USD --bitfinex--> DAI --coinbase--> USDC --binance--> BTC
+171.8442 USD --bitfinex--> ZRX --binance--> ETH --bitfinex--> BTC
+175.71751303768 USD --bitfinex--> INT --bitfinex--> ETH --bitfinex--> BTC
+176.13782434944 USD --bittrex--> ZEC --bitfinex--> BTC
+176.8499999923365 USD --bitfinex--> TRX --bittrex--> BTC
+179.1796756499339 USD --coinbase--> XRP --binance--> RUB --binance--> USDT --binance--> BTC
+179.622842071104 USD --bitfinex--> BNT --binance--> BTC
+180.79399332800003 USD --bitfinex--> ETH --binance--> IOTA --binance--> BTC
+182.20836597883002 USD --bitfinex--> XRP --binance--> EUR --bitfinex--> BTC
+192.81182399999997 USD --coinbase--> XLM --bitfinex--> JPY --bitfinex--> BTC
+194.4702992466722 USD --bittrex--> DGB --bittrex--> BTC
+197.65872000000002 USD --coinbase--> ETH --binance--> BTC
+200.71904924164653 USD --bitfinex--> CHZ --binance--> USDT --binance--> BTC
+206.7725903637145 USD --bitfinex--> DAT --bitfinex--> BTC
+207.15624 USD --coinbase--> LINK --binance--> ETH --bitfinex--> EUR --bitfinex--> BTC
+215.46555915837956 USD --coinbase--> EOS --bittrex--> BTC
+215.92425 USD --coinbase--> LINK --coinbase--> ETH --bitfinex--> JPY --bitfinex--> BTC
+226.17230620941368 USD --bitfinex--> MTN --bitfinex--> BTC
+228.7277185521952 USD --bitfinex--> NEO --binance--> USDT --bittrex--> BTC
+236.9027954353 USD --bitfinex--> AVT --bitfinex--> BTC
+242.528 USD --bitfinex--> XTZ --binance--> BNB --binance--> USDT --binance--> BTC
+245.57396 USD --coinbase--> XRP --binance--> BUSD --binance--> USDT --binance--> BTC
+257.1372427257495 USD --bitfinex--> VEE --bitfinex--> ETH --bitfinex--> BTC
+258.44123604078 USD --bitfinex--> RRT --bitfinex--> BTC
+259.1556355699441 USD --bitfinex--> XRP --binance--> BNB --binance--> BTC
+263.15953137596404 USD --bitfinex--> MNA --bitfinex--> BTC
+269.597403871163 USD --bittrex--> ATOM --binance--> BTC
+269.85546848 USD --bitfinex--> ETH --binance--> EOS --bitfinex--> JPY --bitfinex--> BTC
+271.180012 USD --bitfinex--> EDO --binance--> ETH --bitfinex--> JPY --bitfinex--> BTC
+274.18762705405203 USD --bitfinex--> YYW --bitfinex--> ETH --bitfinex--> BTC
+280.7970126784173 USD --coinbase--> ZRX --coinbase--> BTC
+280.81130961965 USD --bitfinex--> TNB --binance--> ETH --bitfinex--> BTC
+288.226603104 USD --bitfinex--> FUN --binance--> ETH --bitfinex--> BTC
+292.59926606770784 USD --bitstamp--> XRP --coinbase--> BTC
+303.87575757816 USD --bitfinex--> PNK --bitfinex--> ETH --bitfinex--> BTC
+315.55944 USD --bitfinex--> EOS --binance--> BTC
+324.08546381039804 USD --bitfinex--> FSN --bitfinex--> ETH --bitfinex--> BTC
+324.6999991118308 USD --bitfinex--> QSH --bitfinex--> BTC
+326.700530728 USD --bitfinex--> RLC --binance--> BTC
+328.77811470335996 USD --bitfinex--> ORS --bitfinex--> ETH --bitfinex--> BTC
+332.7568150523446 USD --bitfinex--> BAT --coinbase--> USDC --coinbase--> BTC
+335.26245811465384 USD --bitfinex--> ETH --bittrex--> XEM --bittrex--> BTC
+349.94612400000005 USD --bittrex--> BCH --binance--> BNB --binance--> USDT --binance--> BTC
+357.9588070182786 USD --bitfinex--> ZCN --bitfinex--> ETH --bitfinex--> BTC
+367.30853033802293 USD --bittrex--> LTC --binance--> TUSD --binance--> BTC
+381.4352082099983 USD --bitfinex--> DTA --bitfinex--> BTC
+382.62931607431995 USD --bitfinex--> IOT --bitfinex--> EUR --bitfinex--> BTC
+386.249998146 USD --bitfinex--> SNT --binance--> BTC
+390.868 USD --bitfinex--> XMR --binance--> BNB --binance--> BTC
+394.48038106875003 USD --bittrex--> KMD --bittrex--> BTC
+396.15307103808203 USD --bitfinex--> ETP --bitfinex--> BTC
+396.4362114535087 USD --coinbase--> XRP --binance--> BNB --binance--> BTC
+402.29063602510075 USD --bitstamp--> XRP --binance--> USDC --binance--> BTC
+406.55957240261085 USD --bittrex--> USDT --binance--> IOTA --binance--> BTC
+408.155764329494 USD --bitfinex--> DRN --bitfinex--> ETH --bitfinex--> BTC
+411.3152660772 USD --bitfinex--> GOT --bitfinex--> EUR --bitfinex--> BTC
+413.646601 USD --coinbase--> LTC --binance--> TUSD --binance--> USDT --binance--> BTC
+420.4464654208 USD --bitfinex--> RDN --binance--> BTC
+425.74213000000003 USD --coinbase--> ETC --binance--> ETH --bitfinex--> JPY --bitfinex--> BTC
+429.66448 USD --bitfinex--> OMG --binance--> ETH --bitfinex--> GBP --bitfinex--> BTC
+433.5919496999998 USD --coinbase--> REP --binance--> ETH --bitfinex--> EUR --bitfinex--> BTC
+436.48921102959895 USD --bitfinex--> ZEC --coinbase--> BTC
+456.8680282910702 USD --bitstamp--> LTC --binance--> TUSD --binance--> USDC --coinbase--> BTC
+457.15741615261203 USD --bitfinex--> AMP --bitfinex--> BTC
+463.79988221280007 USD --bitfinex--> XRP --binance--> TRX --bittrex--> USDT --binance--> BTC
+481.18577999999997 USD --bitfinex--> OMG --binance--> BNB --binance--> USDT --binance--> BTC
+482.30234745984103 USD --bittrex--> ZEC --coinbase--> BTC
+488.9582504017963 USD --bitfinex--> LYM --bitfinex--> BTC
+492.65612343293196 USD --bitfinex--> DUSK --binance--> USDT --binance--> BTC
+497.16981520438253 USD --bitfinex--> BFT --bitfinex--> ETH --bitfinex--> BTC
+513.469802 USD --bitfinex--> XRP --binance--> TRY --binance--> USDT --binance--> BTC
+520.04301 USD --coinbase--> ALGO --binance--> USDT --binance--> BTC
+526.603224 USD --bittrex--> HBAR --binance--> BTC
+533.9777604899601 USD --bitfinex--> SWM --bitfinex--> ETH --bitfinex--> BTC
+534.4441702370308 USD --bittrex--> KMD --binance--> BTC
+540.3824823916499 USD --bittrex--> USDS --binance--> USDT --binance--> BTC
+561.33 USD --bitfinex--> DGX --bitfinex--> ETH --bitfinex--> GBP --bitfinex--> BTC
+566.1899999999999 USD --bitfinex--> XCH --bitfinex--> BTC
+568.5517784236162 USD --bitstamp--> XRP --binance--> TUSD --binance--> BTC
+573.1628380584999 USD --bitfinex--> ZIL --binance--> USDT --binance--> BTC
+591.5104 USD --bitfinex--> IOT --bitfinex--> ETH --bitfinex--> JPY --bitfinex--> BTC
+599.0207350227971 USD --bitfinex--> XTZ --binance--> BNB --binance--> BTC
+609.061677529699 USD --bittrex--> ZRX --coinbase--> EUR --bitfinex--> BTC
+620.6604180602006 USD --coinbase--> LINK --binance--> USDT --binance--> IOTA --binance--> BTC
+637.180106756978 USD --bitfinex--> LTC --binance--> BNB --binance--> BTC
+641.297568443022 USD --bitfinex--> LTC --binance--> ETH --bitfinex--> GBP --bitfinex--> BTC
+656.101263977551 USD --bitfinex--> OMG --bittrex--> BTC
+665.62248 USD --coinbase--> ETC --binance--> BNB --binance--> BTC
+680.367504281 USD --bitfinex--> ENJ --bittrex--> BTC
+685.3223160972 USD --bitfinex--> NEO --bitfinex--> GBP --bitfinex--> BTC
+691.9997999999999 USD --bitfinex--> ANT --bittrex--> BTC
+692.836858687508 USD --coinbase--> ALGO --binance--> TUSD --binance--> USDT --binance--> BTC
+699.2847436915057 USD --coinbase--> BCH --binance--> PAX --binance--> BTC
+703.16623392239 USD --bittrex--> LTC --bitfinex--> BTC
+707.108450052174 USD --bitfinex--> XVG --binance--> BTC
+710.6827426509008 USD --coinbase--> LINK --binance--> PAX --binance--> USDT --binance--> BTC
+728.6475440198818 USD --coinbase--> ZRX --bittrex--> BTC
+736.8859734081816 USD --bitfinex--> XRP --binance--> RUB --binance--> BTC
+741.1860871756961 USD --bitfinex--> BTT --binance--> USDT --binance--> BTC
+745.2949044741772 USD --bittrex--> LTC --binance--> PAX --binance--> BTC
+749.2242362981644 USD --bitstamp--> LTC --binance--> BNB --binance--> BTC
+780.6855 USD --coinbase--> XRP --binance--> ETH --bitfinex--> JPY --bitfinex--> BTC
+807.7558363124921 USD --coinbase--> ALGO --binance--> TUSD --binance--> BNB --binance--> BTC
+809.3446275567569 USD --bitstamp--> BCH --binance--> PAX --binance--> BTC
+822.6729 USD --coinbase--> ETC --binance--> ETH --bitfinex--> GBP --bitfinex--> BTC
+844.8000000000001 USD --bitfinex--> ETH --binance--> TUSD --binance--> USDC --coinbase--> BTC
+856.810702909096 USD --bitfinex--> UST --bitfinex--> ALG --bitfinex--> BTC
+872.5248167861519 USD --bitfinex--> TRX --binance--> USDC --coinbase--> BTC
+878.30945631 USD --bittrex--> BCH --binance--> USDC --coinbase--> BTC
+935.6222735509361 USD --bitfinex--> XLM --bittrex--> USDT --binance--> BTC
+939.4178965763838 USD --bitstamp--> XRP --binance--> TUSD --binance--> USDT --binance--> BTC
+945.5221610461116 USD --coinbase--> ETH --bitfinex--> GBP --coinbase--> BTC
+945.7561406236439 USD --bittrex--> USDT --bittrex--> BTC
+948.0249566112001 USD --bitstamp--> LTC --bittrex--> ETH --bitfinex--> GBP --bitfinex--> BTC
+957.30880512 USD --bitfinex--> ETH --binance--> QTUM --binance--> BTC
+1011.3412874999999 USD --bitfinex--> GNT --binance--> BTC
+1022.43572 USD --bitfinex--> LTC --coinbase--> GBP --bitfinex--> BTC
+1046.812259301744 USD --bitfinex--> OMG --bitfinex--> ETH --bitfinex--> BTC
+1053.5328 USD --bittrex--> ZEC --bittrex--> BTC
+1059.362497 USD --bitfinex--> ZRX --bitfinex--> BTC
+1062.930414947126 USD --bitfinex--> ETP --bitfinex--> ETH --bitfinex--> BTC
+1063.4801361735279 USD --coinbase--> ATOM --binance--> USDT --binance--> BTC
+1081.8171752442179 USD --bitfinex--> LEO --bitfinex--> ETH --bitfinex--> BTC
+1087.12224136 USD --bitfinex--> ETH --binance--> ADA --binance--> BTC
+1092.1293963291598 USD --bitfinex--> FTT --binance--> USDT --binance--> BTC
+1107.3030639748993 USD --bitstamp--> XRP --binance--> USDC --coinbase--> BTC
+1146.10129429616 USD --bitfinex--> PAX --binance--> BTC
+1147.2 USD --coinbase--> LTC --binance--> USDT --binance--> PAX --binance--> BTC
+1152.0209582783998 USD --bitfinex--> ETC --bittrex--> ETH --bitfinex--> BTC
+1154.14961528 USD --bittrex--> XRP --binance--> USDT --binance--> BTC
+1167.37086 USD --bittrex--> ETH --bitfinex--> JPY --bitfinex--> BTC
+1183.07211456 USD --bitfinex--> ETH --binance--> TRX --bitfinex--> BTC
+1203.66405417 USD --bitfinex--> ATO --bitfinex--> BTC
+1271.3423867768597 USD --bitfinex--> ETH --bitfinex--> GBP --coinbase--> BTC
+1299.8909034698202 USD --bitstamp--> LTC --binance--> USDT --binance--> USDC --coinbase--> BTC
+1346.7466235385 USD --bittrex--> DCR --bittrex--> USDT --binance--> BTC
+1353.8372077135286 USD --bitstamp--> LTC --bittrex--> USDT --binance--> BTC
+1354.53486483 USD --coinbase--> REP --binance--> BTC
+1365.65586512334 USD --bitfinex--> QTM --bitfinex--> BTC
+1410.0113777625916 USD --bitfinex--> VET --binance--> USDT --binance--> BTC
+1424.183553 USD --coinbase--> LTC --binance--> BUSD --binance--> USDT --binance--> PAX --binance--> BTC
+1427.8533205 USD --coinbase--> XRP --bittrex--> ETH --bitfinex--> JPY --bitfinex--> BTC
+1430.8021300592668 USD --bitstamp--> LTC --binance--> ETH --bitfinex--> GBP --bitfinex--> BTC
+1444.4710975 USD --bitfinex--> ELF --binance--> BTC
+1504.8666869436538 USD --coinbase--> BCH --binance--> USDC --coinbase--> BTC
+1507.846688 USD --bitstamp--> BCH --binance--> BUSD --binance--> USDT --binance--> BTC
+1530.485724 USD --bitfinex--> UST --bitfinex--> OKB --bitfinex--> ETH --bitfinex--> BTC
+1569.81792 USD --bitfinex--> OMG --binance--> BTC
+1598.3610309357 USD --bitfinex--> DAI --coinbase--> USDC --coinbase--> BTC
+1603.8820023135002 USD --bitfinex--> BTG --binance--> BTC
+1614.214810562144 USD --bitfinex--> ZRX --bittrex--> BTC
+1659.4472401449 USD --bitstamp--> LTC --bittrex--> BTC
+1716.46310776213 USD --bittrex--> LTC --binance--> BTC
+1719.4943999999998 USD --coinbase--> XRP --binance--> USDC --coinbase--> BTC
+1729.17405 USD --bittrex--> DCR --binance--> BTC
+1781.6554877490994 USD --coinbase--> LINK --binance--> PAX --binance--> BTC
+1880.8015639914001 USD --coinbase--> LTC --bittrex--> USDT --binance--> BTC
+1973.920024188042 USD --bitfinex--> OMG --binance--> ETH --bitfinex--> BTC
+1979.95475 USD --bitfinex--> ZEC --binance--> BNB --binance--> USDT --binance--> BTC
+2027.6963364874755 USD --bitfinex--> BAT --binance--> BTC
+2078.8414706000003 USD --coinbase--> XLM --binance--> TUSD --binance--> USDT --binance--> BTC
+2090.14836 USD --coinbase--> LINK --binance--> ETH --bitfinex--> JPY --bitfinex--> BTC
+2099.0560556249998 USD --bitfinex--> MKR --bitfinex--> ETH --bitfinex--> BTC
+2110.28736 USD --bitfinex--> ETH --binance--> USDC --coinbase--> BTC
+2123.3349288 USD --bitstamp--> LTC --binance--> BUSD --binance--> USDT --binance--> BTC
+2142.3001878498 USD --bittrex--> TUSD --binance--> USDT --binance--> BTC
+2169.6905070602943 USD --bittrex--> TUSD --binance--> USDC --coinbase--> BTC
+2253.4222930142 USD --bittrex--> TUSD --bittrex--> BTC
+2256.018806031535 USD --coinbase--> LINK --binance--> BUSD --binance--> USDT --binance--> BTC
+2268.1971 USD --bitfinex--> ETC --binance--> BTC
+2350.8214100525 USD --bitfinex--> ZEC --bittrex--> USDT --binance--> BTC
+2527.994882835612 USD --bitstamp--> LTC --binance--> USDC --binance--> BTC
+2560.7378279174445 USD --bitfinex--> LTC --binance--> USDC --binance--> BTC
+2585.888375124746 USD --bittrex--> ETC --coinbase--> BTC
+2646.633077721 USD --bitfinex--> NEO --bitfinex--> JPY --bitfinex--> BTC
+2687.288408090457 USD --bittrex--> XRP --bitfinex--> BTC
+2700.024390674651 USD --coinbase--> ZRX --bitfinex--> BTC
+2733.0687523032916 USD --bitfinex--> ETH --binance--> USDT --bittrex--> BTC
+2783.499346113216 USD --bittrex--> TUSD --binance--> BTC
+2815.6330409598 USD --bitfinex--> NEO --bitfinex--> EUR --bitfinex--> BTC
+2837.154658414562 USD --bitfinex--> ETH --bitfinex--> EUR --binance--> BTC
+2863.6327695960003 USD --bitfinex--> BSV --bittrex--> ETH --bitfinex--> GBP --bitfinex--> BTC
+2875.180159926 USD --bittrex--> DCR --bittrex--> BTC
+2904.759284819822 USD --coinbase--> ALGO --binance--> BTC
+2945.37822 USD --bitfinex--> ETH --binance--> TUSD --binance--> BTC
+2959.203834891602 USD --coinbase--> XRP --bittrex--> BTC
+2960.369002961103 USD --coinbase--> LTC --binance--> PAX --binance--> BTC
+3011.980412582405 USD --bitfinex--> XLM --binance--> USDT --binance--> BTC
+3028.4447999999998 USD --bitfinex--> XRP --binance--> USDC --binance--> BTC
+3031.109020786969 USD --bittrex--> USDT --binance--> BNB --binance--> BTC
+3050.66541744 USD --bittrex--> BCH --binance--> PAX --binance--> BTC
+3228.5065499999996 USD --bitfinex--> UST --bitfinex--> LTC --bitfinex--> BTC
+3319.5353999999998 USD --coinbase--> LINK --binance--> ETH --bitfinex--> GBP --bitfinex--> BTC
+3356.615553472365 USD --bittrex--> XRP --binance--> BTC
+3389.0825719117997 USD --bitfinex--> TRX --bitfinex--> BTC
+3391.407406728897 USD --coinbase--> LTC --binance--> TUSD --binance--> BTC
+3469.0489952000003 USD --coinbase--> LINK --coinbase--> ETH --bitfinex--> BTC
+3481.716297498556 USD --bittrex--> BCH --binance--> USDT --binance--> BTC
+3526.6000000000004 USD --bitfinex--> EUT --bitfinex--> EUR --bitfinex--> BTC
+3595.61014674 USD --bitfinex--> UST --bitfinex--> FTT --binance--> BTC
+3607.81025 USD --coinbase--> ETC --binance--> BUSD --binance--> USDT --binance--> BTC
+3648.8273765878002 USD --coinbase--> EOS --bitfinex--> GBP --coinbase--> BTC
+3651.233105389865 USD --bittrex--> ADA --binance--> BTC
+3709.14463 USD --bitfinex--> LTC --binance--> ETH --bitfinex--> BTC
+3727.2109958060732 USD --coinbase--> XLM --bittrex--> BTC
+3840.0004450387532 USD --bitfinex--> ETH --bitfinex--> EUR --bitstamp--> BTC
+3846.84741636612 USD --bittrex--> ETH --bitfinex--> EUR --bitfinex--> BTC
+3861.1101534510963 USD --bitfinex--> LEO --bitfinex--> EOS --bitfinex--> JPY --bitfinex--> BTC
+4076.1996115089296 USD --bitstamp--> LTC --binance--> TUSD --binance--> BTC
+4087.448649017585 USD --coinbase--> LINK --binance--> USDC --binance--> BTC
+4130.570623400672 USD --bitfinex--> ETH --binance--> BUSD --binance--> USDT --binance--> BTC
+4133.562822367245 USD --bitfinex--> ETH --bitfinex--> EUR --coinbase--> BTC
+4166.314304372443 USD --coinbase--> LTC --binance--> BNB --binance--> BTC
+4269.4784 USD --bitfinex--> IOT --bitfinex--> BTC
+4270.618229792607 USD --bitfinex--> ZRX --bitfinex--> ETH --bitfinex--> BTC
+4585.593227201476 USD --bitfinex--> ZRX --coinbase--> BTC
+4651.411841572745 USD --coinbase--> LINK --binance--> USDC --coinbase--> BTC
+4827.019548534834 USD --coinbase--> LTC --binance--> USDC --coinbase--> BTC
+4833.260961902 USD --bitfinex--> BSV --bittrex--> ETH --bitfinex--> JPY --bitfinex--> BTC
+4862.8829714034155 USD --bittrex--> ZEN --binance--> BTC
+4891.5684731584 USD --bitfinex--> XTZ --bittrex--> BTC
+4943.963188124189 USD --bittrex--> ZEC --binance--> BTC
+4953.2160186943 USD --bitstamp--> BCH --binance--> USDC --coinbase--> BTC
+5010.921056409033 USD --coinbase--> XLM --binance--> USDT --binance--> BTC
+5016.29604557 USD --bittrex--> BCH --binance--> BUSD --binance--> USDT --binance--> BTC
+5218.4902568495 USD --bitfinex--> XMR --bittrex--> USDT --binance--> BTC
+5219.217489447375 USD --bittrex--> BCH --bittrex--> USDT --binance--> BTC
+5264.656 USD --bitfinex--> XMR --binance--> BNB --binance--> USDT --binance--> BTC
+5270.352 USD --bitfinex--> ZRX --binance--> BTC
+5292.4613735646535 USD --bittrex--> BCH --coinbase--> BTC
+5317.0705582481405 USD --bittrex--> BAT --binance--> BTC
+5508.46803 USD --coinbase--> XLM --binance--> BTC
+5697.718263826472 USD --coinbase--> ATOM --binance--> BTC
+5731.724768016 USD --bitfinex--> ETH --binance--> BNB --binance--> BTC
+5739.62833798788 USD --bitstamp--> LTC --binance--> PAX --binance--> BTC
+5788.606759493681 USD --bitstamp--> XRP --bitfinex--> BTC
+5845.4541427 USD --bitfinex--> XMR --bittrex--> ETH --bitfinex--> BTC
+6343.5642393252 USD --bitfinex--> NEO --bittrex--> BTC
+6352.764500983515 USD --bitfinex--> ETC --coinbase--> BTC
+6368.019870000001 USD --coinbase--> XLM --coinbase--> BTC
+6475.05408811231 USD --bitfinex--> LTC --binance--> USDT --binance--> BTC
+6511.965581381899 USD --bittrex--> PAX --binance--> BTC
+6523.211524187246 USD --coinbase--> XRP --bitstamp--> BTC
+6785.514797514444 USD --bitfinex--> XRP --binance--> TUSD --binance--> USDT --binance--> BTC
+7304.908467869999 USD --bitfinex--> UST --bitfinex--> FTT --binance--> BNB --binance--> BTC
+7335.921940621005 USD --bitfinex--> NEO --binance--> USDT --binance--> BTC
+7341.78048 USD --coinbase--> LINK --binance--> ETH --bitfinex--> BTC
+7448.697947778445 USD --coinbase--> ETC --coinbase--> BTC
+7452.2614146877 USD --bitfinex--> ZEC --bittrex--> BTC
+7571.020569736567 USD --coinbase--> XRP --coinbase--> BTC
+7659.29328873956 USD --bitfinex--> UST --bitfinex--> EOS --bitfinex--> GBP --bitfinex--> BTC
+7729.349023277386 USD --coinbase--> BCH --binance--> USDT --binance--> BTC
+7753.372753681017 USD --bitfinex--> ZRX --binance--> USDT --binance--> BTC
+7876.1 USD --bitfinex--> XRP --bitstamp--> EUR --bitfinex--> BTC
+7983.037782757184 USD --bitfinex--> UST --bitfinex--> EOS --bitfinex--> JPY --bitfinex--> BTC
+8333.604571241412 USD --bitfinex--> OMG --binance--> USDT --binance--> BTC
+8458.358825455161 USD --coinbase--> LTC --binance--> BUSD --binance--> USDT --binance--> BTC
+8877.890112394278 USD --bitfinex--> XRP --binance--> TUSD --binance--> BTC
+8891.218059757775 USD --bittrex--> USDT --binance--> PAX --binance--> BTC
+8934.851404338777 USD --bitfinex--> XRP --binance--> BNB --binance--> USDT --binance--> BTC
+8969.765523577435 USD --bitstamp--> LTC --coinbase--> BTC
+9032.969161209605 USD --bittrex--> XRP --bitstamp--> BTC
+9044.523609291688 USD --bitfinex--> OMG --bitfinex--> BTC
+9058.494028507661 USD --bitfinex--> LTC --binance--> PAX --binance--> BTC
+9421.254624968095 USD --bitfinex--> LTC --binance--> USDC --coinbase--> BTC
+9443.917822740426 USD --bitfinex--> LTC --binance--> BUSD --binance--> USDT --binance--> BTC
+9686.60830066488 USD --bitfinex--> EOS --bittrex--> BTC
+9698.795530854599 USD --bitfinex--> LTC --binance--> TUSD --binance--> BTC
+9722.416 USD --bitfinex--> XMR --binance--> ETH --bitfinex--> BTC
+9881.203800000001 USD --bitfinex--> XRP --binance--> ETH --bitfinex--> BTC
+9884.9512078 USD --coinbase--> BCH --binance--> BUSD --binance--> USDT --binance--> BTC
+9914.022740931536 USD --bitstamp--> LTC --binance--> USDT --binance--> BTC
+10158.227105085256 USD --bitfinex--> UST --bitfinex--> FTT --binance--> USDT --binance--> BTC
+10491.580816974432 USD --bitfinex--> TRX --bittrex--> USDT --binance--> BTC
+10555.01960563173 USD --coinbase--> ETC --bittrex--> BTC
+10607.953102 USD --coinbase--> DASH --binance--> BTC
+10699.961600780027 USD --bitfinex--> ETH --coinbase--> USDC --coinbase--> BTC
+10719.898626 USD --bittrex--> BCH --binance--> BTC
+11323.3555262866 USD --bitfinex--> ZEC --bitfinex--> BTC
+11631.785572739236 USD --bitfinex--> LEO --bitfinex--> BTC
+11937.90596 USD --bitstamp--> BCH --binance--> BTC
+12033.260932775856 USD --bitfinex--> ETC --binance--> BNB --binance--> USDT --binance--> BTC
+12042.06993225692 USD --coinbase--> XRP --bitfinex--> BTC
+12181.600355626142 USD --bitfinex--> LTC --coinbase--> EUR --bitfinex--> BTC
+12320.523990596332 USD --coinbase--> LINK --coinbase--> ETH --bitfinex--> GBP --bitfinex--> BTC
+12433.313848384896 USD --coinbase--> XLM --bitfinex--> BTC
+12517.1237 USD --bitfinex--> XRP --binance--> BUSD --binance--> USDT --binance--> BTC
+12676.599549910534 USD --bitstamp--> XRP --binance--> BTC
+12908.687508230969 USD --bitfinex--> XRP --binance--> USDC --coinbase--> BTC
+13100.717269971841 USD --bitfinex--> XTZ --bitfinex--> BTC
+13511.1741284056 USD --bitfinex--> ZEC --binance--> USDT --binance--> BTC
+13711.3806 USD --bitfinex--> ETC --binance--> BUSD --binance--> USDT --binance--> BTC
+13739.0904 USD --bitfinex--> ETC --binance--> ETH --bitfinex--> BTC
+14249.979742036585 USD --bitstamp--> XRP --binance--> USDT --binance--> BTC
+14432.694619449267 USD --bitfinex--> ZRX --coinbase--> EUR --bitfinex--> BTC
+14465.5087877097 USD --bitfinex--> NEO --bitfinex--> BTC
+14743.1478923344 USD --bitfinex--> XTZ --bittrex--> USDT --binance--> BTC
+14951.035487885865 USD --bitfinex--> XRP --bittrex--> USDT --binance--> BTC
+15454.4475808345 USD --bitstamp--> BCH --bitstamp--> BTC
+15475.415116451324 USD --bittrex--> BCH --bittrex--> BTC
+15543.17043140299 USD --bittrex--> ETH --bitfinex--> GBP --bitfinex--> BTC
+15791.731474016 USD --bitfinex--> ETC --bittrex--> BTC
+16122.64274361261 USD --bitstamp--> BCH --binance--> USDT --binance--> BTC
+16137.813676716967 USD --bittrex--> BCH --bitstamp--> BTC
+17138.091382006525 USD --bitfinex--> LTC --bittrex--> ETH --bitfinex--> BTC
+17453.435403843156 USD --bitfinex--> ETH --binance--> USDT --binance--> PAX --binance--> BTC
+17510.84165991013 USD --bitfinex--> UST --bitfinex--> EOS --bitfinex--> EUR --bitfinex--> BTC
+17602.0859400819 USD --bitfinex--> NEO --binance--> BTC
+18517.519082208048 USD --coinbase--> BCH --binance--> BTC
+18564.495000828 USD --bitstamp--> ETH --bitfinex--> EUR --bitfinex--> BTC
+19163.34544684 USD --bitfinex--> XMR --bittrex--> BTC
+20014.899556031272 USD --coinbase--> BCH --bitstamp--> BTC
+20407.071438751198 USD --bitfinex--> ETC --coinbase--> GBP --bitfinex--> BTC
+20839.2627055693 USD --coinbase--> LTC --bittrex--> BTC
+20975.102078468663 USD --coinbase--> EOS --bitfinex--> GBP --bitfinex--> BTC
+21593.865246485486 USD --bitfinex--> XRP --bittrex--> ETH --bitfinex--> BTC
+21665.316269294144 USD --bitfinex--> IOT --bitfinex--> GBP --bitfinex--> BTC
+22619.588 USD --bitfinex--> XRP --coinbase--> EUR --bitfinex--> BTC
+23770.770083842202 USD --bitfinex--> ZEC --binance--> BTC
+25227.403685785157 USD --coinbase--> EOS --bitfinex--> JPY --bitfinex--> BTC
+25420.2305692608 USD --bitfinex--> ETC --bittrex--> USDT --binance--> BTC
+26274.35011625008 USD --bitfinex--> EOS --bitfinex--> GBP --coinbase--> BTC
+27155.132782463817 USD --bitstamp--> LTC --binance--> BTC
+29494.4788473059 USD --bitfinex--> LTC --bitstamp--> BTC
+30742.978838903 USD --bittrex--> BSV --bitfinex--> BTC
+33285.42310478084 USD --coinbase--> ETC --binance--> USDT --binance--> BTC
+34280.7246024123 USD --coinbase--> XRP --binance--> USDT --binance--> BTC
+34670.3199752872 USD --bitstamp--> ETH --bitfinex--> JPY --bitfinex--> BTC
+34926.01805298623 USD --bitfinex--> XRP --bittrex--> BTC
+35218.01563579207 USD --coinbase--> ETC --bitfinex--> BTC
+35422.5083128697 USD --bitfinex--> XMR --binance--> BTC
+35557.424512179336 USD --bitstamp--> BCH --coinbase--> BTC
+35675.1302839344 USD --bitfinex--> ETC --coinbase--> EUR --bitfinex--> BTC
+36270.76339672034 USD --coinbase--> BCH --coinbase--> BTC
+36507.840550894005 USD --bitstamp--> LTC --bitfinex--> BTC
+36829.8126691 USD --bitfinex--> XMR --binance--> USDT --binance--> BTC
+36871.13066244549 USD --coinbase--> LTC --binance--> USDT --binance--> BTC
+37151.282395125374 USD --coinbase--> XRP --binance--> BTC
+37305.4359 USD --bitfinex--> XRP --binance--> BTC
+37454.5956872326 USD --coinbase--> ETH --bitfinex--> GBP --bitfinex--> BTC
+38869.76525816532 USD --coinbase--> LINK --binance--> BTC
+39264.04653927559 USD --bitfinex--> XTZ --binance--> BTC
+40166.797958424024 USD --bitfinex--> LTC --bitstamp--> EUR --bitfinex--> BTC
+40349.627474332 USD --bitfinex--> BSV --bittrex--> USDT --binance--> BTC
+40780.453703772 USD --bitfinex--> ETH --bittrex--> BTC
+41218.3494 USD --bitfinex--> FTT --binance--> BTC
+42411.93042994253 USD --bitfinex--> XTZ --binance--> USDT --binance--> BTC
+46287.57260492166 USD --coinbase--> LTC --coinbase--> BTC
+47299.8840335967 USD --coinbase--> ETC --binance--> BTC
+53454.80448 USD --bitfinex--> XTZ --coinbase--> BTC
+54842.88167824843 USD --bitfinex--> UST --bitfinex--> CNHT --bitfinex--> BTC
+55658.525863396164 USD --bitfinex--> LTC --binance--> BTC
+57400.491924479466 USD --coinbase--> LINK --binance--> USDT --binance--> BTC
+66871.38012724071 USD --coinbase--> LTC --bitstamp--> BTC
+67099.67578346033 USD --coinbase--> ETH --bitfinex--> JPY --bitfinex--> BTC
+69953.956737345 USD --bitfinex--> DSH --bitfinex--> BTC
+71541.45254054919 USD --bitfinex--> XRP --binance--> USDT --binance--> BTC
+72334.33500325949 USD --bitfinex--> XMR --bitfinex--> BTC
+74076.32248419705 USD --coinbase--> ETH --bitfinex--> EUR --bitfinex--> BTC
+74443.91286884042 USD --bitfinex--> UST --bitfinex--> ETH --bitfinex--> GBP --bitfinex--> BTC
+79583.844981216 USD --bitfinex--> ETH --bitstamp--> BTC
+80657.387309069 USD --coinbase--> LTC --binance--> BTC
+80838.97930939401 USD --bittrex--> BTC
+83239.6345505725 USD --bitfinex--> LTC --bitfinex--> BTC
+87516.81020154242 USD --bitfinex--> EOS --bitfinex--> EUR --bitfinex--> BTC
+91401.725719363 USD --bitfinex--> ETH --coinbase--> BTC
+91615.7497 USD --bitfinex--> ETC --binance--> USDT --binance--> BTC
+96550.24447585356 USD --bitfinex--> ETH --binance--> USDT --binance--> BTC
+97536.32497403312 USD --bitfinex--> XRP --coinbase--> BTC
+98567.35252712226 USD --bitfinex--> IOT --bitfinex--> JPY --bitfinex--> BTC
+102634.7248255291 USD --bitstamp--> EUR --bitfinex--> BTC
+103596.65100971163 USD --bitfinex--> XRP --bitstamp--> BTC
+121523.6685500701 USD --coinbase--> LTC --bitfinex--> BTC
+146260.02978332064 USD --bittrex--> USDT --binance--> BTC
+147538.941728 USD --bitfinex--> XAUT --bitfinex--> BTC
+167649.1538 USD --bitfinex--> ETH --binance--> BTC
+177625.618513359 USD --bitfinex--> BAB --bitfinex--> BTC
+199747.19345946494 USD --bitfinex--> ETC --bitfinex--> BTC
+205089.69245408854 USD --bitfinex--> BSV --bitfinex--> BTC
+215101.63856765293 USD --bitfinex--> UST --bitfinex--> ETH --bitfinex--> JPY --bitfinex--> BTC
+221339.07818300146 USD --bitfinex--> EOS --bitfinex--> GBP --bitfinex--> BTC
+274822.73762997275 USD --bitfinex--> XRP --bitfinex--> BTC
+322539.88650182326 USD --bitfinex--> EOS --bitfinex--> JPY --bitfinex--> BTC
+725795.1879224352 USD --bitstamp--> BTC
+755285.4612071234 USD --coinbase--> BTC
+1337807.1636731434 USD --bitfinex--> ETH --bitfinex--> BTC
+1825584.8319458202 USD --bitfinex--> UST --bitfinex--> BTC
+2275282.3360153097 USD --bitfinex--> ETH --bitfinex--> EUR --bitfinex--> BTC
+3038986.4267155044 USD --bitfinex--> ETH --bitfinex--> JPY --bitfinex--> BTC
+3773025.567067658 USD --bitfinex--> ETH --bitfinex--> GBP --bitfinex--> BTC
+3.094348623463064e7 USD --bitfinex--> BTC

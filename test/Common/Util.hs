@@ -87,7 +87,8 @@ assertMatchedOrders sellOrders buyOrder f = void $ do
     matchedOrders <- ST.stToIO $ do
         mGraph <- Lib.buildFromOrders shuffledSellOrders
         (buyGraph, _) <- Lib.runArb mGraph $ Lib.arbitrages base >> Lib.arbitrages quote
-        Lib.runMatch buyGraph $ Lib.match buyOrder
+        buyPaths <- Lib.runMatch buyGraph $ Lib.match buyOrder
+        return $ map Lib.toSellOrder buyPaths
     assertAscendingPriceSorted matchedOrders
     f (merge matchedOrders)
   where

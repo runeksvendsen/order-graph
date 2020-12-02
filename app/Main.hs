@@ -20,11 +20,10 @@ import           OrderBook.Graph.Types.Book                 (OrderBook)
 import qualified OrderBook.Graph                            as Lib
 
 import qualified Control.Monad.ST                           as ST
-import           Data.List                                  (sortBy, (\\), sortOn)
+import           Data.List                                  (sortBy, (\\))
 import           Data.Ord                                   (comparing)
 
 import qualified Data.List.NonEmpty                         as NE
-import qualified Data.Text                                  as T
 import qualified Data.Aeson                                 as Json
 import           Data.Aeson                                 ((.=))
 import           System.FilePath                            ((</>))
@@ -63,8 +62,8 @@ main = Opt.withOptions $ \options ->
         forM_ (catMaybes logResult) putStr
   where
     csvExecutionResult er = toS . Csv.encode $
-        let liquidity sideM = fromMaybe 0 $ liLiquidity <$> (liLiquidityInfo er >>= sideM)
-        in csvOutput er (liquidity liBuyLiquidity) (liquidity liSellLiquidity)
+        let liquidity sideM = fromMaybe 0 $ Lib.liLiquidity <$> (liLiquidityInfo er >>= sideM)
+        in csvOutput er (liquidity Lib.liBuyLiquidity) (liquidity Lib.liSellLiquidity)
     csvOutput
         :: ExecutionResult
         -> Lib.NumType
@@ -121,7 +120,7 @@ data Execution numType = Execution
       -- ^ Information about the graph
     , inputData     :: Lib.IBuyGraph
       -- ^ Graph without arbitrages. Built from order books read from 'inputFile'.
-    , mainRun       :: Lib.IBuyGraph -> IO ([SomeSellOrder], [SomeSellOrder])
+    , mainRun       :: Lib.IBuyGraph -> IO ([Lib.SellPath], [Lib.BuyPath])
       -- ^ Process input data
     }
 
@@ -141,15 +140,8 @@ mkExecutions options graphInfo inputFile graph = do
     mkExecution crypto =
         Execution inputFile graphInfo graph (mainRun crypto)
     mainRun crypto orders = ST.stToIO $
-        Lib.withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder ->
-            Lib.matchOrders (Opt.logger options) buyOrder sellOrder orders
+        Lib.matchOrders (Opt.logger options) numeraire crypto orders
     numeraire   = Opt.numeraire options
-
-data PriceRange numType =
-    PriceRange
-        { lowestPrice :: numType
-        , highestPrice :: numType
-        }
 
 -- | Result for an entire execution
 data ExecutionResult = ExecutionResult
@@ -157,74 +149,19 @@ data ExecutionResult = ExecutionResult
     , liMaxSlippage     :: Double
     , liCrypto          :: Lib.Currency     -- ^ Target cryptocurrency
     , liNumeraire       :: Lib.Currency     -- ^ Numeraire
-    , liLiquidityInfo   :: Maybe LiquidityInfo
-    }
-
--- | Liquidity info in both buy and sell direction
-data LiquidityInfo = LiquidityInfo
-    { liBaseQuote       :: (Lib.Currency, Lib.Currency)
-    , liBuyLiquidity    :: Maybe SideLiquidity
-    , liSellLiquidity   :: Maybe SideLiquidity
-    }
-
--- | Liquidity info in a single direction (either buy or sell)
-data SideLiquidity = SideLiquidity
-    { liLiquidity    :: Lib.NumType             -- ^ Non-zero liquidity
-    , liPriceRange   :: PriceRange Lib.NumType
-    , liPaths        :: NonEmpty (Lib.NumType, PriceRange Lib.NumType, T.Text)  -- ^ (quantity, price_range, path_description)
+    , liLiquidityInfo   :: Maybe Lib.LiquidityInfo
     }
 
 analyze :: Lib.Currency -> Opt.Options -> Execution numType -> IO ExecutionResult
 analyze cryptocurrency Opt.Options{..} Execution{..} = do
-    (buyOrders, sellOrders) <- mainRun inputData
+    (sellPath, buyPath) <- mainRun inputData
     return $ ExecutionResult
         { liInputFile       = inputFile
         , liMaxSlippage     = maxSlippage
         , liCrypto          = cryptocurrency
         , liNumeraire       = numeraire
-        , liLiquidityInfo   = toLiquidityInfo (buyOrders, sellOrders)
+        , liLiquidityInfo   = Lib.toLiquidityInfo (sellPath, buyPath)
         }
-
-toLiquidityInfo
-    :: ([SomeSellOrder' Lib.NumType], [SomeSellOrder' Lib.NumType])
-    -> Maybe LiquidityInfo
-toLiquidityInfo (buyOrders, sellOrders) = do
-    allOrders <- NE.nonEmpty $ buyOrders ++ sellOrders
-    Just $ LiquidityInfo
-        { liBaseQuote       = ordersMarket allOrders
-        , liBuyLiquidity    = NE.nonEmpty sellOrders >>= toSideLiquidity
-        , liSellLiquidity   = NE.nonEmpty buyOrders >>= toSideLiquidity
-        }
-  where
-    ordersMarket nonEmptyOrders = orderMarket (NE.head nonEmptyOrders)
-    orderMarket order = (Lib.soBase order, Lib.soQuote order)
-
-toSideLiquidity
-    :: NE.NonEmpty (SomeSellOrder' Lib.NumType)
-    -> Maybe SideLiquidity
-toSideLiquidity nonEmptyOrders = Just $
-    let paths = NE.fromList $ sortByQuantity $ map quoteSumVenue (groupByVenue $ NE.toList nonEmptyOrders)
-    in SideLiquidity
-        { liLiquidity    = quoteSum nonEmptyOrders
-        , liPriceRange   = firstLastPrice nonEmptyOrders
-        , liPaths        = paths
-        }
-  where
-    firstLastPrice lst =
-        let priceSorted = NE.sortBy (comparing soPrice) lst
-        in PriceRange (soPrice $ NE.head priceSorted) (soPrice $ NE.last priceSorted)
-    quoteSumVenue orders =
-        (quoteSum orders, priceRange orders, soVenue $ NE.head orders)
-    groupByVenue = NE.groupBy (\a b -> soVenue a == soVenue b) . sortOn soVenue
-    sortByQuantity = sortBy (flip $ comparing $ \(quoteSum, _, _) -> quoteSum)
-    quoteSum orderList = sum $ NE.map quoteQuantity orderList
-    quoteQuantity order = Lib.soQty order * Lib.soPrice order
-    priceRange
-        :: NE.NonEmpty SomeSellOrder
-        -> PriceRange Lib.NumType
-    priceRange soList =
-        let priceList = NE.map soPrice soList
-        in PriceRange (minimum priceList) (maximum priceList)
 
 showExecutionResult :: Opt.Options -> ExecutionResult -> String
 showExecutionResult Opt.Options{..} ExecutionResult{..}
@@ -234,40 +171,39 @@ showExecutionResult Opt.Options{..} ExecutionResult{..}
         [ "NO ORDERS MATCHED"
         , lineSeparator
         ]
-    | Just LiquidityInfo{..} <- liLiquidityInfo
-    , (_, quoteCurrency) <- liBaseQuote = unlines $
+    | Just Lib.LiquidityInfo{..} <- liLiquidityInfo = unlines $
         logHeader
         ++
-        [ logLine "buy liquidity" $ showAmount quoteCurrency (liquidity liBuyLiquidity)
-        , logLine "sell liquidity" $ showAmount quoteCurrency (liquidity liSellLiquidity)
-        , logLine "SUM" $ showAmount quoteCurrency (liquidity liBuyLiquidity + liquidity liSellLiquidity)
-        , logLine "Buy price (low/high)"  $ maybe "-" (showPriceRange) (liPriceRange <$> liBuyLiquidity)
-        , logLine "Sell price (low/high)" $ maybe "-" (showPriceRange) (liPriceRange <$> liSellLiquidity)
+        [ logLine "buy liquidity" $ showAmount (liquidity liBuyLiquidity)
+        , logLine "sell liquidity" $ showAmount (liquidity liSellLiquidity)
+        , logLine "SUM" $ showAmount (liquidity liBuyLiquidity + liquidity liSellLiquidity)
+        , logLine "Buy price (low/high)"  $ maybe "-" (showPriceRange) (Lib.liPriceRange <$> liBuyLiquidity)
+        , logLine "Sell price (low/high)" $ maybe "-" (showPriceRange) (Lib.liPriceRange <$> liSellLiquidity)
         , lineSeparator
         ]
         ++
         if maxNumPaths > 0
-            then prettyPrintPaths quoteCurrency "Buy" liBuyLiquidity
-                 ++ prettyPrintPaths quoteCurrency "Sell" liSellLiquidity
+            then prettyPrintPaths "Buy" liBuyLiquidity
+                 ++ prettyPrintPaths "Sell" liSellLiquidity
             else []
   where
-    prettyPrintPaths quoteCurrency strSide liSide =
-        [ strSide <> " paths:", "" , maybe "<no paths>" (showPaths quoteCurrency) (liPaths <$> liSide), lineSeparator ]
-    showPaths quoteCurrency paths =
-        unlines $ map (pathSumRange quoteCurrency) (NE.take maxNumPaths paths)
-    liquidity = fromMaybe 0 . fmap liLiquidity
+    prettyPrintPaths strSide liSide =
+        [ strSide <> " paths:", "" , maybe "<no paths>" showPaths (Lib.liPaths <$> liSide), lineSeparator ]
+    showPaths paths =
+        unlines $ map pathSumRange (NE.take maxNumPaths paths)
+    liquidity = fromMaybe 0 . fmap Lib.liLiquidity
     showFloatSamePrecision num  = printf (printf "%%.%df" $ digitsAfterPeriod num) num
     digitsAfterPeriod num =
         let beforeRemoved = dropWhile (/= '.') $ printf "%f" num
         in if null beforeRemoved then 0 else length beforeRemoved - 1
-    pathSumRange quoteCurrency (quoteAmount, priceRange, venue) =
+    pathSumRange (quoteAmount, priceRange, path) =
         unlines
-            [ logLine ("Volume (quote)") (showAmount quoteCurrency quoteAmount)
+            [ logLine ("Volume (quote)") (showAmount quoteAmount)
             , logLine "Price (low/high)" (showPriceRange priceRange)
-            , logLine "Path" (toS venue)
+            , logLine "Path" (toS $ Lib.showPath path)
             ]
-    showPriceRange :: Real a => PriceRange a -> String
-    showPriceRange PriceRange{..} = printf "%s / %s" (showPrice lowestPrice) (showPrice highestPrice)
+    showPriceRange :: Real a => Lib.PriceRange a -> String
+    showPriceRange Lib.PriceRange{..} = printf "%s / %s" (showPrice lowestPrice) (showPrice highestPrice)
     thousandSeparator numStr =
         let addDelimiter (index, char) accum =
                 if index /= 0 && index `mod` (3 :: Int) == 0
@@ -276,8 +212,8 @@ showExecutionResult Opt.Options{..} ExecutionResult{..}
         in reverse $ foldr addDelimiter [] (zip [0..] (reverse numStr))
     showInteger :: Lib.NumType -> String
     showInteger = thousandSeparator . show @Integer . floor
-    showAmount :: Lib.Currency -> Lib.NumType -> String
-    showAmount currency = (++ " " ++ toS currency) . showInteger
+    showAmount :: Lib.NumType -> String
+    showAmount = (++ " " ++ toS liNumeraire) . showInteger
     showPrice :: Real price => price -> String
     showPrice = Format.formatFloatFloor 8
     lineSeparator = "-----------------------------------------------------"
@@ -325,15 +261,21 @@ benchSingle obFile Lib.GraphInfo{..} graph action = do
 writeChartFile
     :: Opt.Options
     -> FilePath
-    -> ([SomeSellOrder], [SomeSellOrder])
+    -> ([Lib.SellPath], [Lib.BuyPath])
     -> IO ()
-writeChartFile options obPath (bids, asks) = do
+writeChartFile options obPath (sellPaths, buyPaths) = do
     log "Writing order book.."
     let trimmedAsks = trimOrders $ sortBy (comparing soPrice)        asks
         trimmedBids = trimOrders $ sortBy (flip $ comparing soPrice) bids
+        (bids, asks) = (map toFakeSellOrder sellPaths, map Lib.toSellOrder buyPaths)
     Json.encodeFile obPath (mkJsonOb trimmedBids trimmedAsks)
     putStrLn $ "Wrote " ++ show obPath
   where
+    -- convert to a sell order that's really a buy order.
+    -- used to be compatible with 'mkJsonOb'.
+    -- works because 'mkJsonOb' doesn't care about base/quote symbol.
+    toFakeSellOrder :: Lib.SellPath -> SomeSellOrder
+    toFakeSellOrder = Lib.invertSomeSellOrder . Lib.toSellOrder
     trimOrders :: [SomeSellOrder] -> [SomeSellOrder]
     trimOrders = Util.compress 500 . Util.merge
     log = Opt.logger options

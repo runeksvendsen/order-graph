@@ -1,12 +1,21 @@
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph
-( withBidsAsksOrder
+( -- * Read input data; build graph; match orders
+  withBidsAsksOrder
 , readOrdersFile
 , buildBuyGraph
 , GraphInfo(..)
 , IBuyGraph
 , matchOrders
+  -- * Process output of order matching
+, LiquidityInfo(..)
+, SideLiquidity(..)
+, PriceRange(..)
+, toLiquidityInfo
+, toSideLiquidity
   -- * Re-exports
 , module Export
 )
@@ -16,19 +25,24 @@ import Prelude hiding (log)
 import OrderBook.Graph.Internal.Prelude hiding (log)
 
 import OrderBook.Graph.Build (CompactOrderList, Tagged)
-import OrderBook.Graph.Exchange (invertSomeSellOrder)
 import qualified OrderBook.Graph.Types.Book as Book
 import qualified Data.Graph.Digraph as DG
 
 import Data.Text (Text)
-import Data.List (nub)
+import Data.List (sortOn, sortBy, nub, groupBy)
 import qualified Data.Aeson as Json
+import qualified Data.List.NonEmpty as NE
+import qualified Data.Text as T
+
 
 -- Exports
 import OrderBook.Graph.Types as Export
 import OrderBook.Graph.Build as Export (build, buildFromOrders, SellOrderGraph)
 import OrderBook.Graph.Match as Export (unlimited, BuyOrder, match, arbitrages)
 import OrderBook.Graph.Run as Export (runArb, runMatch)
+import OrderBook.Graph.Types.Path as Export
+import OrderBook.Graph.Exchange as Export (invertSomeSellOrder)
+import Data.Ord (comparing)
 
 
 -- |
@@ -65,8 +79,12 @@ readOrdersFile log maxSlippage filePath = do
     let orders = concatMap Book.fromOrderBook books
     log $ "Order book count: " ++ show (length books)
     log $ "Order count: " ++ show (length orders)
-    -- TODO: print warning in case of input orderbook depth < 'maxSlippage'
-    return $ map (Book.trimSlippageOB maxSlippage) books
+    let (trimmedBooks, warningMs) = unzip $ map (Book.trimSlippageOB maxSlippage) books
+    -- print warning in case of input orderbook depth < 'maxSlippage'
+    let warnings = catMaybes warningMs
+    unless (null warnings) $ log "WARNING: insufficient order book depth for order books:"
+    forM_ warnings $ \warning -> log $ "\t" <> toS warning
+    return trimmedBooks
   where
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail :: (Json.FromJSON numType, Ord numType) => FilePath -> IO [OrderBook numType]
@@ -78,7 +96,7 @@ readOrdersFile log maxSlippage filePath = do
 buildGraph
     :: (Real numType)
     => (forall m. Monad m => String -> m ())
-    -> [OrderBook numType]                         -- ^ Sell orders
+    -> [OrderBook numType]
     -> ST s (GraphInfo numType, SellOrderGraph s "arb")
 buildGraph log sellOrders = do
     log "Building graph..."
@@ -106,11 +124,20 @@ findArbitrages log gi graph = do
     runArb graph $ do
         log "Finding arbitrages..."
         let findArbs (_, arbsAccum) src = do
+                log $ "\t" ++ toS src
                 (buyGraph, arbs) <- arbitrages src
                 return (buyGraph, arbs : arbsAccum)
         (buyGraph, arbs) <- foldM findArbs (error "Empty graph", []) (giVertices gi)
-        log $ unlines ["Arbitrages:", pp $ concat arbs]
+        log (arbLogStr $ concat arbs)
         return buyGraph
+  where
+    arbLogStr paths = toS $ T.unlines $ map (T.unlines . map ("\t" <>) . printGroup) $ groupOn (pStart . pathDescr) paths
+    printGroup paths =
+        T.unwords [toS (pStart . pathDescr $ head paths), toS . show @Double . realToFrac $ pathsQty paths]
+        : map (("\t" <>) . showPath . head) (groupOn pathDescr paths)
+    pathsQty :: [Path] -> NumType
+    pathsQty = sum . map pQty
+    groupOn f = groupBy (\a1 a2 -> f a1 == f a2) . sortOn f
 
 type IBuyGraph = (DG.IDigraph Currency (Tagged "buy" CompactOrderList))
 
@@ -124,18 +151,76 @@ buildBuyGraph log sellOrders = do
     buyGraph <- DG.freeze =<< findArbitrages log gi mGraph
     return (gi, buyGraph)
 
+-- |
 matchOrders
-    :: (KnownSymbol src, KnownSymbol dst)
-    => (forall m. Monad m => String -> m ())
-    -> BuyOrder dst src     -- ^ Buy cryptocurrency for national currency
-    -> BuyOrder src dst     -- ^ Sell cryptocurrency for national currency
+    :: (forall m. Monad m => String -> m ()) -- ^ logger
+    -> Currency -- ^ numeraire
+    -> Currency -- ^ cryptocurrency
     -> IBuyGraph
-    -> ST s ([SomeSellOrder], [SomeSellOrder])
-matchOrders log buyOrder sellOrder buyGraph = do
+    -> ST s ([SellPath], [BuyPath])
+matchOrders log numeraire crypto buyGraph = withBidsAsksOrder numeraire crypto $ \buyOrder sellOrder -> do
     buyGraph' <- DG.thaw buyGraph
     runMatch buyGraph' $ do
         log "Matching sell order..."
-        bids <- map invertSomeSellOrder <$> match sellOrder
+        sellPath <- map toSellPath <$> match sellOrder
         log "Matching buy order..."
-        asks <- match buyOrder
-        return (bids, asks)
+        buyPath <- map toBuyPath <$> match buyOrder
+        return (sellPath, buyPath)
+
+
+-- | Liquidity info in both buy and sell direction
+data LiquidityInfo = LiquidityInfo
+    { liBuyLiquidity    :: Maybe SideLiquidity
+    , liSellLiquidity   :: Maybe SideLiquidity
+    } deriving (Eq, Show)
+
+-- | Liquidity info in a single direction (either buy or sell)
+data SideLiquidity = SideLiquidity
+    { liLiquidity    :: NumType             -- ^ Non-zero liquidity
+    , liPriceRange   :: PriceRange NumType
+    , liPaths        :: NonEmpty (NumType, PriceRange NumType, PathDescr)  -- ^ (quantity, price_range, path)
+    } deriving (Eq, Show)
+
+data PriceRange numType =
+    PriceRange
+        { lowestPrice :: numType
+        , highestPrice :: numType
+        } deriving (Eq, Show)
+
+toLiquidityInfo
+    :: ([SellPath], [BuyPath])
+    -> Maybe LiquidityInfo
+toLiquidityInfo (sellPath, buyPath) = do
+    Just $ LiquidityInfo
+        { liBuyLiquidity    = toSideLiquidity <$> NE.nonEmpty buyPath
+        , liSellLiquidity   = toSideLiquidity <$> NE.nonEmpty sellPath
+        }
+
+toSideLiquidity
+    :: forall path.
+       HasPathQuantity path NumType
+    => NE.NonEmpty path
+    -> SideLiquidity
+toSideLiquidity nonEmptyOrders =
+    let paths = NE.fromList $ sortByQuantity $ map quoteSumVenue (groupByPath $ NE.toList nonEmptyOrders)
+    in SideLiquidity
+        { liLiquidity    = quoteSum nonEmptyOrders
+        , liPriceRange   = firstLastPrice nonEmptyOrders
+        , liPaths        = paths
+        }
+  where
+    firstLastPrice lst =
+        let priceSorted = NE.sortBy (comparing pPrice) lst
+        in PriceRange (pPrice $ NE.head priceSorted) (pPrice $ NE.last priceSorted)
+    quoteSumVenue paths =
+        (quoteSum paths, priceRange paths, pathDescr $ NE.head paths)
+    groupByPath = NE.groupBy (\a b -> pathDescr a == pathDescr b) . sortOn pathDescr
+    sortByQuantity = sortBy (flip $ comparing $ \(quoteQty, _, _) -> quoteQty)
+    quoteSum orderList = sum $ NE.map quoteQuantity orderList
+    quoteQuantity path = pQty path * pPrice path
+    priceRange
+        :: NE.NonEmpty path
+        -> PriceRange NumType
+    priceRange soList =
+        let priceList = NE.map pPrice soList
+        in PriceRange (minimum priceList) (maximum priceList)

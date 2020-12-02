@@ -1,6 +1,8 @@
 module Main where
 
 import qualified Unit.Spec                          as Unit
+import qualified Unit.Integration
+import qualified Unit.Regression
 import qualified Property.Combine                   as Combine
 import qualified Property.Build                     as Build
 import qualified Property.Match                     as Match
@@ -14,7 +16,7 @@ import           Test.Hspec                         (parallel)
 
 main :: IO ()
 main = do
-    void $ runTestTT Unit.tests
+    void $ runTestTT $ TestList [Unit.tests, Unit.Integration.tests, Unit.Regression.tests]
     runHspec $ parallel $ do
         Combine.spec
         Build.spec

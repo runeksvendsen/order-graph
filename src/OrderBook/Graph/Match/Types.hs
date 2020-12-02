@@ -11,7 +11,8 @@ module OrderBook.Graph.Match.Types
 where
 
 import           OrderBook.Graph.Internal.Prelude
-import           OrderBook.Graph.Build                      (SomeSellOrder'(..))
+import           OrderBook.Graph.Types.Path                 (pPrice, pQty, Path')
+import OrderBook.Graph.Types.SomeSellOrder (NumType)
 
 
 -- |
@@ -23,7 +24,7 @@ data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
       -- ^ maximum percentage difference between price of first and last matched order
     }
 
-type BuyOrder = BuyOrder' Rational
+type BuyOrder = BuyOrder' NumType
 
 -- | A buy order whose execution will continue until there
 --    is no path from 'src' to 'dst'.
@@ -36,10 +37,10 @@ unlimited = BuyOrder'
     , boMaxSlippage = Nothing
     }
 
-type MatchResult = MatchResult' Rational
+type MatchResult = MatchResult' NumType
 data MatchResult' numTyp = MatchResult'
-    { mrOrders      :: [SomeSellOrder' numTyp]
-    , mrFirstOrder  :: Maybe (SomeSellOrder' numTyp)
+    { mrOrders      :: [Path' numTyp]
+    , mrFirstOrder  :: Maybe (Path' numTyp)
     , mrQuantity    :: numTyp
     } deriving (Eq, Show)
 
@@ -53,12 +54,12 @@ empty = MatchResult'
 addOrder
     :: (Real numTyp, Show numTyp)
     => MatchResult' numTyp
-    -> SomeSellOrder' numTyp
+    -> Path' numTyp
     -> MatchResult' numTyp
 addOrder (MatchResult' [] Nothing _) order =
-    MatchResult' [order] (Just order) (soQty order)
+    MatchResult' [order] (Just order) (pQty order)
 addOrder (MatchResult' orders firstOrder@Just{} qty) order =
-    MatchResult' (order : orders) firstOrder (qty + soQty order)
+    MatchResult' (order : orders) firstOrder (qty + pQty order)
 addOrder mr@(MatchResult' _ Nothing _) _ =
     error $ "invalid MatchResult' " ++ show mr
 
@@ -78,5 +79,5 @@ orderFilled (BuyOrder' qtyM _ slipM) (MatchResult' (latest:_) (Just first) mrQty
     checkProp propM f = maybe False f propM
     qtyFilled = checkProp qtyM $ \qty -> mrQty >= qty
     slippageReached = checkProp slipM $ \maxSlippage ->
-        let slippagePct = abs $ (soPrice latest - soPrice first) / soPrice first * 100
+        let slippagePct = abs $ (pPrice latest - pPrice first) / pPrice first * 100
         in slippagePct > maxSlippage
