@@ -45,7 +45,7 @@ tests = TestLabel "regression" $ TestList $
             outputCompare "test/data/double/test19.json" "test/data/regression/double-test19.txt" 0.5 "USD" "BTC"
         , TestLabel "sell/buy: " $ TestCase $ do
             liquidityInfoM <- Lib.toLiquidityInfo <$> matchOrders "test/data/double/test19.json" 0.5 "USD" "BTC"
-            fmap buySellLiquidity liquidityInfoM `shouldBe` Just (Just 46936113, Just 20767102)
+            fmap buySellLiquidity liquidityInfoM `shouldBe` Just (Just 51175355, Just 23781286)
         ]
     ]
   where

@@ -1,5 +1,7 @@
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph
 ( -- * Read input data; build graph; match orders
   withBidsAsksOrder
@@ -27,10 +29,11 @@ import qualified OrderBook.Graph.Types.Book as Book
 import qualified Data.Graph.Digraph as DG
 
 import Data.Text (Text)
-import Data.List (sortOn, sortBy, nub)
+import Data.List (sortOn, sortBy, nub, groupBy)
 import qualified Data.Aeson as Json
 import qualified Data.List.NonEmpty as NE
--- import qualified Data.Text as T
+import qualified Data.Text as T
+
 
 -- Exports
 import OrderBook.Graph.Types as Export
@@ -76,8 +79,12 @@ readOrdersFile log maxSlippage filePath = do
     let orders = concatMap Book.fromOrderBook books
     log $ "Order book count: " ++ show (length books)
     log $ "Order count: " ++ show (length orders)
-    -- TODO: print warning in case of input orderbook depth < 'maxSlippage'
-    return $ map (Book.trimSlippageOB maxSlippage) books
+    let (trimmedBooks, warningMs) = unzip $ map (Book.trimSlippageOB maxSlippage) books
+    -- print warning in case of input orderbook depth < 'maxSlippage'
+    let warnings = catMaybes warningMs
+    unless (null warnings) $ log "WARNING: insufficient order book depth for order books:"
+    forM_ warnings $ \warning -> log $ "\t" <> toS warning
+    return trimmedBooks
   where
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail :: (Json.FromJSON numType, Ord numType) => FilePath -> IO [OrderBook numType]
@@ -117,11 +124,20 @@ findArbitrages log gi graph = do
     runArb graph $ do
         log "Finding arbitrages..."
         let findArbs (_, arbsAccum) src = do
+                log $ "\t" ++ toS src
                 (buyGraph, arbs) <- arbitrages src
                 return (buyGraph, arbs : arbsAccum)
         (buyGraph, arbs) <- foldM findArbs (error "Empty graph", []) (giVertices gi)
-        log $ unlines ["Arbitrages:", pp $ concat arbs]
+        log (arbLogStr $ concat arbs)
         return buyGraph
+  where
+    arbLogStr paths = toS $ T.unlines $ map (T.unlines . map ("\t" <>) . printGroup) $ groupOn (pStart . pathDescr) paths
+    printGroup paths =
+        T.unwords [toS (pStart . pathDescr $ head paths), toS . show @Double . realToFrac $ pathsQty paths]
+        : map (("\t" <>) . showPath . head) (groupOn pathDescr paths)
+    pathsQty :: [Path] -> NumType
+    pathsQty = sum . map pQty
+    groupOn f = groupBy (\a1 a2 -> f a1 == f a2) . sortOn f
 
 type IBuyGraph = (DG.IDigraph Currency (Tagged "buy" CompactOrderList))
 

@@ -82,3 +82,12 @@ tests:
     - safe-money
     - orderbook
     - bellman-ford
+
+benchmarks:
+  order-graph-bench:
+    main:                Main.hs
+    source-dirs:
+    - bench
+    dependencies:
+    - order-graph
+    - gauge

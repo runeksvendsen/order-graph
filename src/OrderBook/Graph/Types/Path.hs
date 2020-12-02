@@ -1,5 +1,4 @@
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -8,6 +7,7 @@ module OrderBook.Graph.Types.Path
 ( Path'
 , Path
 , PathDescr
+, pStart
 , BuyPath
 , SellPath
 , BuyPath'
@@ -39,7 +39,11 @@ data PathDescr = PathDescr
      -- Last currency is destination currency.
     } deriving (Eq, Show, Ord, Generic)
 
+pStart :: PathDescr -> Currency
+pStart = _pStart
+
 instance PrettyVal PathDescr
+instance NFData PathDescr
 
 -- | A path from one currency to another, going through at least a single venue, and zero or more intermediate currency+venue.
 --   Examples:
@@ -63,6 +67,7 @@ instance Ord numType => Ord (Path' numType) where
         in mkTuple p1 `compare` mkTuple p2
 
 instance PrettyVal numType => PrettyVal (Path' numType)
+instance NFData numType => NFData (Path' numType)
 
 type Path = Path' NumType
 
@@ -71,6 +76,7 @@ newtype BuyPath' numType = BuyPath' { getBuyPath :: Path' numType }
     deriving (Eq, Show, Ord, Generic, Functor)
 
 type BuyPath = BuyPath' NumType
+instance NFData numType => NFData (BuyPath' numType)
 
 -- | The same as 'Path'', except with different units for price and quantity.
 --   Price unit is /destination currency/ per /start currency/;
@@ -94,6 +100,7 @@ toSellPath bp@Path'{..} = SellPath' $
       }
 
 instance PrettyVal numType => PrettyVal (SellPath' numType)
+instance NFData numType => NFData (SellPath' numType)
 
 type SellPath = SellPath' NumType
 
@@ -166,8 +173,14 @@ instance HasPath (SellPath' numType) where
     pathDescr = pathDescr . getSellPath
     showPath = showPath . getSellPath
 
-instance (Fractional numType, Real numType, Show numType) => HasPathQuantity (SellPath' numType) numType where
+instance HasPathQuantity SellPath NumType where
     pPrice = _pPrice . getSellPath
     pQty = _pQty . getSellPath
-    toSellOrder = fmap fromRational . invertSomeSellOrder . toSellOrder . fmap toRational . getSellPath
+    toSellOrder = invertSomeSellOrder . toSellOrder . getSellPath
+    showPathQty = showPathQty . getSellPath
+
+instance HasPathQuantity (SellPath' Double) Double where
+    pPrice = _pPrice . getSellPath
+    pQty = _pQty . getSellPath
+    toSellOrder = fmap realToFrac . toSellOrder . fmap toRational
     showPathQty = showPathQty . getSellPath

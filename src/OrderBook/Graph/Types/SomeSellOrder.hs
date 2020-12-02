@@ -16,8 +16,10 @@ module OrderBook.Graph.Types.SomeSellOrder
 , SomeSellOrder
 , CompactOrder'(..)
 , CompactOrder
+, toDouble
 , toCompactOrder
 , NumType
+, fromCompactOrder
 )
 where
 
@@ -55,7 +57,7 @@ instance Real numType => Show (SomeSellOrder' numType) where
 instance NFData numType => NFData (SomeSellOrder' numType)
 instance PrettyVal (SomeSellOrder' Double)
 
-instance PrettyVal SomeSellOrder where
+instance PrettyVal (SomeSellOrder' Rational) where
     prettyVal sso =
         prettyVal (fmap realToFrac sso :: SomeSellOrder' Double)
 
@@ -72,9 +74,20 @@ data CompactOrder' numType = CompactOrder'
     { coPrice :: numType
     , coQty   :: numType
     , coVenue :: T.Text
-    } deriving (Eq, Show, Read, Ord, Functor, Generic)
+    } deriving (Eq, Read, Ord, Functor, Generic)
 
+instance Real numType => Show (CompactOrder' numType) where
+    show CompactOrder'{..} =
+        printf "CompactOrder { %s qty=%f price=%f }"
+            coVenue
+            (realToFrac coQty :: Double)
+            (realToFrac coPrice :: Double)
+
+instance PrettyVal (CompactOrder' Double)
 type CompactOrder = CompactOrder' NumType
+
+toDouble :: Real numType => CompactOrder' numType -> CompactOrder' Double
+toDouble = fmap realToFrac
 
 instance NFData numType => NFData (CompactOrder' numType)
 
@@ -83,3 +96,16 @@ instance DG.HasWeight CompactOrder Double where
 
 toCompactOrder :: SomeSellOrder' numType -> CompactOrder' numType
 toCompactOrder o = CompactOrder' (soPrice o) (soQty o) (soVenue o)
+
+fromCompactOrder :: DG.IdxEdge Currency (CompactOrder' numType) -> SomeSellOrder' numType
+fromCompactOrder idxEdge =
+    let base = DG.toNode idxEdge
+        quote = DG.fromNode idxEdge
+        co = DG.eMeta idxEdge
+    in SomeSellOrder'
+        { soPrice = coPrice co
+        , soQty   = coQty co
+        , soBase  = base
+        , soQuote = quote
+        , soVenue = coVenue co
+        }
