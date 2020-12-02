@@ -79,10 +79,12 @@ readOrdersFile log maxSlippage filePath = do
     let orders = concatMap Book.fromOrderBook books
     log $ "Order book count: " ++ show (length books)
     log $ "Order count: " ++ show (length orders)
-    forM (map (Book.trimSlippageOB maxSlippage) books) $ \(trimmedBook, warningM) -> do
-        -- print warning in case of input orderbook depth < 'maxSlippage'
-        forM_ warningM (\warning -> log $ "WARNING: " <> toS warning)
-        return trimmedBook
+    let (trimmedBooks, warningMs) = unzip $ map (Book.trimSlippageOB maxSlippage) books
+    -- print warning in case of input orderbook depth < 'maxSlippage'
+    let warnings = catMaybes warningMs
+    unless (null warnings) $ log "WARNING: insufficient order book depth for order books:"
+    forM_ warnings $ \warning -> log $ "\t" <> toS warning
+    return trimmedBooks
   where
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail :: (Json.FromJSON numType, Ord numType) => FilePath -> IO [OrderBook numType]

@@ -152,7 +152,7 @@ trimSlippageOB
     => Rational
     -- ^ Slippage in percent. E.g. 50%1 = 50%
     -> OrderBook numType
-    -> (OrderBook numType, Maybe Text) -- ^ (trimmed order book, maybe warning)
+    -> (OrderBook numType, Maybe Text) -- ^ (trimmed order book, maybe "insufficient order book depth" warning)
 trimSlippageOB maxSlippage ob =
     let trimObSide = trimSlippageGeneric price (fromRational maxSlippage) . Vec.toList
         trimObGetWarnings sideStr = fmap (maybe (Just [sideStr]) (const Nothing) . listToMaybe) . trimObSide
@@ -164,7 +164,6 @@ trimSlippageOB maxSlippage ob =
             }
         mkWarning sideStrLst = T.unwords
             [ showKind ob
-            , "(" <> T.intercalate ", " sideStrLst <> "):"
-            , "insufficient order book depth"
+            , "(" <> T.intercalate ", " sideStrLst <> ")"
             ]
     in (newOb, mkWarning <$> bidsWarningM <> asksWarningM)
