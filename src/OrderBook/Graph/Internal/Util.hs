@@ -55,7 +55,8 @@ combine f =
 --    further away than the first order's price.
 --   E.g. "trimSlippage 10 sellOrders"
 --    will remove the orders in "sellOrders" whose price is more/less than 10%
---    of the first order in "sellOrders"
+--    of the first order in "sellOrders".
+-- The result is in 'fst' while the removed orders are in 'snd'.
 trimSlippageGeneric
     :: (Fractional numType, Ord numType)
     => (order -> numType)
