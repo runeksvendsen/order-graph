@@ -8,6 +8,7 @@ module OrderBook.Graph.Types.Path
 , Path
 , PathDescr
 , pStart
+, pMoves
 , BuyPath
 , SellPath
 , BuyPath'
@@ -41,6 +42,9 @@ data PathDescr = PathDescr
 
 pStart :: PathDescr -> Currency
 pStart = _pStart
+
+pMoves :: PathDescr -> NonEmpty (Text, Currency)
+pMoves = _pMoves
 
 instance PrettyVal PathDescr
 instance NFData PathDescr
