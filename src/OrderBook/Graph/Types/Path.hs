@@ -137,6 +137,7 @@ class HasPath path => HasPathQuantity path numType | path -> numType where
     pQty :: path -> numType
     toSellOrder :: path -> SomeSellOrder' numType
     showPathQty :: path -> T.Text -- ^ format: "<qty> @ <price> <showPath>"
+    pathPath :: path -> Path' numType
 
 instance HasPath PathDescr where
     pathDescr = id
@@ -152,6 +153,7 @@ instance HasPath (Path' numType) where
     showPath = showPath . _pPath
 
 instance Show numType => HasPathQuantity (Path' numType) numType where
+    pathPath = id
     pPrice = _pPrice
     pQty = _pQty
     toSellOrder bp = SomeSellOrder'
@@ -168,6 +170,7 @@ instance HasPath (BuyPath' numType) where
     showPath = showPath . getBuyPath
 
 instance Show numType => HasPathQuantity (BuyPath' numType) numType where
+    pathPath = getBuyPath
     pPrice = pPrice . getBuyPath
     pQty = pQty . getBuyPath
     toSellOrder = toSellOrder . getBuyPath
@@ -178,12 +181,14 @@ instance HasPath (SellPath' numType) where
     showPath = showPath . getSellPath
 
 instance HasPathQuantity SellPath NumType where
+    pathPath = getSellPath
     pPrice = _pPrice . getSellPath
     pQty = _pQty . getSellPath
     toSellOrder = invertSomeSellOrder . toSellOrder . getSellPath
     showPathQty = showPathQty . getSellPath
 
 instance HasPathQuantity (SellPath' Double) Double where
+    pathPath = getSellPath
     pPrice = _pPrice . getSellPath
     pQty = _pQty . getSellPath
     toSellOrder = fmap realToFrac . toSellOrder . fmap toRational
