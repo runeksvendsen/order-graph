@@ -68,10 +68,9 @@ withBidsAsksOrder numeraire crypto f =
 readOrdersFile
     :: (Json.FromJSON numType, Fractional numType, Real numType)
     => ([Char] -> IO ())
-    -> Rational
     -> [Char]
     -> IO [OrderBook numType]
-readOrdersFile log maxSlippage filePath = do
+readOrdersFile log filePath = do
     log $ "Reading order books from " ++ show filePath ++ "..."
     books <- decodeFileOrFail filePath
     -- Log venues
@@ -79,12 +78,7 @@ readOrdersFile log maxSlippage filePath = do
     let orders = concatMap Book.fromOrderBook books
     log $ "Order book count: " ++ show (length books)
     log $ "Order count: " ++ show (length orders)
-    let (trimmedBooks, warningMs) = unzip $ map (Book.trimSlippageOB maxSlippage) books
-    -- print warning in case of input orderbook depth < 'maxSlippage'
-    let warnings = catMaybes warningMs
-    unless (null warnings) $ log "WARNING: insufficient order book depth for order books:"
-    forM_ warnings $ \warning -> log $ "\t" <> toS warning
-    return trimmedBooks
+    return books
   where
     throwError file str = error $ file ++ ": " ++ str
     decodeFileOrFail :: (Json.FromJSON numType, Ord numType) => FilePath -> IO [OrderBook numType]
@@ -94,24 +88,28 @@ readOrdersFile log maxSlippage filePath = do
     logVenues venues = forM_ venues $ \venue -> log ("\t" ++ toS venue)
 
 buildGraph
-    :: (Real numType)
+    :: (Real numType, Fractional numType)
     => (forall m. Monad m => String -> m ())
+    -> Rational
     -> [OrderBook numType]
     -> ST s (GraphInfo numType, SellOrderGraph s "arb")
-buildGraph log sellOrders = do
+buildGraph log maxSlippage books = do
     log "Building graph..."
-    graph <- build sellOrders
+    graph <- build trimmedBooks
     currencies <- DG.vertexLabels graph
     edgeCount <- DG.edgeCount graph
-    let gi = GraphInfo { giVertices = currencies, giEdgeCount = edgeCount }
+    let gi = GraphInfo { giVertices = currencies, giEdgeCount = edgeCount, giWarnings = catMaybes warningMs }
     log $ "Vertex count: " ++ show (length currencies)
     log $ "Edge count:   " ++ show edgeCount
     return (gi, graph)
+  where
+    (trimmedBooks, warningMs) = unzip $ map (Book.trimSlippageOB maxSlippage) books
 
 -- NB: Phantom 'numType' is number type of input order book
 data GraphInfo numType = GraphInfo
     { giVertices    :: [Currency]
     , giEdgeCount   :: Word
+    , giWarnings    :: [Text]
     }
 
 -- | Find and remove all arbitrages from the input graph.
@@ -142,12 +140,13 @@ findArbitrages log gi graph = do
 type IBuyGraph = (DG.IDigraph Currency (Tagged "buy" CompactOrderList))
 
 buildBuyGraph
-    :: Real numType
+    :: (Real numType, Fractional numType)
     => (forall m. Monad m => String -> m ())
+    -> Rational
     -> [OrderBook numType]
     -> ST s (GraphInfo numType, IBuyGraph)
-buildBuyGraph log sellOrders = do
-    (gi, mGraph) <- buildGraph log sellOrders
+buildBuyGraph log maxSlippage sellOrders = do
+    (gi, mGraph) <- buildGraph log maxSlippage sellOrders
     buyGraph <- DG.freeze =<< findArbitrages log gi mGraph
     return (gi, buyGraph)
 

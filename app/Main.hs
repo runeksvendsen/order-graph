@@ -40,9 +40,10 @@ main :: IO ()
 main = Opt.withOptions $ \options ->
     Opt.withNumberType options $ \(Opt.SomeNumberType (_ :: Proxy numType)) ->
     forM_ (Opt.inputFiles options) $ \inputFile -> do
-        orderBooks :: [OrderBook numType] <- Lib.readOrdersFile
-            (Opt.logger options) (toRational $ Opt.maxSlippage options) inputFile
-        (graphInfo, graph) <- ST.stToIO $ Lib.buildBuyGraph (Opt.logger options) orderBooks
+        orderBooks :: [OrderBook numType] <- Lib.readOrdersFile (Opt.logger options) inputFile
+        (graphInfo, graph) <- ST.stToIO $ Lib.buildBuyGraph
+            (Opt.logger options) (toRational $ Opt.maxSlippage options) orderBooks
+        logInsufficientSlippage (Opt.logger options) graphInfo
         let executionCryptoList = mkExecutions options graphInfo inputFile graph
         logResult <- forAll (Opt.mode options) executionCryptoList $ \(execution, crypto) -> do
             case Opt.mode options of
@@ -61,6 +62,11 @@ main = Opt.withOptions $ \options ->
                         return Nothing
         forM_ (catMaybes logResult) putStr
   where
+    logInsufficientSlippage log graphInfo = do -- print warning in case of input orderbook depth < 'maxSlippage'
+        let warnings = Lib.giWarnings graphInfo
+        unless (null warnings) $ log "WARNING: insufficient order book depth for order books:"
+        forM_ warnings $ \warning -> log $ "\t" <> toS warning
+
     csvExecutionResult er = toS . Csv.encode $
         let liquidity sideM = fromMaybe 0 $ Lib.liLiquidity <$> (liLiquidityInfo er >>= sideM)
         in csvOutput er (liquidity Lib.liBuyLiquidity) (liquidity Lib.liSellLiquidity)
