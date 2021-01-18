@@ -64,11 +64,11 @@ matchSellBuyPath =
     asks = Vec.fromList [Lib.mkOrder 3 7500, Lib.mkOrder 1.5 7700]
 
 matchOrderBooks
-    :: forall numType s. Real numType
+    :: forall numType s. (Real numType, Fractional numType)
     => [Lib.OrderBook numType]
     -> ST.ST s ([T.Text], [T.Text])
 matchOrderBooks orderBooks = do
-    (sellPath, buyPaths) <- Lib.buildBuyGraph noLogging orderBooks >>= Lib.matchOrders noLogging "USD" "BTC" . snd
+    (sellPath, buyPaths) <- Lib.buildBuyGraph noLogging 1e9 orderBooks >>= Lib.matchOrders noLogging "USD" "BTC" . snd
     return
         ( map (Lib.showPathQty . sellPathDouble) sellPath
         , map (Lib.showPathQty . buyPathDouble) buyPaths

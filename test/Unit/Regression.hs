@@ -19,8 +19,8 @@ import           Test.Hspec.Expectations.Pretty
 
 matchOrders :: FilePath -> Double -> Lib.Currency -> Lib.Currency -> IO ([Lib.SellPath], [Lib.BuyPath])
 matchOrders file slippage numeraire crypto = do
-    orderBooks <- Lib.readOrdersFile noLogging (toRational slippage) file
-    return $ ST.runST $ Lib.buildBuyGraph noLogging (orderBooks :: [Lib.OrderBook Double]) >>=
+    orderBooks <- Lib.readOrdersFile noLogging file
+    return $ ST.runST $ Lib.buildBuyGraph noLogging (toRational slippage) (orderBooks :: [Lib.OrderBook Double]) >>=
             Lib.matchOrders noLogging numeraire crypto . snd
 
 caseOutputLines :: FilePath -> Double -> Lib.Currency -> Lib.Currency -> IO [String]
