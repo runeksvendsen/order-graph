@@ -52,3 +52,8 @@ SUM                      34,279,645 USD
 # Input data
 
 Input order books can be fetched using the `WriteTestData` executable from [crypto-venues](https://github.com/runeksvendsen/crypto-venues).
+
+# TODO
+
+* Testing:
+  * For all *cryptocurrency/numeraire/run*: liquidity as a function of *slippage* is monotonically increasing
