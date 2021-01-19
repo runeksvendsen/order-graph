@@ -24,7 +24,7 @@ import           Data.Ord                                   (comparing)
 import qualified Data.Vector                                as Vec
 import qualified Data.Aeson                                 as Json
 import qualified Data.Aeson.Types                           as Json
-import           Data.Aeson                                 ((.:))
+import           Data.Aeson                                 ((.=), (.:))
 import qualified Data.Text                                  as T
 
 
@@ -64,16 +64,8 @@ mkOrder = Order
 -- | Parse 'OrderBook' from JSON and simultaneously sort orders by price.
 --   Buy orders: descending, sell orders: ascending.
 instance (Json.FromJSON numType, Ord numType) => Json.FromJSON (OrderBook numType) where
-    parseJSON json = do
-        book <- jsonParseBookRaw json
-        return $ book
-            { bids = withList (sortOnDescending price) (bids book)
-            , asks = withList (sortOnAscending price) (asks book)
-            }
-      where
-        withList f = Vec.fromList . f . Vec.toList
-        sortOnDescending f = sortBy (flip $ comparing f)
-        sortOnAscending f = sortOn f
+    parseJSON json =
+        sortOrders <$> jsonParseBookRaw json
 
 -- | Parse 'OrderBook' from JSON without sorting orders by price.
 jsonParseBookRaw
@@ -88,7 +80,41 @@ jsonParseBookRaw =
         <*> v .: "base"
         <*> v .: "quote"
 
+-- | Convert 'OrderBook' to JSON and simultaneously sort orders by price.
+--   Buy orders: descending, sell orders: ascending.
+instance (Json.ToJSON numType, Ord numType) => Json.ToJSON (OrderBook numType) where
+    toJSON book =
+        bookToJsonRaw (sortOrders book)
+
+-- | Sort orders by price.
+--   Buy orders: descending, sell orders: ascending.
+sortOrders :: Ord numType => OrderBook numType -> OrderBook numType
+sortOrders book =
+    book
+        { bids = withList (sortOnDescending price) (bids book)
+        , asks = withList (sortOnAscending price) (asks book)
+        }
+  where
+    withList f = Vec.fromList . f . Vec.toList
+    sortOnDescending f = sortBy (flip $ comparing f)
+    sortOnAscending f = sortOn f
+
+-- | Parse 'OrderBook' from JSON without sorting orders by price.
+bookToJsonRaw
+    :: Json.ToJSON numType
+    => OrderBook numType
+    -> Json.Value
+bookToJsonRaw OrderBook{..} =
+    Json.object
+        [ "bids" .= bids
+        , "asks" .= asks
+        , "venue" .= venue
+        , "base" .= (toS base :: Text)
+        , "quote" .= (toS quote :: Text)
+        ]
+
 instance Json.FromJSON numType => Json.FromJSON (Order numType)
+instance Json.ToJSON numType => Json.ToJSON (Order numType)
 
 bookVenue :: OrderBook numType -> T.Text
 bookVenue = venue
