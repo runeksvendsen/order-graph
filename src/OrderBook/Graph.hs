@@ -103,7 +103,7 @@ buildGraph log maxSlippage books = do
     log $ "Edge count:   " ++ show edgeCount
     return (gi, graph)
   where
-    (trimmedBooks, warningMs) = unzip $ map (Book.trimSlippageOB maxSlippage) books
+    (trimmedBooks, warningMs) = unzip $ map (Book.trimSlippageOB maxSlippage . sortOrders) books
 
 -- NB: Phantom 'numType' is number type of input order book
 data GraphInfo numType = GraphInfo

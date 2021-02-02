@@ -6,6 +6,7 @@ module OrderBook.Graph.Types.Book
 ( OrderBook
 , mkOrderBook
 , mkOrder
+, sortOrders
 , bookVenue
 , baseQuote
 , fromOrderBook
@@ -64,8 +65,8 @@ mkOrder = Order
 -- | Parse 'OrderBook' from JSON and simultaneously sort orders by price.
 --   Buy orders: descending, sell orders: ascending.
 instance (Json.FromJSON numType, Ord numType) => Json.FromJSON (OrderBook numType) where
-    parseJSON json =
-        sortOrders <$> jsonParseBookRaw json
+    parseJSON =
+        jsonParseBookRaw
 
 -- | Parse 'OrderBook' from JSON without sorting orders by price.
 jsonParseBookRaw
@@ -83,8 +84,8 @@ jsonParseBookRaw =
 -- | Convert 'OrderBook' to JSON and simultaneously sort orders by price.
 --   Buy orders: descending, sell orders: ascending.
 instance (Json.ToJSON numType, Ord numType) => Json.ToJSON (OrderBook numType) where
-    toJSON book =
-        bookToJsonRaw (sortOrders book)
+    toJSON =
+        bookToJsonRaw
 
 -- | Sort orders by price.
 --   Buy orders: descending, sell orders: ascending.
