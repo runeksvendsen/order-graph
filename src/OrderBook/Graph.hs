@@ -215,8 +215,7 @@ toSideLiquidity nonEmptyOrders =
         (quoteSum paths, priceRange paths, pathDescr $ NE.head paths)
     groupByPath = NE.groupBy (\a b -> pathDescr a == pathDescr b) . sortOn pathDescr
     sortByQuantity = sortBy (flip $ comparing $ \(quoteQty, _, _) -> quoteQty)
-    quoteSum orderList = sum $ NE.map quoteQuantity orderList
-    quoteQuantity path = pQty path * pPrice path
+    quoteSum orderList = sum $ NE.map pQty orderList
     priceRange
         :: NE.NonEmpty path
         -> PriceRange NumType

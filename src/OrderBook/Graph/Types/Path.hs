@@ -90,19 +90,19 @@ newtype SellPath' numType = SellPath' { getSellPath :: Path' numType }
     deriving (Eq, Show, Ord, Generic, Functor)
 
 toBuyPath
-    :: Path' numType
-    -> BuyPath' numType
-toBuyPath = BuyPath'
-
-toSellPath
     :: Fractional numType
     => Path' numType
-    -> SellPath' numType
-toSellPath bp@Path'{..} = SellPath' $
-    bp
-      { _pPrice = recip $ _pPrice
+    -> BuyPath' numType
+toBuyPath sp@Path'{..} = BuyPath' $
+    sp
+      { _pPrice = recip _pPrice
       , _pQty   = _pQty * _pPrice
       }
+
+toSellPath
+    :: Path' numType
+    -> SellPath' numType
+toSellPath = SellPath'
 
 instance PrettyVal numType => PrettyVal (SellPath' numType)
 instance NFData numType => NFData (SellPath' numType)
