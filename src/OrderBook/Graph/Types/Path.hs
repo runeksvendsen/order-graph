@@ -61,6 +61,7 @@ data Path' numType = Path'
     , _pQty   :: !numType
       -- ^ Unit: "destination currency"
       -- (e.g. /BTC/ for path @USD --venue--> BTC@)
+      --  Multiply by 'pPrice' to change unit to "source currency" (/USD/ in above example).
     , _pPath :: !PathDescr
       -- ^ Actual path
     } deriving (Eq, Show, Generic, Functor)
