@@ -2,8 +2,6 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
--- {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications #-}
 module OrderBook.Graph.Types.Path
 ( Path'
 , pathQty
@@ -156,7 +154,7 @@ showPathQty path =
                         (showPath path)
     in toS string
 
-
+-- | Path quantity in units of "crypto"
 pQtyCrypto
     :: ( HasPathQuantity path numType
        , Fractional numType
