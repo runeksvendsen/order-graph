@@ -5,6 +5,17 @@
 
 packages:
 - completed:
+    name: orderbook
+    version: 0.1.0.0
+    git: https://github.com/runeksvendsen/orderbook.git
+    pantry-tree:
+      size: 929
+      sha256: 0c2dac5d71bde402a284be5b77f2f27741ddf331634aeec8228ceeb82eff7e4d
+    commit: b0b7babf47e26538af611210b92adf00b3f79b11
+  original:
+    git: https://github.com/runeksvendsen/orderbook.git
+    commit: b0b7babf47e26538af611210b92adf00b3f79b11
+- completed:
     name: bellman-ford
     version: 0.1.0.0
     git: https://github.com/runeksvendsen/bellman-ford.git
@@ -15,6 +26,19 @@ packages:
   original:
     git: https://github.com/runeksvendsen/bellman-ford.git
     commit: a089bfe9d449afbc1907ded5223bba23a5de9e8a
+- completed:
+    subdir: mutable-containers
+    name: mutable-containers
+    version: 0.3.4
+    git: https://github.com/runeksvendsen/mono-traversable.git
+    pantry-tree:
+      size: 1042
+      sha256: f3d661f98aa880ce6f14767cda2536f8b501a5d5fd6df3e425450fef868a28b3
+    commit: 5bcff3e91337c071a7855be0691eae1bc91f35b5
+  original:
+    subdir: mutable-containers
+    git: https://github.com/runeksvendsen/mono-traversable.git
+    commit: 5bcff3e91337c071a7855be0691eae1bc91f35b5
 - completed:
     hackage: logging-3.0.5@sha256:88096d3124fce9a19af3720f751e1a354d866ed5030d2e5197238d2277cdb2f2,2374
     pantry-tree:

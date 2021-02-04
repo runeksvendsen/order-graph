@@ -2,11 +2,11 @@ resolver: lts-14.0
 
 extra-deps:
   - git: https://github.com/runeksvendsen/orderbook.git
-    commit: 1cfe64aeb59ddebcfb0b8353f82457d16766fa36
+    commit: b0b7babf47e26538af611210b92adf00b3f79b11
   - git: https://github.com/runeksvendsen/bellman-ford.git
     commit: a089bfe9d449afbc1907ded5223bba23a5de9e8a
   - git: https://github.com/runeksvendsen/mono-traversable.git
-    commit: d1c7e00240482b57ed61e9342cb227d44a02c70a
+    commit: 5bcff3e91337c071a7855be0691eae1bc91f35b5
     subdirs:
       - mutable-containers
   - logging-3.0.5@sha256:88096d3124fce9a19af3720f751e1a354d866ed5030d2e5197238d2277cdb2f2
