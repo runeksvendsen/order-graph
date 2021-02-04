@@ -88,8 +88,7 @@ newtype SellPath' numType = SellPath' { getSellPath :: Path' numType }
     deriving (Eq, Show, Ord, Generic, Functor)
 
 toBuyPath
-    :: Fractional numType
-    => Path' numType
+    :: Path' numType
     -> BuyPath' numType
 toBuyPath = BuyPath'
 
