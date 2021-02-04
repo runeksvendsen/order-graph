@@ -134,7 +134,7 @@ findArbitrages log gi graph = do
         T.unwords [toS (pStart . pathDescr $ head paths), toS . show @Double . realToFrac $ pathsQty paths]
         : map (("\t" <>) . showPath . head) (groupOn pathDescr paths)
     pathsQty :: [Path] -> NumType
-    pathsQty = sum . map pQty
+    pathsQty = sum . map pathQty
     groupOn f = groupBy (\a1 a2 -> f a1 == f a2) . sortOn f
 
 type IBuyGraph = (DG.IDigraph Currency (Tagged "buy" CompactOrderList))
@@ -203,7 +203,7 @@ toSideLiquidity
 toSideLiquidity nonEmptyOrders =
     let paths = NE.fromList $ sortByQuantity $ map quoteSumVenue (groupByPath $ NE.toList nonEmptyOrders)
     in SideLiquidity
-        { liLiquidity    = quoteSum nonEmptyOrders
+        { liLiquidity    = numeraireSum nonEmptyOrders
         , liPriceRange   = firstLastPrice nonEmptyOrders
         , liPaths        = paths
         }
@@ -212,11 +212,10 @@ toSideLiquidity nonEmptyOrders =
         let priceSorted = NE.sortBy (comparing pPrice) lst
         in PriceRange (pPrice $ NE.head priceSorted) (pPrice $ NE.last priceSorted)
     quoteSumVenue paths =
-        (quoteSum paths, priceRange paths, pathDescr $ NE.head paths)
+        (numeraireSum paths, priceRange paths, pathDescr $ NE.head paths)
     groupByPath = NE.groupBy (\a b -> pathDescr a == pathDescr b) . sortOn pathDescr
     sortByQuantity = sortBy (flip $ comparing $ \(quoteQty, _, _) -> quoteQty)
-    quoteSum orderList = sum $ NE.map quoteQuantity orderList
-    quoteQuantity path = pQty path * pPrice path
+    numeraireSum pathList = sum $ NE.map pQty pathList
     priceRange
         :: NE.NonEmpty path
         -> PriceRange NumType

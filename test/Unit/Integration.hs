@@ -30,7 +30,7 @@ matchBuyPath =
     TestCase $ ST.runST (matchOrderBooks [orderBook])
         `shouldBe` ([], ["10.0 @ 10000.0" <> path, "20.0 @ 11000.0" <> path])
   where
-    orderBook :: Lib.OrderBook Double
+    orderBook :: Lib.OrderBook Rational
     orderBook = Lib.mkOrderBook bids asks "TestVenue" "BTC" "USD"
     path = " USD --TestVenue--> BTC"
     bids = Vec.fromList []
@@ -42,7 +42,7 @@ matchSellPath =
     TestCase $ ST.runST (matchOrderBooks [orderBook])
         `shouldBe` (["5.0 @ 9000.0" <> path, "15.0 @ 8500.0" <> path], [])
   where
-    orderBook :: Lib.OrderBook Double
+    orderBook :: Lib.OrderBook Rational
     orderBook = Lib.mkOrderBook bids asks "TestVenue" "BTC" "USD"
     path = " BTC --TestVenue--> USD"
     bids = Vec.fromList [Lib.mkOrder 5 9000, Lib.mkOrder 15 8500]
@@ -56,7 +56,7 @@ matchSellBuyPath =
                    , ["3.0 @ 7500.0" <> pathBuy, "1.5 @ 7700.0" <> pathBuy]
                    )
   where
-    orderBook :: Lib.OrderBook Double
+    orderBook :: Lib.OrderBook Rational
     orderBook = Lib.mkOrderBook bids asks "TestVenue" "BTC" "USD"
     pathSell = " BTC --TestVenue--> USD"
     pathBuy = " USD --TestVenue--> BTC"
@@ -74,9 +74,9 @@ matchOrderBooks orderBooks = do
         , map (Lib.showPathQty . buyPathDouble) buyPaths
         )
   where
-    sellPathDouble :: Lib.SellPath -> Lib.SellPath' Double
+    sellPathDouble :: Lib.SellPath -> Lib.SellPath' Rational
     sellPathDouble = fmap fromRational
-    buyPathDouble :: Lib.BuyPath -> Lib.BuyPath' Double
+    buyPathDouble :: Lib.BuyPath -> Lib.BuyPath' Rational
     buyPathDouble = fmap fromRational
     noLogging :: Monad m => String -> m ()
     noLogging = const $ return ()
