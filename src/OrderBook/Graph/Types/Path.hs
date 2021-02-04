@@ -76,16 +76,14 @@ instance NFData numType => NFData (Path' numType)
 
 type Path = Path' NumType
 
--- | The same as 'Path''
+-- | A 'Path' whose /source/ (/start/) currency is a numeraire.
 newtype BuyPath' numType = BuyPath' { getBuyPath :: Path' numType }
     deriving (Eq, Show, Ord, Generic, Functor)
 
 type BuyPath = BuyPath' NumType
 instance NFData numType => NFData (BuyPath' numType)
 
--- | The same as 'Path'', except with different units for price and quantity.
---   Price unit is /destination currency/ per /start currency/;
---   quantity unit is /start currency/.
+-- | A 'Path' whose /destination/ (/end/) currency is a numeraire.
 newtype SellPath' numType = SellPath' { getSellPath :: Path' numType }
     deriving (Eq, Show, Ord, Generic, Functor)
 
@@ -93,11 +91,7 @@ toBuyPath
     :: Fractional numType
     => Path' numType
     -> BuyPath' numType
-toBuyPath sp@Path'{..} = BuyPath' $
-    sp
-      { _pPrice = recip _pPrice
-      , _pQty   = _pQty * _pPrice
-      }
+toBuyPath = BuyPath'
 
 toSellPath
     :: Path' numType
@@ -134,8 +128,8 @@ class HasPath path where
 
 -- | Describes price and quantity for a path
 class HasPath path => HasPathQuantity path numType | path -> numType where
-    pPrice :: path -> numType
-    pQty :: path -> numType
+    pPrice :: path -> numType -- ^ Unit: numeraire per crypto
+    pQty :: path -> numType -- ^ Unit: numeraire
     toSellOrder :: path -> SomeSellOrder' numType
     showPathQty :: path -> T.Text -- ^ format: "<qty> @ <price> <showPath>"
     pathPath :: path -> Path' numType
@@ -157,25 +151,32 @@ instance Show numType => HasPathQuantity (Path' numType) numType where
     pathPath = id
     pPrice = _pPrice
     pQty = _pQty
-    toSellOrder bp = SomeSellOrder'
-      { soPrice = pPrice bp
-      , soQty   = pQty bp
-      , soBase  = snd $ NE.last (_pMoves $ _pPath bp)
-      , soQuote = _pStart $ _pPath bp
-      , soVenue = showPath bp
-      }
-    showPathQty path = toS (printf "%s @ %s %s" (show $ _pQty path) (show $ _pPrice path) (showPath path) :: String)
+    toSellOrder = pathToSellOrder
+    showPathQty = pathShowPathQty
+
+pathToSellOrder :: Path' numType -> SomeSellOrder' numType
+pathToSellOrder path = SomeSellOrder'
+    { soPrice = _pPrice path
+    , soQty   = _pQty path
+    , soBase  = snd $ NE.last (_pMoves $ _pPath path)
+    , soQuote = _pStart $ _pPath path
+    , soVenue = showPath path
+    }
+
+pathShowPathQty :: Show a => Path' a -> Text
+pathShowPathQty path =
+    toS (printf "%s @ %s %s" (show $ _pQty path) (show $ _pPrice path) (showPath path) :: String)
 
 instance HasPath (BuyPath' numType) where
     pathDescr = pathDescr . getBuyPath
     showPath = showPath . getBuyPath
 
-instance Show numType => HasPathQuantity (BuyPath' numType) numType where
+instance (Show numType, Num numType) => HasPathQuantity (BuyPath' numType) numType where
     pathPath = getBuyPath
-    pPrice = pPrice . getBuyPath
-    pQty = pQty . getBuyPath
-    toSellOrder = toSellOrder . getBuyPath
-    showPathQty = showPathQty . getBuyPath
+    pPrice = _pPrice . getBuyPath
+    pQty bp = _pQty (getBuyPath bp) * _pPrice (getBuyPath bp)
+    toSellOrder = pathToSellOrder . getBuyPath
+    showPathQty = pathShowPathQty . getBuyPath
 
 instance HasPath (SellPath' numType) where
     pathDescr = pathDescr . getSellPath
@@ -183,14 +184,14 @@ instance HasPath (SellPath' numType) where
 
 instance HasPathQuantity SellPath NumType where
     pathPath = getSellPath
-    pPrice = _pPrice . getSellPath
+    pPrice sp = recip $ _pPrice (getSellPath sp)
     pQty = _pQty . getSellPath
-    toSellOrder = invertSomeSellOrder . toSellOrder . getSellPath
-    showPathQty = showPathQty . getSellPath
+    toSellOrder = invertSomeSellOrder . pathToSellOrder . getSellPath
+    showPathQty = pathShowPathQty . getSellPath
 
 instance HasPathQuantity (SellPath' Double) Double where
     pathPath = getSellPath
-    pPrice = _pPrice . getSellPath
+    pPrice sp = recip $ _pPrice (getSellPath sp)
     pQty = _pQty . getSellPath
     toSellOrder = fmap realToFrac . toSellOrder . fmap toRational
-    showPathQty = showPathQty . getSellPath
+    showPathQty = pathShowPathQty . getSellPath
