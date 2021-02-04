@@ -11,17 +11,13 @@ module OrderBook.Graph.Match.Types
 where
 
 import           OrderBook.Graph.Internal.Prelude
-import           OrderBook.Graph.Types.Path                 (pPrice, pQty, Path')
+import           OrderBook.Graph.Types.Path (Path')
 import OrderBook.Graph.Types.SomeSellOrder (NumType)
 
 
 -- |
-data BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
-    { boQuantity        :: Maybe numTyp
-    , boMaxPrice        :: Maybe numTyp
-      -- ^ (TODO: IGNORED FOR NOW) maximum price
-    , boMaxSlippage     :: Maybe numTyp
-      -- ^ maximum percentage difference between price of first and last matched order
+newtype BuyOrder' numTyp (dst :: Symbol) (src :: Symbol) = BuyOrder'
+    { boQuantity        :: Maybe numTyp -- TODO: ignored for now
     }
 
 type BuyOrder = BuyOrder' NumType
@@ -33,22 +29,16 @@ unlimited
     => BuyOrder' numTyp dst src
 unlimited = BuyOrder'
     { boQuantity    = Nothing
-    , boMaxPrice    = Nothing
-    , boMaxSlippage = Nothing
     }
 
 type MatchResult = MatchResult' NumType
-data MatchResult' numTyp = MatchResult'
+newtype MatchResult' numTyp = MatchResult'
     { mrOrders      :: [Path' numTyp]
-    , mrFirstOrder  :: Maybe (Path' numTyp)
-    , mrQuantity    :: numTyp
     } deriving (Eq, Show)
 
 empty :: Num numTyp => MatchResult' numTyp
 empty = MatchResult'
     { mrOrders      = []
-    , mrFirstOrder  = Nothing
-    , mrQuantity    = 0
     }
 
 addOrder
@@ -56,28 +46,14 @@ addOrder
     => MatchResult' numTyp
     -> Path' numTyp
     -> MatchResult' numTyp
-addOrder (MatchResult' [] Nothing _) order =
-    MatchResult' [order] (Just order) (pQty order)
-addOrder (MatchResult' orders firstOrder@Just{} qty) order =
-    MatchResult' (order : orders) firstOrder (qty + pQty order)
-addOrder mr@(MatchResult' _ Nothing _) _ =
-    error $ "invalid MatchResult' " ++ show mr
+addOrder (MatchResult' orders) order = MatchResult' (order: orders)
 
 -- | Stop order execution if this returns 'True'
 --
---  TODO: check maximum price
+--  TODO: check quantity
 orderFilled
     :: (Fractional numTyp, Real numTyp, Show numTyp)
     => BuyOrder' numTyp base quote
     -> MatchResult' numTyp
     -> Bool
-orderFilled _ (MatchResult' _ Nothing _) = False
-orderFilled _ mr@(MatchResult' [] Just{} _) = error $ "invalid MatchResult' " ++ show mr
-orderFilled (BuyOrder' qtyM _ slipM) (MatchResult' (latest:_) (Just first) mrQty) =
-    qtyFilled || slippageReached
-  where
-    checkProp propM f = maybe False f propM
-    qtyFilled = checkProp qtyM $ \qty -> mrQty >= qty
-    slippageReached = checkProp slipM $ \maxSlippage ->
-        let slippagePct = abs $ (pPrice latest - pPrice first) / pPrice first * 100
-        in slippagePct > maxSlippage
+orderFilled _ (MatchResult' _) = False

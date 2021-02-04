@@ -1,10 +1,13 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
+-- {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 module OrderBook.Graph.Types.Path
 ( Path'
+, pathQty
+, pathToSellOrder
 , Path
 , PathDescr
 , pStart
@@ -18,6 +21,8 @@ module OrderBook.Graph.Types.Path
 , toSellPath
 , HasPath(..)
 , HasPathQuantity(..)
+, pQtyCrypto
+, showPathQty
 )
 where
 
@@ -56,15 +61,19 @@ instance NFData PathDescr
 --      * USD --bitfinex--> XTZ --binance--> USDT --bitfinex--> JPY --bitfinex--> BTC
 data Path' numType = Path'
     { _pPrice :: !numType
-      -- ^ Unit: quantity of /start currency/ per unit of /destination currency/
+      -- ^ Unit: quantity of /start/ currency per unit of /destination/ currency
       -- (e.g. /USD per BTC/ for path @USD --venue--> BTC@)
     , _pQty   :: !numType
-      -- ^ Unit: "destination currency"
+      -- ^ Unit: "destination" currency
       -- (e.g. /BTC/ for path @USD --venue--> BTC@)
-      --  Multiply by 'pPrice' to change unit to "source currency" (/USD/ in above example).
+      --  Multiply by 'pPrice' to change unit to "source" currency (/USD/ in above example).
     , _pPath :: !PathDescr
       -- ^ Actual path
     } deriving (Eq, Show, Generic, Functor)
+
+-- | Path quantitiy. Unit: path "destination" currency
+pathQty :: Path' numType -> numType
+pathQty = _pQty
 
 instance Ord numType => Ord (Path' numType) where
     p1 `compare` p2 =
@@ -130,8 +139,31 @@ class HasPath path => HasPathQuantity path numType | path -> numType where
     pPrice :: path -> numType -- ^ Unit: numeraire per crypto
     pQty :: path -> numType -- ^ Unit: numeraire
     toSellOrder :: path -> SomeSellOrder' numType
-    showPathQty :: path -> T.Text -- ^ format: "<qty> @ <price> <showPath>"
     pathPath :: path -> Path' numType
+
+showPathQty
+    :: forall path numType.
+       (HasPathQuantity path numType, Fractional numType, Real numType, Show numType)
+    => path
+    -> T.Text -- ^ format: "<qty_crypto> @ <price> <showPath>"
+showPathQty path =
+    let showAsDouble :: numType -> String
+        showAsDouble num = printf "%f" (realToFrac num :: Double)
+        string :: String
+        string = printf "%s @ %s %s"
+                        (showAsDouble $ pQtyCrypto path)
+                        (showAsDouble $ pPrice path)
+                        (showPath path)
+    in toS string
+
+
+pQtyCrypto
+    :: ( HasPathQuantity path numType
+       , Fractional numType
+       )
+       => path
+       -> numType -- ^ Unit: crypto
+pQtyCrypto path = pQty path / pPrice path
 
 instance HasPath PathDescr where
     pathDescr = id
@@ -140,18 +172,11 @@ instance HasPath PathDescr where
       where
         moves = NE.map venueAndBase pathMoves
         venueAndBase :: (T.Text, Currency) -> T.Text
-        venueAndBase (venue, base) = " --" <> venue <> "--> " <> toS base
+        venueAndBase (venue, base) = toS " --" <> venue <> toS "--> " <> toS base
 
 instance HasPath (Path' numType) where
     pathDescr = _pPath
     showPath = showPath . _pPath
-
-instance Show numType => HasPathQuantity (Path' numType) numType where
-    pathPath = id
-    pPrice = _pPrice
-    pQty = _pQty
-    toSellOrder = pathToSellOrder
-    showPathQty = pathShowPathQty
 
 pathToSellOrder :: Path' numType -> SomeSellOrder' numType
 pathToSellOrder path = SomeSellOrder'
@@ -162,10 +187,6 @@ pathToSellOrder path = SomeSellOrder'
     , soVenue = showPath path
     }
 
-pathShowPathQty :: Show a => Path' a -> Text
-pathShowPathQty path =
-    toS (printf "%s @ %s %s" (show $ _pQty path) (show $ _pPrice path) (showPath path) :: String)
-
 instance HasPath (BuyPath' numType) where
     pathDescr = pathDescr . getBuyPath
     showPath = showPath . getBuyPath
@@ -175,7 +196,6 @@ instance (Show numType, Num numType) => HasPathQuantity (BuyPath' numType) numTy
     pPrice = _pPrice . getBuyPath
     pQty bp = _pQty (getBuyPath bp) * _pPrice (getBuyPath bp)
     toSellOrder = pathToSellOrder . getBuyPath
-    showPathQty = pathShowPathQty . getBuyPath
 
 instance HasPath (SellPath' numType) where
     pathDescr = pathDescr . getSellPath
@@ -186,11 +206,9 @@ instance HasPathQuantity SellPath NumType where
     pPrice sp = recip $ _pPrice (getSellPath sp)
     pQty = _pQty . getSellPath
     toSellOrder = invertSomeSellOrder . pathToSellOrder . getSellPath
-    showPathQty = pathShowPathQty . getSellPath
 
 instance HasPathQuantity (SellPath' Double) Double where
     pathPath = getSellPath
     pPrice sp = recip $ _pPrice (getSellPath sp)
     pQty = _pQty . getSellPath
     toSellOrder = fmap realToFrac . toSellOrder . fmap toRational
-    showPathQty = pathShowPathQty . getSellPath
