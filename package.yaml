@@ -25,6 +25,7 @@ library:
   source-dirs: src
   dependencies:
     - protolude
+    - orderbook
     - primitive
     - deepseq
     - hashable
@@ -36,6 +37,7 @@ library:
     - thrist
     - tagged
     - text
+    - safe-money
 
 executables:
   order-graph-exe:

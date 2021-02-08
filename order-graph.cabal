@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3158f57cc699c11d5ca7ec2fa3ae6f30ddf747fa33f56226feeda497330f7b73
+-- hash: 00dff7141d10416199877fdd6a7726af84883203a79b16131b9c6ca12fa5b2c2
 
 name:           order-graph
 version:        0.1.0.0
@@ -46,9 +46,11 @@ library
     , bellman-ford
     , deepseq
     , hashable
+    , orderbook
     , pretty-show
     , primitive
     , protolude
+    , safe-money
     , tagged
     , text
     , thrist

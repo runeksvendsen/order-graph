@@ -12,6 +12,7 @@ module OrderBook.Graph.Types.Book
 , fromOrderBook
 , trimSlippageOB
 , toSellBuyOrders
+, convertBook
 )
 where
 
@@ -19,6 +20,7 @@ import           OrderBook.Graph.Internal.Prelude
 import           OrderBook.Graph.Types.Currency             (Currency)
 import           OrderBook.Graph.Types.SomeSellOrder
 import           OrderBook.Graph.Internal.Util              (trimSlippageGeneric)
+import qualified OrderBook.Types                            as OB
 
 import           Data.List                                  (sortBy, sortOn)
 import           Data.Ord                                   (comparing)
@@ -27,6 +29,7 @@ import qualified Data.Aeson                                 as Json
 import qualified Data.Aeson.Types                           as Json
 import           Data.Aeson                                 ((.=), (.:))
 import qualified Data.Text                                  as T
+import qualified Money
 
 
 data OrderBook numType = OrderBook
@@ -165,6 +168,25 @@ fromOrderBook ob = concat
     ]
   where
     (sellOrders, buyOrders) = toSellBuyOrders ob
+
+convertBook
+    :: forall numType venue base quote.
+       (Real numType)
+    => OrderBook numType
+    -> OB.OrderBook venue base quote
+convertBook ob =
+    OB.OrderBook
+        (OB.BuySide $ Vec.map toOrder (bids ob) )
+        (OB.SellSide $ Vec.map toOrder (asks ob))
+  where
+    exchangeRateFromRational rat =
+        let errMsg = "convertBook: invalid exchange rate: " ++ show rat
+        in fromMaybe (error errMsg) $ Money.exchangeRate rat
+    toOrder :: Order numType -> OB.Order base quote
+    toOrder o = OB.Order
+        { oQuantity = Money.dense' . toRational $ qty o
+        , oPrice = exchangeRateFromRational . toRational $ price o
+        }
 
 showKind :: OrderBook numType -> T.Text
 showKind ob =
