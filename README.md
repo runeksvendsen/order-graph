@@ -1,5 +1,9 @@
 [![CircleCI](https://circleci.com/gh/runeksvendsen/order-graph.svg?style=svg)](https://circleci.com/gh/runeksvendsen/order-graph)
 
+# Market depth analysis
+
+This library implements the algorithm described in [this paper](doc/RuneKSvendsen-CryptocurrencyLiquidity-Project2019.pdf). See this paper's abstract for a brief introduction.
+
 # Running
 
 1. Install the Haskell build tool [Stack](https://docs.haskellstack.org/en/stable/install_and_upgrade/)
