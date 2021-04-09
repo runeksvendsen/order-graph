@@ -148,6 +148,10 @@ withSomeSellOrder sso f =
                     let order = Order' (Qty' $ soQty sso) (Price' $ soPrice sso)
                     in f (order :: Order src dst)
 
+-- | Convert a 'ShortestPath' into a 'Thrist'.
+--
+--  The 'Thrist' must be consumed within the supplied callback function
+--   (as otherwise the type parameters of the 'Thrist' would escape their scope).
 withSomeSellOrders
     :: ShortestPath
     -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => NonEmpty (DG.IdxEdge B.Currency B.CompactOrderList)
