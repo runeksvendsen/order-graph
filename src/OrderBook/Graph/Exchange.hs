@@ -2,11 +2,8 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph.Exchange
@@ -151,7 +148,6 @@ withSomeSellOrder sso f =
                     let order = Order' (Qty' $ soQty sso) (Price' $ soPrice sso)
                     in f (order :: Order src dst)
 
--- |
 withSomeSellOrders
     :: ShortestPath
     -> (forall src dst. (KnownSymbol src, KnownSymbol dst) => NonEmpty (DG.IdxEdge B.Currency B.CompactOrderList)
