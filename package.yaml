@@ -38,6 +38,13 @@ library:
     - tagged
     - text
     - safe-money
+    - file-embed # OrderBook.Graph.Test
+    - bytestring # OrderBook.Graph.Test
+
+extra-source-files:
+  - test/data/run1-1.json
+  - test/data/double/test19.json
+  - test/data/regression/double-test19.txt
 
 executables:
   order-graph-exe:

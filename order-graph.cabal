@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 00dff7141d10416199877fdd6a7726af84883203a79b16131b9c6ca12fa5b2c2
+-- hash: 2da37c231370e7ab07f662f9369f748f59a127709b8eec36298ff9eb49016d26
 
 name:           order-graph
 version:        0.1.0.0
@@ -16,6 +16,10 @@ copyright:      CC0
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    test/data/run1-1.json
+    test/data/double/test19.json
+    test/data/regression/double-test19.txt
 
 library
   exposed-modules:
@@ -28,6 +32,7 @@ library
       OrderBook.Graph.Match.Types
       OrderBook.Graph.Query
       OrderBook.Graph.Run
+      OrderBook.Graph.Test.Data
       OrderBook.Graph.Types
       OrderBook.Graph.Types.Book
       OrderBook.Graph.Types.Currency
@@ -44,7 +49,9 @@ library
       aeson
     , base >=4.7 && <5
     , bellman-ford
+    , bytestring
     , deepseq
+    , file-embed
     , hashable
     , orderbook
     , pretty-show

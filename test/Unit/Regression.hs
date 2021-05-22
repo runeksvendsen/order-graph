@@ -9,7 +9,7 @@ module Unit.Regression
 where
 
 import qualified OrderBook.Graph as Lib
-
+import qualified OrderBook.Graph.Test.Data as TestData
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Control.Monad.ST as ST
@@ -19,16 +19,12 @@ import           Test.Hspec.Expectations.Pretty
 
 matchOrders :: FilePath -> Double -> Lib.Currency -> Lib.Currency -> IO ([Lib.SellPath], [Lib.BuyPath])
 matchOrders file slippage numeraire crypto = do
-    orderBooks <- Lib.readOrdersFile noLogging file
-    return $ ST.runST $ Lib.buildBuyGraph noLogging (toRational slippage) (orderBooks :: [Lib.OrderBook Double]) >>=
+    return $ ST.runST $ Lib.buildBuyGraph noLogging (toRational slippage) TestData.orderbookList >>=
             Lib.matchOrders noLogging numeraire crypto . snd
 
-caseOutputLines :: FilePath -> Double -> Lib.Currency -> Lib.Currency -> IO [String]
-caseOutputLines file slippage numeraire crypto = do
-    (sellPaths, buyPaths) <- matchOrders file slippage numeraire crypto
-    let sellLines = map showIt (mkData sellPaths)
-        buyLines = map showIt (mkData buyPaths)
-    return $ sellLines ++ buyLines
+toHumanReadable :: ([Lib.SellPath], [Lib.BuyPath]) -> ([(Double, String)], [(Double, String)])
+toHumanReadable (sellPaths, buyPaths) =
+    (map showIt $ mkData sellPaths, map showIt $ mkData buyPaths)
   where
     mkData paths = toList $ NE.map dropPriceRange . NE.sortWith quantity . Lib.liPaths
         <$> (Lib.toSideLiquidity <$> NE.nonEmpty paths)
@@ -36,7 +32,7 @@ caseOutputLines file slippage numeraire crypto = do
     dropPriceRange (qty, _, path) = (qty, path)
     toList Nothing = []
     toList (Just ne) = NE.toList ne
-    showIt (qty, path) = show (fromRational qty :: Double) ++ " " ++ T.unpack (Lib.showPath path)
+    showIt (qty, path) = (fromRational qty :: Double, T.unpack (Lib.showPath path))
 
 tests :: Test
 tests = TestLabel "regression" $ TestList $
@@ -45,7 +41,7 @@ tests = TestLabel "regression" $ TestList $
             outputCompare "test/data/double/test19.json" "test/data/regression/double-test19.txt" 0.5 "USD" "BTC"
         , TestLabel "sell/buy: " $ TestCase $ do
             liquidityInfoM <- Lib.toLiquidityInfo <$> matchOrders "test/data/double/test19.json" 0.5 "USD" "BTC"
-            fmap buySellLiquidity liquidityInfoM `shouldBe` Just (Just 51175355, Just 23781286)
+            fmap buySellLiquidity liquidityInfoM `shouldBe` Just (Just 51175354, Just 23781286)
         ]
     ]
   where
@@ -54,9 +50,8 @@ tests = TestLabel "regression" $ TestList $
         (fmap sideLiquidityFloor liBuyLiquidity, fmap sideLiquidityFloor liSellLiquidity)
     sideLiquidityFloor = floor . Lib.liLiquidity
     outputCompare inputFile expectedOutFile slippage numeraire crypto = do
-        outLines <- caseOutputLines inputFile slippage numeraire crypto
-        regressOut <- lines <$> readFile expectedOutFile
-        outLines `shouldBe` regressOut
+        outLines <- toHumanReadable <$> matchOrders inputFile slippage numeraire crypto
+        outLines `shouldBe` TestData.regressData
 
 noLogging :: Monad m => String -> m ()
 noLogging = const $ return ()
