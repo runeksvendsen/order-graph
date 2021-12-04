@@ -18,6 +18,9 @@ jobs:
       - run:
           name: Build tests
           command: stack test --no-run-tests
+      - run:
+          name: Build benchmarks
+          command: stack build --bench --no-run-benchmarks
       - save_cache:
           name: Save cache
           key: v3-{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}
