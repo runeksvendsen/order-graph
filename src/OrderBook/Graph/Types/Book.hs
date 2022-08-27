@@ -8,6 +8,8 @@ module OrderBook.Graph.Types.Book
 , mkOrder
 , sortOrders
 , bookVenue
+, bookBids
+, bookAsks
 , baseQuote
 , fromOrderBook
 , trimSlippageOB
@@ -125,6 +127,12 @@ bookVenue = venue
 
 baseQuote :: OrderBook numType -> (T.Text, T.Text)
 baseQuote ob = (toS $ base ob, toS $ quote ob)
+
+bookBids :: OrderBook numType -> Vec.Vector (Order numType)
+bookBids = bids
+
+bookAsks :: OrderBook numType -> Vec.Vector (Order numType)
+bookAsks = asks
 
 -- | Convert all orders in an orderbook (consisting of both sell orders and buy orders)
 --    into a pair of 'SomeSellOrder' representing both sell orders and buy orders.
