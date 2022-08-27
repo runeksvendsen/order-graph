@@ -5,6 +5,8 @@
 module OrderBook.Graph.Types.Book
 ( OrderBook
 , Order
+, orderQty
+, orderPrice
 , mkOrderBook
 , mkOrder
 , sortOrders
@@ -47,6 +49,12 @@ data Order numType = Order
     { qty   :: numType
     , price :: numType
     } deriving (Functor, Generic)
+
+orderQty :: Order numType -> numType
+orderQty = qty
+
+orderPrice :: Order numType -> numType
+orderPrice = price
 
 instance NFData numType => NFData (OrderBook numType)
 instance NFData numType => NFData (Order numType)
