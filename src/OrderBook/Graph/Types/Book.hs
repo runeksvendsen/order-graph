@@ -43,12 +43,12 @@ data OrderBook numType = OrderBook
     , venue :: T.Text
     , base  :: Currency
     , quote :: Currency
-    } deriving (Functor, Generic)
+    } deriving (Eq, Show, Functor, Generic)
 
 data Order numType = Order
     { qty   :: numType
     , price :: numType
-    } deriving (Functor, Generic)
+    } deriving (Eq, Show, Functor, Generic)
 
 orderQty :: Order numType -> numType
 orderQty = qty
