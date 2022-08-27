@@ -4,6 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module OrderBook.Graph.Types.Book
 ( OrderBook
+, Order
 , mkOrderBook
 , mkOrder
 , sortOrders
